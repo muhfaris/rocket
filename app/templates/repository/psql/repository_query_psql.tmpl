@@ -1,0 +1,16 @@
+// {{ .Name }}QueryInPSQL rule implementation in postgres sql
+type {{ .Name }}QueryInPSQL struct {
+	Conn *sql.DB
+}
+
+// New{{ .Name }}QueryInPSQL is to create {{ .Name }}QueryInPSQL instance
+func New{{ .Name }}QueryInPSQL(db *sql.DB) repository.{{ .Name }}Query {
+	return &{{ .Name }}QueryInPSQL{Conn: db}
+}
+
+// Find{{ .Name }}ByID is to find rule by id
+func (q *{{ .Name }}QueryInPSQL) Find{{ .Name }}ByID(ctx context.Context, id uuid.UUID) <-chan repository.QueryResult {
+	result := make(chan repository.QueryResult)
+	return result
+}
+
