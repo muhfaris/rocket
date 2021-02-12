@@ -1,0 +1,55 @@
+package  {{ .pkg  }}
+
+{{if or .isPostgresSQL .isRedis}}
+var (
+{{if .isPostgresSQL }}
+	dbPool    *sql.DB
+{{end}}
+{{if .isRedis }}
+	cachePool *redis.Pool
+{{end}}
+)
+{{end}}
+
+var rootCmd = &cobra.Command{
+	Use:   "{{ .name }}",
+	Short: "Generate sample from rocket",
+}
+
+func init() {
+    {{if and .isPostgresSQL .isRedis}}
+	cobra.OnInitialize(
+        splash,
+        initconfig,
+        initDatabase,
+        initCache,
+    )
+    {{end}}
+
+    {{if .isPostgresSQL }}
+	cobra.OnInitialize(
+        splash,
+        initconfig,
+        initDatabase,
+    )
+    {{end}}
+
+     {{if .isRedis}}
+	cobra.OnInitialize(
+        splash,
+        initconfig,
+        initCache,
+    )
+    {{end}}
+
+}
+
+// Execute is root function
+func Execute() {
+	rootCmd.AddCommand(serveCmd)
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}

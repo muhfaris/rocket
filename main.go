@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "github.com/muhfaris/rocket/cmd"
 
+func main() {
+	cmd.Execute()
 }

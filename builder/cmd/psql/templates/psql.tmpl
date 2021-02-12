@@ -1,0 +1,18 @@
+func {{ .database_function }}() {
+	dbOptions := psql.DBOptions{
+		Host:     viper.GetString("{{ .database_host }}"),
+		Port:     viper.GetInt("{{ .database_port }}"),
+		Username: viper.GetString("{{ database_username }}"),
+		Password: viper.GetString("{{ database_password }}"),
+		DBName:   viper.GetString("{{ database_name }}"),
+		SSLMode:  viper.GetString("{{ database_ssl_mode }}"),
+	}
+
+	conn, err := psql.Connect(&dbOptions)
+	if err != nil {
+		log.Fatalln("Database:", err)
+	}
+
+	log.Println("Database connected ...")
+	dbPool = conn
+}
