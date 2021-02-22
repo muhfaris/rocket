@@ -19,30 +19,68 @@ var rootCmd = &cobra.Command{
 func init() {
     {{if and .isPostgresSQL .isRedis}}
 	cobra.OnInitialize(
-        splash,
         initconfig,
         initDatabase,
         initCache,
     )
     {{end}}
-
     {{if .isPostgresSQL }}
 	cobra.OnInitialize(
-        splash,
         initconfig,
         initDatabase,
     )
     {{end}}
-
      {{if .isRedis}}
 	cobra.OnInitialize(
-        splash,
         initconfig,
         initCache,
     )
     {{end}}
-
 }
+
+var cfgFile string
+func initconfig() {
+	viper.SetConfigType("{{ .formatType }}")
+
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.AddConfigPath("./configs")
+		viper.SetConfigName("config")
+	}
+
+	//read env
+	viper.AutomaticEnv()
+
+	// if a config file is found, read it in.
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalln("Config application:", err)
+	}
+
+	log.Println("using config file:", viper.ConfigFileUsed())
+}
+
+{{if .isPostgresSQL }}
+func initDatabase() {
+	dbOptions := psql.DBOptions{
+		Host:     viper.GetString("persistence.database.host"),
+		Port:     viper.GetInt("persistence.database.port"),
+		Username: viper.GetString("persistence.database.username"),
+		Password: viper.GetString("persistence.database.password"),
+		DBName:   viper.GetString("persistence.database.name"),
+		SSLMode:  viper.GetString("persistence.database.ssl_mode"),
+	}
+
+	conn, err := psql.Connect(&dbOptions)
+	if err != nil {
+		log.Fatalln("Database:", err)
+	}
+
+	log.Println("Database connected ...")
+	dbPool = conn
+}
+{{ end }}
 
 // Execute is root function
 func Execute() {

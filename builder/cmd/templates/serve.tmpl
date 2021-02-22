@@ -10,25 +10,6 @@ func serveAPI(ctx context.Context, app *handler.App) {
 	router := mux.NewRouter()
 	h := handler.NewHandler(app)
 
-	// Internal api
-	// /internal
-	h.APIinternal(app, router.PathPrefix("/internal").Subrouter())
-
-	// handler api
-	// /api
-	api := router.PathPrefix("/api").Subrouter()
-
-	// API version 1
-	// /api/v1
-	h.APIv1(app, api)
-
-	// API version 2
-	// /api/v2
-	h.APIv2(app, api)
-
-	// logHandler := apiv1.PathPrefix("/log-activities).Subrouter()
-	// handler.LogHandler(dbPool, logHandler)
-
 	s := &http.Server{
 		Addr:        fmt.Sprintf(":%d", app.Config.Port),
 		Handler:     cors(router),
@@ -37,7 +18,7 @@ func serveAPI(ctx context.Context, app *handler.App) {
 
 	done := make(chan struct{})
 	go func() {
-		<-ctx.Done()
+		{{ .chanSign }}ctx.Done()
 		if err := s.Shutdown(context.Background()); err != nil {
 			logrus.Error(err)
 		}
@@ -48,7 +29,7 @@ func serveAPI(ctx context.Context, app *handler.App) {
 	if err := s.ListenAndServe(); err != http.ErrServerClosed {
 		logrus.Error(err)
 	}
-	<-done
+	{{ .chanSign }}done
 }
 
 var serveCmd = &cobra.Command{
@@ -65,7 +46,7 @@ var serveCmd = &cobra.Command{
 		go func() {
 			ch := make(chan os.Signal, 1)
 			signal.Notify(ch, os.Interrupt)
-			<-ch
+			&lt;-ch
 			logrus.Info("signal caught. shutting down...")
 			cancel()
 		}()

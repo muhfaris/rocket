@@ -13,17 +13,35 @@ import (
 var rootCmd = &cobra.Command{
 	Use: "rocket",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		viper.GetString("project")
-		c := builder.NewCMDBuilder()
-		c.Generate()
+		project := viper.GetString("project")
+		db := viper.GetString("db")
+		cache := viper.GetString("cache")
+		queue := viper.GetString("queue")
+		config := viper.GetString("config")
+
+		b := builder.NewBuilder(project, db, cache, queue, config)
+		b.Generate()
+
 		return nil
 	},
 }
 
 func init() {
 	cobra.OnInitialize(initconfig)
-	rootCmd.PersistentFlags().StringP("new", "n", "Your Project Name", "name for new project")
+	rootCmd.PersistentFlags().StringP("new", "n", "rocker-sample", "name for new project")
 	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("new"))
+
+	rootCmd.PersistentFlags().StringP("database", "d", "postgresql", "database for new project (e.g mysql,  postgresql)")
+	viper.BindPFlag("db", rootCmd.PersistentFlags().Lookup("new"))
+
+	rootCmd.PersistentFlags().StringP("cache", "e", "none", "cache for new project (e.g redis)")
+	viper.BindPFlag("cache", rootCmd.PersistentFlags().Lookup("new"))
+
+	rootCmd.PersistentFlags().StringP("queue", "q", "none", "queue fro new project (e.g rabbitmq)")
+	viper.BindPFlag("queue", rootCmd.PersistentFlags().Lookup("new"))
+
+	rootCmd.PersistentFlags().StringP("config", "c", "toml", "config for new project (e.g toml)")
+	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("new"))
 }
 
 func initconfig() {
@@ -37,11 +55,9 @@ func initconfig() {
 
 	// if a config file is found, read it in.
 	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalln("Config application:", err)
+	if err == nil {
+		log.Println("using config file:", viper.ConfigFileUsed())
 	}
-
-	log.Println("using config file:", viper.ConfigFileUsed())
 }
 
 // Execute is root function
