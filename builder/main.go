@@ -7,30 +7,36 @@ import (
 	"github.com/muhfaris/rocket/shared/templates"
 )
 
+var _baseproject BaseProject
+
 type Main struct {
 	template          []byte
 	tempalteGitignore []byte
 	filename          string
 	filepath          string
-	ProjectName       string
-	Base
+	BasePackage
 }
 
 type MainData struct {
 	PackagePath string
+	ProjectName string
 	Path        string
 }
 
 func New(packagePath, projectName string) *Main {
+	_baseproject = BaseProject{
+		AppName:     projectName,
+		ProjectName: projectName,
+		PackagePath: packagePath,
+	}
 	return &Main{
 		template:          templates.GetMainTemplate(),
 		tempalteGitignore: templates.GetGitIgnore(),
 		filename:          "main.go",
 		filepath:          fmt.Sprintf("%s/main.go", projectName),
-		ProjectName:       projectName,
-		Base: Base{
+		BasePackage: BasePackage{
+			PackageName: "main",
 			PackagePath: packagePath,
-			Path:        "cmd",
 		},
 	}
 }
@@ -43,14 +49,14 @@ func (m *Main) Generate() error {
 		}
 		// failed to create new project
 		// delete created project
-		err = libos.DeleteDir(m.ProjectName)
+		err = libos.DeleteDir(_baseproject.ProjectName)
 		if err != nil {
 			return
 		}
 	}()
 
 	// create project
-	err = initializeDirProject(m.ProjectName)
+	err = initializeDirProject(_baseproject.ProjectName)
 	if err != nil {
 		return err
 	}
@@ -58,7 +64,7 @@ func (m *Main) Generate() error {
 	// create main.go
 	data := MainData{
 		PackagePath: m.PackagePath,
-		Path:        m.Path,
+		Path:        "cmd",
 	}
 
 	raw, err := libos.ExecuteTemplate(m.template, data)
@@ -72,7 +78,7 @@ func (m *Main) Generate() error {
 	}
 
 	// create .gitignore
-	filepathGitignore := fmt.Sprintf("%s/.gitignore", m.ProjectName)
+	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
 	err = libos.CreateFile(filepathGitignore, m.tempalteGitignore)
 	if err != nil {
 		return err
@@ -85,7 +91,7 @@ func (m *Main) Generate() error {
 	}
 
 	// format file go
-	err = libos.FormatDirPath(m.ProjectName)
+	err = libos.FormatDirPath(_baseproject.ProjectName)
 	if err == nil {
 		return nil
 	}
@@ -94,8 +100,14 @@ func (m *Main) Generate() error {
 }
 
 func (m *Main) generate() error {
-	cmd := newCMD(m.ProjectName, m.ProjectName)
+	cmd := newCMD(_baseproject.AppName, _baseproject.ProjectName)
 	err := cmd.Generate()
+	if err != nil {
+		return err
+	}
+
+	cfg := NewConfig("config", "yaml", _baseproject.ProjectName)
+	err = cfg.Generate()
 	if err != nil {
 		return err
 	}

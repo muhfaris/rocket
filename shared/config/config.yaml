@@ -1,0 +1,4 @@
+app:
+  config:
+    name: app # app config name
+    type: json # json, yaml

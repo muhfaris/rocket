@@ -16,7 +16,8 @@ type CMD struct {
 }
 
 type CMDData struct {
-	AppName string
+	AppName     string
+	PackagePath string
 }
 
 func newCMD(appName, projectName string) *CMD {
@@ -30,7 +31,8 @@ func newCMD(appName, projectName string) *CMD {
 
 func (c *CMD) Generate() error {
 	data := CMDData{
-		AppName: c.AppName,
+		AppName:     c.AppName,
+		PackagePath: _baseproject.PackagePath,
 	}
 
 	_, err := os.Stat(c.dirpath)
@@ -41,7 +43,7 @@ func (c *CMD) Generate() error {
 	if os.IsNotExist(err) {
 		err := os.Mkdir(c.dirpath, os.ModePerm)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating directory cmd %s: %w", c.dirpath, err)
 		}
 	}
 

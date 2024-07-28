@@ -4,15 +4,23 @@ import (
 	"fmt"
 	"os"
 
+	"{{.PackagePath}}/config"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-Use:  "{{.AppName}}",
-	RunE: mainRunE,
+Use:     "{{.AppName}}",
+	PreRunE: preRunE,
+	RunE:    mainRunE,
 }
 
-func init() {
+func preRunE(cmd *cobra.Command, args []string) error {
+	err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func mainRunE(cmd *cobra.Command, args []string) error {
