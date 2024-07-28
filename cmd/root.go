@@ -42,6 +42,8 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("config", "c", "toml", "config for new project (e.g toml)")
 	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("new"))
+
+	rootCmd.AddCommand(openapiCmd)
 }
 
 func initconfig() {
