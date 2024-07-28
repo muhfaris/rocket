@@ -1,7 +1,12 @@
 package builder
 
-type Base struct {
+type BasePackage struct {
 	PackageName string
 	PackagePath string
-	Path        string
+}
+
+type BaseProject struct {
+	AppName     string
+	ProjectName string
+	PackagePath string
 }

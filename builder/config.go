@@ -1,0 +1,53 @@
+package builder
+
+import (
+	"fmt"
+	"os"
+
+	libos "github.com/muhfaris/rocket/shared/os"
+	"github.com/muhfaris/rocket/shared/templates"
+)
+
+type Config struct {
+	template   []byte
+	dirpath    string
+	filepath   string
+	ConfigName string
+	ConfigType string
+}
+
+func NewConfig(configName, configType, projectName string) *Config {
+	return &Config{
+		template:   templates.GetConfigTemplate(),
+		dirpath:    fmt.Sprintf("%s/config", projectName),
+		filepath:   fmt.Sprintf("%s/config/%s.go", projectName, configName),
+		ConfigName: configName,
+		ConfigType: configType,
+	}
+}
+
+func (c *Config) Generate() error {
+	_, err := os.Stat(c.dirpath)
+	if os.IsExist(err) {
+		return fmt.Errorf("directory config %s already exists", c.dirpath)
+	}
+
+	if os.IsNotExist(err) {
+		err := os.Mkdir(c.dirpath, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("error creating directory config %s: %w", c.dirpath, err)
+		}
+	}
+
+	raw, err := libos.ExecuteTemplate(c.template, c)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(c.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -13,6 +13,9 @@ var (
 
 	//go:embed cmd/root.tmpl
 	_cmdTemplate []byte
+
+	//go:embed config/config.tmpl
+	_tomlTemplate []byte
 )
 
 func GetMainTemplate() []byte {
@@ -25,4 +28,8 @@ func GetGitIgnore() []byte {
 
 func GetCMDTemplate() []byte {
 	return _cmdTemplate
+}
+
+func GetConfigTemplate() []byte {
+	return _tomlTemplate
 }
