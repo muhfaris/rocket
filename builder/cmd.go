@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	libos "github.com/muhfaris/rocket/shared/os"
@@ -30,6 +31,8 @@ func newCMD(appName, projectName string) *CMD {
 }
 
 func (c *CMD) Generate() error {
+	slog.Info("└── Creating cmd")
+
 	data := CMDData{
 		AppName:     c.AppName,
 		PackagePath: _baseproject.PackagePath,

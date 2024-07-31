@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	libos "github.com/muhfaris/rocket/shared/os"
@@ -27,6 +28,7 @@ func NewConfig(configName, configType, projectName string) *Config {
 }
 
 func (c *Config) Generate() error {
+	slog.Info("└── Creating config")
 	_, err := os.Stat(c.dirpath)
 	if os.IsExist(err) {
 		return fmt.Errorf("directory config %s already exists", c.dirpath)

@@ -2,6 +2,9 @@ package builder
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
+	"os/exec"
 
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
@@ -55,6 +58,8 @@ func (m *Main) Generate() error {
 		}
 	}()
 
+	slog.Info("Creating new project", "project", _baseproject.ProjectName)
+
 	// create project
 	err = initializeDirProject(_baseproject.ProjectName)
 	if err != nil {
@@ -78,6 +83,7 @@ func (m *Main) Generate() error {
 	}
 
 	// create .gitignore
+	slog.Info("└── Creating .gitignore", "project", _baseproject.ProjectName)
 	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
 	err = libos.CreateFile(filepathGitignore, m.tempalteGitignore)
 	if err != nil {
@@ -91,6 +97,7 @@ func (m *Main) Generate() error {
 	}
 
 	// format file go
+	slog.Info("└── Formatting directory", "project", _baseproject.ProjectName)
 	err = libos.FormatDirPath(_baseproject.ProjectName)
 	if err == nil {
 		return nil
@@ -110,6 +117,44 @@ func (m *Main) generate() error {
 	err = cfg.Generate()
 	if err != nil {
 		return err
+	}
+
+	project := NewProject(_baseproject.ProjectName)
+	err = project.GenerateDirectories()
+	if err != nil {
+		return err
+	}
+
+	err = m.initializeModule()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Main) initializeModule() error {
+	slog.Info("└── Initializing go module", "project", _baseproject.ProjectName)
+	// Change the current working directory to the specific directory
+	err := os.Chdir(_baseproject.ProjectName)
+	if err != nil {
+		return fmt.Errorf("failed to change directory to %s: %v", _baseproject.ProjectName, err)
+	}
+
+	// Initialize the Go module
+	err = exec.Command("go", "mod", "init", _baseproject.PackagePath).Run()
+	if err != nil {
+		return fmt.Errorf("failed to initialize go module: %v", err)
+	}
+
+	err = exec.Command("go", "mod", "tidy").Run()
+	if err != nil {
+		return fmt.Errorf("failed to tidy go module: %v", err)
+	}
+
+	err = exec.Command("go", "mod", "vendor").Run()
+	if err != nil {
+		return fmt.Errorf("failed to vendor go module: %v", err)
 	}
 
 	return nil
