@@ -5,7 +5,7 @@ import (
 	"{{.PackagePath}}/internal/adapter/rest/routers/v1/response"
 )
 
-func Health() func(c *fiber.Ctx) error {
+func {{.HandlerName}() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		return response.Success(c, "I'm Alive!")
 	}
