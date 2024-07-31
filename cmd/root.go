@@ -28,20 +28,14 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(initconfig)
-	rootCmd.PersistentFlags().StringP("new", "n", "rocker-sample", "name for new project")
-	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("new"))
 
-	rootCmd.PersistentFlags().StringP("database", "d", "postgresql", "database for new project (e.g mysql,  postgresql)")
-	viper.BindPFlag("db", rootCmd.PersistentFlags().Lookup("new"))
+	// add openapi flag package project
+	openapiCmd.Flags().StringP("package", "p", "", "package project")
+	viper.BindPFlag("package", openapiCmd.Flags().Lookup("package"))
 
-	rootCmd.PersistentFlags().StringP("cache", "e", "none", "cache for new project (e.g redis)")
-	viper.BindPFlag("cache", rootCmd.PersistentFlags().Lookup("new"))
-
-	rootCmd.PersistentFlags().StringP("queue", "q", "none", "queue fro new project (e.g rabbitmq)")
-	viper.BindPFlag("queue", rootCmd.PersistentFlags().Lookup("new"))
-
-	rootCmd.PersistentFlags().StringP("config", "c", "toml", "config for new project (e.g toml)")
-	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("new"))
+	// add openapi flag project name
+	openapiCmd.Flags().StringP("project", "n", "", "project name")
+	viper.BindPFlag("project", openapiCmd.Flags().Lookup("project"))
 
 	rootCmd.AddCommand(openapiCmd)
 }
