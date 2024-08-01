@@ -44,11 +44,11 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("project name can't contain space or special character")
 	}
 
-	_, err := loader.LoadFromFile(pathOpenapiSpec)
+	doc, err := loader.LoadFromFile(pathOpenapiSpec)
 	if err != nil {
 		return err
 	}
 
-	m := builder.New(packageName, projectName)
+	m := builder.New(doc, packageName, projectName)
 	return m.Generate()
 }

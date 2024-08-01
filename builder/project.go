@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
 
 type Project struct {
+	doc             *openapi3.T
 	Dirs            []string
 	Rest            Rest
 	RestRouter      RestRouter
@@ -58,8 +61,9 @@ type DataSharedLibrary struct {
 	template []byte
 }
 
-func NewProject(projectName string) *Project {
+func NewProject(doc *openapi3.T, projectName string) *Project {
 	return &Project{
+		doc: doc,
 		Dirs: []string{
 			"internal/adapter/inbound/rest/routers",
 			"internal/adapter/inbound/rest/routers/v1/handlers",
@@ -155,6 +159,9 @@ func (p *Project) GenerateDirectories() error {
 	if err != nil {
 		return err
 	}
+
+	// Generate rest handlers
+	p.GenerateRestHandlers()
 
 	return nil
 }
@@ -294,4 +301,60 @@ func (p *Project) GenerateSharedLibrary() error {
 	}
 
 	return nil
+}
+
+type RouterGroup struct {
+	GroupName string
+	GroupPath string
+	Routes    []ChildRouterGroup
+}
+
+type ChildRouterGroup struct {
+	Method  string
+	Path    string
+	Handler string
+}
+
+func (p *Project) GenerateRestHandlers() {
+	var childsRouter []ChildRouterGroup
+
+	for path, pathItem := range p.doc.Paths.Map() {
+		var (
+			groupRoute     string
+			groupRoutePath string
+		)
+
+		for method, operation := range pathItem.Operations() {
+			childRouter := ChildRouterGroup{
+				Method:  method,
+				Path:    path,
+				Handler: operation.OperationID,
+			}
+
+			xRouteGroupAny := operation.Extensions["x-route-group"]
+			xRouteGroup, ok := xRouteGroupAny.(string)
+			if ok && (groupRoute == "" || groupRoutePath == "") {
+				xRouteGroups := strings.Split(xRouteGroup, "::")
+				groupRoute = xRouteGroups[0]
+				groupRoutePath = xRouteGroups[1]
+			}
+
+			childsRouter = append(childsRouter, childRouter)
+
+			handlerData := &HandlerData{
+				PackagePath: _baseproject.PackagePath,
+				HandlerName: operation.OperationID,
+				Structs:     make([]Struct, 0),
+				HasParams:   false,
+				HasQuery:    false,
+				HasBody:     false,
+				ParamsData:  ParamsData{},
+				QueryData:   QueryData{},
+				BodyData:    BodyData{},
+			}
+
+			handlerData.Generate(method, operation)
+			fmt.Println(handlerData)
+		}
+	}
 }

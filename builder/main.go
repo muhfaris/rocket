@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
@@ -13,6 +14,7 @@ import (
 var _baseproject BaseProject
 
 type Main struct {
+	doc               *openapi3.T
 	template          []byte
 	tempalteGitignore []byte
 	filename          string
@@ -26,13 +28,15 @@ type MainData struct {
 	Path        string
 }
 
-func New(packagePath, projectName string) *Main {
+func New(doc *openapi3.T, packagePath, projectName string) *Main {
 	_baseproject = BaseProject{
 		AppName:     projectName,
 		ProjectName: projectName,
 		PackagePath: packagePath,
 	}
+
 	return &Main{
+		doc:               doc,
 		template:          templates.GetMainTemplate(),
 		tempalteGitignore: templates.GetGitIgnore(),
 		filename:          "main.go",
@@ -119,7 +123,7 @@ func (m *Main) generate() error {
 		return err
 	}
 
-	project := NewProject(_baseproject.ProjectName)
+	project := NewProject(m.doc, _baseproject.ProjectName)
 	err = project.GenerateDirectories()
 	if err != nil {
 		return err

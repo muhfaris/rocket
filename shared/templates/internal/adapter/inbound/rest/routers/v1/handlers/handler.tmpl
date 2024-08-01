@@ -1,0 +1,42 @@
+package handlersv1
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"{{.PackagePath}}/internal/adapter/rest/routers/v1/response"
+)
+
+{{range .Structs}}
+	type {{.StructName}} struct {
+		{{range .Fields}}
+			{{.FieldName}} {{.FieldType}} {{.Tag}}
+		{{end}}
+	}
+{{end}}
+
+func {{.HandlerName}() func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		{{if .HasParams}}
+			var {{.ParamsName}} {{.ParamsStructName}}
+			if err := c.ParamsParser(&{{.ParamsName}}); err != nil {
+				return err
+			}
+		{{end}}
+
+		{{if .HasQuery}}
+			var {{.QueryName}} {{.QueryStructName}}
+			if	err:= c.QueryParser(&{{.QueryName}}); err != nil {
+				return err
+			}
+		{{end}}
+
+
+		{{if .HasBody}}
+			var {{.BodyName}} {{.BodyStructName}}
+			if err := c.BodyParser(&{{.BodyName}); err != nil {
+				return err
+			}
+		{{end}}
+
+		return response.Success(c, "I'm Alive!")
+	}
+}

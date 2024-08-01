@@ -125,6 +125,7 @@ paths:
       tags:
         - Register Partner
       summary: Get detail partner account
+      x-parameters-name: DetailPartner
       parameters:
         - name: partner_id
           in: path
