@@ -8,8 +8,8 @@ import (
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
-	handlersv1 "{{.PackagePath}}/internal/adapter/rest/routers/v1/handlers"
-	"{{.PackagePath}}/internal/adapter/rest/routers/v1/middlewares"
+	handlersv1 "{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/handlers"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/middlewares"
 	portadapter "{{.PackagePath}}/internal/core/port/inbound/adapter"
 
 	"github.com/gofiber/fiber/v2/middleware/requestid"
@@ -24,7 +24,7 @@ func Init(port int) portadapter.Rest {
 	r := fiber.New(fiber.Config{
 	AppName:                  "{{.AppName}}",
 		EnableSplittingOnParsers: true,
-		ErrorHandler:             middlewares.Error(),
+		<!-- ErrorHandler:             middlewares.Error(), -->
 	})
 
 	r.Use(requestid.New())

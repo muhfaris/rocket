@@ -2,11 +2,11 @@ package builder
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	libcase "github.com/muhfaris/rocket/shared/case"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
@@ -19,6 +19,13 @@ type Project struct {
 	RespPortAdapter RestPortAdapter
 	RestMiddlewares RestMiddlewares
 	SharedLibrary   SharedLibrary
+	RestResponse    RestResponse
+}
+
+type RestResponse struct {
+	dirpath  string
+	template []byte
+	filepath string
 }
 
 type Rest struct {
@@ -101,6 +108,11 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 				},
 			},
 		},
+		RestResponse: RestResponse{
+			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/response", projectName),
+			template: templates.GetRestResponseTemplate(),
+			filepath: "response.go",
+		},
 		SharedLibrary: SharedLibrary{
 			dirpath: fmt.Sprintf("%s/shared", projectName),
 			data: []DataSharedLibrary{
@@ -115,7 +127,8 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 }
 
 func (p *Project) GenerateDirectories() error {
-	slog.Info("└── Creating based project directories")
+	// slog.Info("└── Creating based project directories")
+	fmt.Println("└── Creating based project directories")
 
 	for _, dir := range p.Dirs {
 		_, err := os.Stat(dir)
@@ -129,7 +142,8 @@ func (p *Project) GenerateDirectories() error {
 		}
 	}
 
-	slog.Info("└── Creating rest")
+	// slog.Info("└── Creating rest")
+	fmt.Println("└── Creating rest")
 	// Generate cmd rest
 	err := p.GenerateRest()
 	if err != nil {
@@ -160,8 +174,17 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
+	// Generate rest response
+	err = p.GenerateRestResponse()
+	if err != nil {
+		return err
+	}
+
 	// Generate rest handlers
-	p.GenerateRestHandlers()
+	err = p.GenerateRestHandlers()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -303,6 +326,41 @@ func (p *Project) GenerateSharedLibrary() error {
 	return nil
 }
 
+func (p *Project) GenerateRestResponse() error {
+	_, err := os.Stat(p.RestResponse.dirpath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = os.Stat(p.RestResponse.dirpath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	dataResponse := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.RestResponse.template, dataResponse)
+	if err != nil {
+		return err
+	}
+
+	filepath := fmt.Sprintf("%s/%s", p.RestResponse.dirpath, p.RestResponse.filepath)
+	err = libos.CreateFile(filepath, raw)
+	if err != nil {
+		return fmt.Errorf("error creating file %s: %w", filepath, err)
+	}
+
+	return nil
+}
+
 type RouterGroup struct {
 	GroupName string
 	GroupPath string
@@ -315,7 +373,8 @@ type ChildRouterGroup struct {
 	Handler string
 }
 
-func (p *Project) GenerateRestHandlers() {
+func (p *Project) GenerateRestHandlers() error {
+	fmt.Println("└── Creating rest handlers")
 	var childsRouter []ChildRouterGroup
 
 	for path, pathItem := range p.doc.Paths.Map() {
@@ -353,8 +412,36 @@ func (p *Project) GenerateRestHandlers() {
 				BodyData:    BodyData{},
 			}
 
-			handlerData.Generate(method, operation)
-			fmt.Println(handlerData)
+			err := handlerData.Generate(method, operation)
+			if err != nil {
+				return err
+			}
+
+			raw, err := libos.ExecuteTemplate(templates.GetRestHandlerTemplate(), handlerData)
+			if err != nil {
+				return err
+			}
+
+			var (
+				handlerDir = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
+				filename   = fmt.Sprintf("%s.go", libcase.ToSnakeCase(handlerData.HandlerName))
+				filepath   = fmt.Sprintf("%s/%s", handlerDir, filename)
+			)
+
+			_, err = os.Stat(handlerDir)
+			if os.IsNotExist(err) {
+				err := os.MkdirAll(handlerDir, os.ModePerm)
+				if err != nil {
+					return err
+				}
+			}
+
+			err = libos.CreateFile(filepath, raw)
+			if err != nil {
+				return fmt.Errorf("error creating file %s: %w", filepath, err)
+			}
 		}
 	}
+
+	return nil
 }

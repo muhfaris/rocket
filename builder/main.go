@@ -2,7 +2,6 @@ package builder
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 
@@ -62,7 +61,8 @@ func (m *Main) Generate() error {
 		}
 	}()
 
-	slog.Info("Creating new project", "project", _baseproject.ProjectName)
+	// slog.Info("Creating new project", "project", _baseproject.ProjectName)
+	fmt.Println("Creating new project", _baseproject.ProjectName)
 
 	// create project
 	err = initializeDirProject(_baseproject.ProjectName)
@@ -87,7 +87,8 @@ func (m *Main) Generate() error {
 	}
 
 	// create .gitignore
-	slog.Info("└── Creating .gitignore", "project", _baseproject.ProjectName)
+	// slog.Info("└── Creating .gitignore", "project", _baseproject.ProjectName)
+	fmt.Println("└── Creating .gitignore", _baseproject.ProjectName)
 	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
 	err = libos.CreateFile(filepathGitignore, m.tempalteGitignore)
 	if err != nil {
@@ -101,7 +102,8 @@ func (m *Main) Generate() error {
 	}
 
 	// format file go
-	slog.Info("└── Formatting directory", "project", _baseproject.ProjectName)
+	// slog.Info("└── Formatting directory", "project", _baseproject.ProjectName)
+	fmt.Println("└── Formatting directory", _baseproject.ProjectName)
 	err = libos.FormatDirPath(_baseproject.ProjectName)
 	if err == nil {
 		return nil
@@ -138,7 +140,8 @@ func (m *Main) generate() error {
 }
 
 func (m *Main) initializeModule() error {
-	slog.Info("└── Initializing go module", "project", _baseproject.ProjectName)
+	// slog.Info("└── Initializing go module", "project", _baseproject.ProjectName)
+	fmt.Println("└── Initializing go module", _baseproject.ProjectName)
 	// Change the current working directory to the specific directory
 	err := os.Chdir(_baseproject.ProjectName)
 	if err != nil {

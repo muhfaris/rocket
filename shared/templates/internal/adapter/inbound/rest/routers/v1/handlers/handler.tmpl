@@ -2,18 +2,20 @@ package handlersv1
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"{{.PackagePath}}/internal/adapter/rest/routers/v1/response"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/response"
 )
 
-{{range .Structs}}
-	type {{.StructName}} struct {
-		{{range .Fields}}
-			{{.FieldName}} {{.FieldType}} {{.Tag}}
-		{{end}}
-	}
+{{if .HasStructs}}
+	{{- range .Structs}}
+		type {{.StructName}} struct {
+			{{- range .Fields}}
+				{{.FieldName}} {{.FieldType}} {{RawHTML .Tag}}
+			{{- end}}
+		}
+	{{- end}}
 {{end}}
 
-func {{.HandlerName}() func(c *fiber.Ctx) error {
+func {{.HandlerName}}() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		{{if .HasParams}}
 			var {{.ParamsName}} {{.ParamsStructName}}
@@ -32,7 +34,7 @@ func {{.HandlerName}() func(c *fiber.Ctx) error {
 
 		{{if .HasBody}}
 			var {{.BodyName}} {{.BodyStructName}}
-			if err := c.BodyParser(&{{.BodyName}); err != nil {
+			if err := c.BodyParser(&{{.BodyName}}); err != nil {
 				return err
 			}
 		{{end}}

@@ -16,6 +16,7 @@ type HandlerData struct {
 	HasParams   bool
 	HasQuery    bool
 	HasBody     bool
+	HasStructs  bool
 	ParamsData
 	QueryData
 	BodyData
@@ -27,7 +28,7 @@ type Struct struct {
 }
 
 type Field struct {
-	FielName  string
+	FieldName string
 	FieldType string
 	Tag       string
 }
@@ -60,7 +61,7 @@ func (h *HandlerData) parametersToField(parameter *openapi3.ParameterRef) (Field
 	)
 
 	field := Field{
-		FielName:  fieldName,
+		FieldName: fieldName,
 		FieldType: fieldTypes[0],
 		Tag:       fmt.Sprintf("`params:\"%s\"`", parameter.Value.Name),
 	}
@@ -86,13 +87,15 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 
 		for _, parameter := range operation.Parameters {
 			if parameter.Value.In == "path" {
+				if xParameterName == nil {
+					err := fmt.Errorf("x-parameters-name is should be set, operation %s", operation.OperationID)
+					slog.Error(err.Error())
+					return err
+				}
+
 				h.HasParams = true
 				h.ParamsData.ParamsName = parameter.Value.Name
-				_, h.ParamsData.ParamsStructName = libcase.Format(parameter.Value.Name)
-
-				if xParameterName == nil {
-					slog.Error("x-parameters-name is should be set", "operation", operation.OperationID)
-				}
+				h.ParamsData.ParamsStructName = structName
 
 				field, err := h.parametersToField(parameter)
 				if err != nil {
@@ -103,13 +106,13 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			}
 
 			if parameter.Value.In == "query" {
-				h.HasQuery = true
-				h.QueryData.QueryName = parameter.Value.Name
-				_, h.QueryData.QueryStructName = libcase.Format(parameter.Value.Name)
-
 				if xParameterName == nil {
 					slog.Error("x-parameters-name is should be set", "operation", operation.OperationID)
 				}
+
+				h.HasQuery = true
+				h.QueryData.QueryName = parameter.Value.Name
+				h.QueryData.QueryStructName = structName
 
 				field, err := h.parametersToField(parameter)
 				if err != nil {
@@ -121,9 +124,10 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 		}
 
 		h.Structs = append(h.Structs, s)
+		h.HasStructs = len(h.Structs) > 0
 		return nil
 
-	case "POST":
+	case "POST", "PATCH", "PUT", "DELETE":
 		if operation.RequestBody == nil {
 			return nil
 		}
@@ -136,23 +140,53 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 		for contextType, content := range requestBody.Value.Content {
 			// if properties is empty use map
 			if len(content.Schema.Value.Properties) == 0 {
-				h.HasBody = true
+				if !h.HasBody {
+					h.HasBody = true
+				}
 				h.BodyData.BodyName = "bodyRequest"
 				h.BodyData.BodyStructName = "map[string]any"
 				return nil
 			}
 
-			fmt.Println(contextType)
-			for key, property := range content.Schema.Value.Properties {
-				fmt.Println(key, property)
+			if contextType == "application/json" {
+				var (
+					xPropertiesName   = content.Schema.Value.Extensions["x-properties-name"]
+					propertiesName, _ = xPropertiesName.(string)
+					_, structName     = libcase.Format(propertiesName)
+					s                 = Struct{StructName: structName}
+				)
 
+				for key, property := range content.Schema.Value.Properties {
+					if xPropertiesName == nil {
+						err := fmt.Errorf("x-properties-name is should be set on properties, operation %s", operation.OperationID)
+						slog.Error(err.Error())
+						return err
+					}
+
+					if !h.HasBody {
+						h.HasBody = true
+						h.BodyData.BodyName = "bodyRequest"
+						h.BodyData.BodyStructName = structName
+					}
+
+					var (
+						fieldTypes   = property.Value.Type.Slice()
+						_, fieldName = libcase.Format(key)
+					)
+
+					field := Field{
+						FieldName: fieldName,
+						FieldType: fieldTypes[0],
+						Tag:       fmt.Sprintf("`json:\"%s\"`", key),
+					}
+
+					s.Fields = append(s.Fields, field)
+				}
+				h.Structs = append(h.Structs, s)
 			}
 		}
 
-		raw, _ := operation.RequestBody.MarshalJSON()
-
-		fmt.Println(string(raw))
-		h.HasBody = true
+		h.HasStructs = len(h.Structs) > 0
 		return nil
 
 	default:

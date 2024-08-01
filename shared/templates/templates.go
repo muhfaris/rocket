@@ -31,6 +31,12 @@ var (
 
 	//go:embed shared/context/context.tmpl
 	_sharedContextTemplate []byte
+
+	//go:embed internal/adapter/inbound/rest/routers/v1/handlers/handler.tmpl
+	_restHandlerTemplate []byte
+
+	//go:embed internal/adapter/inbound/rest/routers/v1/response/response.tmpl
+	_restResponseTemplate []byte
 )
 
 func GetMainTemplate() []byte {
@@ -67,4 +73,12 @@ func GetRestLatencyMiddlewareTemplate() []byte {
 
 func GetSharedContextTemplate() []byte {
 	return _sharedContextTemplate
+}
+
+func GetRestHandlerTemplate() []byte {
+	return _restHandlerTemplate
+}
+
+func GetRestResponseTemplate() []byte {
+	return _restResponseTemplate
 }

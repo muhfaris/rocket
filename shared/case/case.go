@@ -3,6 +3,7 @@ package libcase
 import (
 	"regexp"
 	"strings"
+	"unicode"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -65,4 +66,24 @@ func toPascalCase(param string) string {
 
 	// Gabungkan kembali menjadi satu string
 	return strings.Join(words, "")
+}
+
+// Function to convert a string to snake_case
+func ToSnakeCase(str string) string {
+	var sb strings.Builder
+
+	for i, r := range str {
+		if unicode.IsUpper(r) {
+			// Add an underscore before the uppercase letter if it's not the first character
+			if i != 0 {
+				sb.WriteRune('_')
+			}
+			// Convert the uppercase letter to lowercase
+			sb.WriteRune(unicode.ToLower(r))
+		} else {
+			sb.WriteRune(r)
+		}
+	}
+
+	return sb.String()
 }

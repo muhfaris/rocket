@@ -220,3 +220,28 @@ paths:
                     status_code: 400
                     error: AcceptedTnC is a required field
                     latency: 174.41µs
+    patch:
+      operationId: UpdatePartnerHandler
+      tags:
+        - Register Partner
+      parameters:
+        - name: partner_id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: "{{partner_id}}"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              x-properties-name: UpdatePartner
+              properties:
+                fullname:
+                  type: string
+                email:
+                  type: string
+      responses:
+        200:
+          description: ""
