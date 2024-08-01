@@ -131,7 +131,7 @@ func (p *Project) GenerateDirectories() error {
 	fmt.Println("└── Creating based project directories")
 
 	for _, dir := range p.Dirs {
-		_, err := os.Stat(dir)
+		_, err := os.Stat(fmt.Sprintf("%s/%s", _baseproject.ProjectName, dir))
 		if os.IsExist(err) {
 			continue
 		}

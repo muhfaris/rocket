@@ -18,13 +18,12 @@ var openapiCmd = &cobra.Command{
 
 func openapiRunE(cmd *cobra.Command, args []string) error {
 	var (
-		ctx             = context.Background()
-		loader          = &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
-		pathOpenapiSpec = "spec/openapi.yaml"
+		ctx              = context.Background()
+		loader           = &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
+		packageNameParam = viper.Get("package")
+		projectNameParam = viper.Get("project")
+		openapiFileParam = viper.Get("openapi")
 	)
-
-	packageNameParam := viper.Get("package")
-	projectNameParam := viper.Get("project")
 
 	if packageNameParam == "" || projectNameParam == "" {
 		return fmt.Errorf("package and project name must be set")
@@ -40,11 +39,20 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("project name must be string")
 	}
 
+	openapiFilePath, ok := openapiFileParam.(string)
+	if !ok {
+		return fmt.Errorf("openapi file must be string")
+	}
+
+	if openapiFilePath == "" {
+		return fmt.Errorf("openapi file must be set")
+	}
+
 	if has := utils.ContainsSpaceOrSpecialChar(projectName); has {
 		return fmt.Errorf("project name can't contain space or special character")
 	}
 
-	doc, err := loader.LoadFromFile(pathOpenapiSpec)
+	doc, err := loader.LoadFromFile(openapiFilePath)
 	if err != nil {
 		return err
 	}

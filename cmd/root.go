@@ -29,13 +29,15 @@ var rootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initconfig)
 
-	// add openapi flag package project
 	openapiCmd.Flags().StringP("package", "p", "", "package project")
 	viper.BindPFlag("package", openapiCmd.Flags().Lookup("package"))
 
-	// add openapi flag project name
 	openapiCmd.Flags().StringP("project", "n", "", "project name")
 	viper.BindPFlag("project", openapiCmd.Flags().Lookup("project"))
+
+	// add openapi flag project name
+	openapiCmd.Flags().StringP("openapi", "o", "", "path openapi file")
+	viper.BindPFlag("openapi", openapiCmd.Flags().Lookup("openapi"))
 
 	rootCmd.AddCommand(openapiCmd)
 }
