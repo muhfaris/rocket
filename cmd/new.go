@@ -12,8 +12,10 @@ import (
 )
 
 var openapiCmd = &cobra.Command{
-	Use:  "new",
-	RunE: openapiRunE,
+	Use:     "new",
+	Short:   "Create new project",
+	Example: "new --package myproject --project myproject --openapi myopenapi.yaml",
+	RunE:    openapiRunE,
 }
 
 func openapiRunE(cmd *cobra.Command, args []string) error {
