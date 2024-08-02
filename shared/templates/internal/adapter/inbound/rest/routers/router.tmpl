@@ -34,13 +34,13 @@ func Init(port int) portadapter.Rest {
 	// publicGroup := r.Group("/")
 	// publicGroup.Get("/health", handlersv1.Health())
 
-  {{range .Groups}}
-    {{.GroupName}} = r.Group("/{{.GroupPath}}")
-
-    {{range .Routes}}
-      {{.GroupName}}.{{.Method}}("{{.Path}}", handlersv1.{{.Handler}}())
-    {{end}}
-  {{end}}
+  {{- range .Groups}}
+  	{{$groupName:= .GroupName}}
+    {{$groupName}} := r.Group("{{.GroupPath}}")
+    {{- range .Routes}}
+      {{$groupName}}.{{.Method}}("{{.Path}}", handlersv1.{{.Handler}}())
+    {{- end}}
+  {{- end}}
 
 	return &Router{
 		Client: r,

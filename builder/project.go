@@ -9,6 +9,7 @@ import (
 	libcase "github.com/muhfaris/rocket/shared/case"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
+	"github.com/muhfaris/rocket/shared/utils"
 )
 
 type Project struct {
@@ -20,6 +21,7 @@ type Project struct {
 	RestMiddlewares RestMiddlewares
 	SharedLibrary   SharedLibrary
 	RestResponse    RestResponse
+	RoutesGroup     []RouterGroup
 }
 
 type RestResponse struct {
@@ -148,6 +150,12 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
+	// Generate rest handlers
+	err = p.GenerateRestHandlers()
+	if err != nil {
+		return err
+	}
+
 	// Generate rest router
 	err = p.GenerateRestRouter()
 	if err != nil {
@@ -174,12 +182,6 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate rest response
 	err = p.GenerateRestResponse()
-	if err != nil {
-		return err
-	}
-
-	// Generate rest handlers
-	err = p.GenerateRestHandlers()
 	if err != nil {
 		return err
 	}
@@ -228,7 +230,9 @@ func (p *Project) GenerateRestRouter() error {
 	routerData := map[string]any{
 		"PackagePath": _baseproject.PackagePath,
 		"AppName":     _baseproject.AppName,
+		"Groups":      p.RoutesGroup,
 	}
+
 	raw, err := libos.ExecuteTemplate(p.RestRouter.template, routerData)
 	if err != nil {
 		return err
@@ -330,7 +334,7 @@ func (p *Project) GenerateSharedLibrary() error {
 }
 
 func (p *Project) GenerateRestResponse() error {
-	fmt.Printf(" %s%s\n", lineOnProgress, p.RestResponse.dirpath)
+	fmt.Printf(" %s%s\n", lineLast, p.RestResponse.dirpath)
 	_, err := os.Stat(p.RestResponse.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
@@ -379,31 +383,47 @@ type ChildRouterGroup struct {
 
 func (p *Project) GenerateRestHandlers() error {
 	var (
-		childsRouter []ChildRouterGroup
-		handlerDir   = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
+		childsRouter   []ChildRouterGroup
+		handlerDir     = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
+		routesGroupMap = make(map[string]RouterGroup)
 	)
 
 	fmt.Printf(" %s%s\n", lineOnProgress, handlerDir)
 
 	for path, pathItem := range p.doc.Paths.Map() {
 		var (
-			groupRoute     string
-			groupRoutePath string
+			groupRoute     = "routeGroup"
+			groupRoutePath = "/"
 		)
 
 		for method, operation := range pathItem.Operations() {
 			childRouter := ChildRouterGroup{
-				Method:  method,
-				Path:    path,
-				Handler: operation.OperationID,
+				Method:  libcase.ToTitleCase(method), // method fiber
+				Path:    utils.ConvertBracesToColon(path),
+				Handler: operation.OperationID, // handler name
 			}
 
 			xRouteGroupAny := operation.Extensions["x-route-group"]
 			xRouteGroup, ok := xRouteGroupAny.(string)
-			if ok && (groupRoute == "" || groupRoutePath == "") {
+			if ok && groupRoute == "routesGroup" {
 				xRouteGroups := strings.Split(xRouteGroup, "::")
+				if len(xRouteGroups) != 2 {
+					return fmt.Errorf("invalid x-route-group format: %s at path %s", xRouteGroup, path)
+				}
+
 				groupRoute = xRouteGroups[0]
 				groupRoutePath = xRouteGroups[1]
+			}
+
+			existRoute, exist := routesGroupMap[groupRoute]
+			if !exist {
+				routesGroupMap[groupRoute] = RouterGroup{
+					GroupName: groupRoute,
+					GroupPath: groupRoutePath,
+					Routes:    []ChildRouterGroup{childRouter}}
+			} else {
+				existRoute.Routes = append(existRoute.Routes, childRouter)
+				routesGroupMap[groupRoute] = existRoute
 			}
 
 			childsRouter = append(childsRouter, childRouter)
@@ -450,5 +470,10 @@ func (p *Project) GenerateRestHandlers() error {
 		}
 	}
 
+	var routesGroup []RouterGroup
+	for _, routeGroup := range routesGroupMap {
+		routesGroup = append(routesGroup, routeGroup)
+	}
+	p.RoutesGroup = routesGroup
 	return nil
 }

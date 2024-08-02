@@ -17,7 +17,7 @@ tags:
 paths:
   /register/partners:
     post:
-      operationId: getPartner
+      operationId: GetPartners
       tags:
         - Register Partner
       summary: Register new account
@@ -121,7 +121,7 @@ paths:
                     latency: 174.41µs
   /register/partners/{partner_id}:
     get:
-      operationId: getDetailPartner
+      operationId: GetDetailPartner
       tags:
         - Register Partner
       summary: Get detail partner account

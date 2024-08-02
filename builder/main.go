@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	libos "github.com/muhfaris/rocket/shared/os"
@@ -88,10 +89,16 @@ func (m *Main) Generate() error {
 	}
 
 	// format file go
-	fmt.Println("└── Formatting directory", _baseproject.ProjectName)
-	err = libos.FormatDirPath(_baseproject.ProjectName)
-	if err == nil {
-		return nil
+	fmt.Println("└── Formatting directory", _baseproject.ProjectName, "...")
+	time.Sleep(10 * time.Millisecond)
+	err = m.GoImports(_baseproject.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	err = m.GoFmt(_baseproject.ProjectName)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -125,7 +132,7 @@ func (m *Main) generate() error {
 }
 
 func (m *Main) initializeModule() error {
-	fmt.Printf("%s%s\n", lineLast, "go module")
+	fmt.Printf("%s%s\n", lineLast, "Go module")
 	// Change the current working directory to the specific directory
 	err := os.Chdir(_baseproject.ProjectName)
 	if err != nil {
@@ -133,17 +140,23 @@ func (m *Main) initializeModule() error {
 	}
 
 	// Initialize the Go module
-	err = exec.Command("go", "mod", "init", _baseproject.PackagePath).Run()
+	cmd := exec.Command("go", "mod", "init", _baseproject.PackagePath)
+	cmd.Dir = _baseproject.ProjectName
+	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to initialize go module: %v", err)
 	}
 
-	err = exec.Command("go", "mod", "tidy").Run()
+	cmd = exec.Command("go", "mod", "tidy")
+	cmd.Dir = _baseproject.ProjectName
+	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to tidy go module: %v", err)
 	}
 
-	err = exec.Command("go", "mod", "vendor").Run()
+	cmd = exec.Command("go", "mod", "vendor")
+	cmd.Dir = _baseproject.ProjectName
+	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to vendor go module: %v", err)
 	}
@@ -181,4 +194,14 @@ func (m *Main) initGitignore() error {
 	}
 
 	return nil
+}
+
+func (m *Main) GoImports(directory string) error {
+	cmd := exec.Command("goimports", "-w", directory)
+	return cmd.Run()
+}
+
+func (m *Main) GoFmt(directory string) error {
+	cmd := exec.Command("gofmt", "-w", directory)
+	return cmd.Run()
 }

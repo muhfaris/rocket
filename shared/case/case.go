@@ -87,3 +87,12 @@ func ToSnakeCase(str string) string {
 
 	return sb.String()
 }
+
+// ToTitleCase converts a string to title case (e.g., "hello" becomes "Hello").
+func ToTitleCase(input string) string {
+	if len(input) == 0 {
+		return input
+	}
+	input = strings.ToLower(input)
+	return strings.ToUpper(string(input[0])) + strings.ToLower(input[1:])
+}
