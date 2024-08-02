@@ -70,27 +70,13 @@ func (m *Main) Generate() error {
 		return err
 	}
 
-	// create main.go
-	data := MainData{
-		PackagePath: m.PackagePath,
-		Path:        "cmd",
-	}
-
-	raw, err := libos.ExecuteTemplate(m.template, data)
-	if err != nil {
-		return err
-	}
-
-	err = libos.CreateFile(m.filepath, raw)
+	err = m.initMain()
 	if err != nil {
 		return err
 	}
 
 	// create .gitignore
-	// slog.Info("└── Creating .gitignore", "project", _baseproject.ProjectName)
-	fmt.Println("└── Creating .gitignore", _baseproject.ProjectName)
-	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
-	err = libos.CreateFile(filepathGitignore, m.tempalteGitignore)
+	err = m.initGitignore()
 	if err != nil {
 		return err
 	}
@@ -102,7 +88,6 @@ func (m *Main) Generate() error {
 	}
 
 	// format file go
-	// slog.Info("└── Formatting directory", "project", _baseproject.ProjectName)
 	fmt.Println("└── Formatting directory", _baseproject.ProjectName)
 	err = libos.FormatDirPath(_baseproject.ProjectName)
 	if err == nil {
@@ -140,8 +125,7 @@ func (m *Main) generate() error {
 }
 
 func (m *Main) initializeModule() error {
-	// slog.Info("└── Initializing go module", "project", _baseproject.ProjectName)
-	fmt.Println("└── Initializing go module", _baseproject.ProjectName)
+	fmt.Printf("%s%s\n", lineLast, "go module")
 	// Change the current working directory to the specific directory
 	err := os.Chdir(_baseproject.ProjectName)
 	if err != nil {
@@ -162,6 +146,38 @@ func (m *Main) initializeModule() error {
 	err = exec.Command("go", "mod", "vendor").Run()
 	if err != nil {
 		return fmt.Errorf("failed to vendor go module: %v", err)
+	}
+
+	return nil
+}
+
+func (m *Main) initMain() error {
+	fmt.Printf("%s%s\n", lineOnProgress, m.filename)
+	// create main.go
+	data := MainData{
+		PackagePath: m.PackagePath,
+		Path:        "cmd",
+	}
+
+	raw, err := libos.ExecuteTemplate(m.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(m.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Main) initGitignore() error {
+	fmt.Printf("%s%s\n", lineOnProgress, ".gitignore")
+	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
+	err := libos.CreateFile(filepathGitignore, m.tempalteGitignore)
+	if err != nil {
+		return err
 	}
 
 	return nil

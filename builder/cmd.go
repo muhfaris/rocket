@@ -30,8 +30,7 @@ func newCMD(appName, projectName string) *CMD {
 }
 
 func (c *CMD) Generate() error {
-	// slog.Info("└── Creating cmd")
-	fmt.Println("└── Creating cmd")
+	fmt.Printf("%s%s\n", lineOnProgress, "cmd")
 
 	data := CMDData{
 		AppName:     c.AppName,

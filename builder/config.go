@@ -27,8 +27,7 @@ func NewConfig(configName, configType, projectName string) *Config {
 }
 
 func (c *Config) Generate() error {
-	// slog.Info("└── Creating config")
-	fmt.Println("└── Creating config")
+	fmt.Printf("%s%s\n", lineOnProgress, "config")
 	_, err := os.Stat(c.dirpath)
 	if os.IsExist(err) {
 		return fmt.Errorf("directory config %s already exists", c.dirpath)

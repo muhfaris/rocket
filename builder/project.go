@@ -128,22 +128,20 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 
 func (p *Project) GenerateDirectories() error {
 	// slog.Info("└── Creating based project directories")
-	fmt.Println("└── Creating based project directories")
-
+	fmt.Printf("%s%s\n", lineLast, "Creating based project directories")
 	for _, dir := range p.Dirs {
-		_, err := os.Stat(fmt.Sprintf("%s/%s", _baseproject.ProjectName, dir))
+		dirpath := fmt.Sprintf("%s/%s", _baseproject.ProjectName, dir)
+		_, err := os.Stat(dirpath)
 		if os.IsExist(err) {
 			continue
 		}
 
-		err = os.MkdirAll(dir, os.ModePerm)
+		err = os.MkdirAll(dirpath, os.ModePerm)
 		if err != nil {
 			return fmt.Errorf("failed to create directory %s: %v", dir, err)
 		}
 	}
 
-	// slog.Info("└── Creating rest")
-	fmt.Println("└── Creating rest")
 	// Generate cmd rest
 	err := p.GenerateRest()
 	if err != nil {
@@ -190,6 +188,7 @@ func (p *Project) GenerateDirectories() error {
 }
 
 func (p *Project) GenerateRest() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.Rest.dirpathCmd)
 	_, err := os.Stat(p.Rest.dirpathCmd)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.Rest.dirpathCmd, os.ModePerm)
@@ -217,6 +216,7 @@ func (p *Project) GenerateRest() error {
 }
 
 func (p *Project) GenerateRestRouter() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.RestRouter.dirpath)
 	_, err := os.Stat(p.RestRouter.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.RestRouter.dirpath, os.ModePerm)
@@ -243,6 +243,7 @@ func (p *Project) GenerateRestRouter() error {
 }
 
 func (p *Project) GenerateRestPortAdapter() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.RespPortAdapter.dirpath)
 	_, err := os.Stat(p.RespPortAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.RespPortAdapter.dirpath, os.ModePerm)
@@ -265,6 +266,7 @@ func (p *Project) GenerateRestPortAdapter() error {
 }
 
 func (p *Project) GenerateRestMiddlewares() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.RestMiddlewares.dirpath)
 	_, err := os.Stat(p.RestMiddlewares.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.RestMiddlewares.dirpath, os.ModePerm)
@@ -293,6 +295,7 @@ func (p *Project) GenerateRestMiddlewares() error {
 }
 
 func (p *Project) GenerateSharedLibrary() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.SharedLibrary.dirpath)
 	_, err := os.Stat(p.SharedLibrary.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.SharedLibrary.dirpath, os.ModePerm)
@@ -327,6 +330,7 @@ func (p *Project) GenerateSharedLibrary() error {
 }
 
 func (p *Project) GenerateRestResponse() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.RestResponse.dirpath)
 	_, err := os.Stat(p.RestResponse.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
@@ -374,8 +378,12 @@ type ChildRouterGroup struct {
 }
 
 func (p *Project) GenerateRestHandlers() error {
-	fmt.Println("└── Creating rest handlers")
-	var childsRouter []ChildRouterGroup
+	var (
+		childsRouter []ChildRouterGroup
+		handlerDir   = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
+	)
+
+	fmt.Printf(" %s%s\n", lineOnProgress, handlerDir)
 
 	for path, pathItem := range p.doc.Paths.Map() {
 		var (
@@ -423,9 +431,8 @@ func (p *Project) GenerateRestHandlers() error {
 			}
 
 			var (
-				handlerDir = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
-				filename   = fmt.Sprintf("%s.go", libcase.ToSnakeCase(handlerData.HandlerName))
-				filepath   = fmt.Sprintf("%s/%s", handlerDir, filename)
+				filename = fmt.Sprintf("%s.go", libcase.ToSnakeCase(handlerData.HandlerName))
+				filepath = fmt.Sprintf("%s/%s", handlerDir, filename)
 			)
 
 			_, err = os.Stat(handlerDir)
