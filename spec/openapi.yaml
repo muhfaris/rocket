@@ -122,6 +122,7 @@ paths:
   /register/partners/{partner_id}:
     get:
       operationId: GetDetailPartner
+      x-route-group: partnerGroup::/api
       tags:
         - Register Partner
       summary: Get detail partner account
@@ -222,6 +223,7 @@ paths:
                     latency: 174.41µs
     patch:
       operationId: UpdatePartnerHandler
+      x-route-group: partnerGroup::/api
       tags:
         - Register Partner
       parameters:

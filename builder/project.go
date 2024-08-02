@@ -405,10 +405,10 @@ func (p *Project) GenerateRestHandlers() error {
 
 			xRouteGroupAny := operation.Extensions["x-route-group"]
 			xRouteGroup, ok := xRouteGroupAny.(string)
-			if ok && groupRoute == "routesGroup" {
+			if ok && xRouteGroup != "" {
 				xRouteGroups := strings.Split(xRouteGroup, "::")
 				if len(xRouteGroups) != 2 {
-					return fmt.Errorf("invalid x-route-group format: %s at path %s", xRouteGroup, path)
+					return fmt.Errorf("invalid x-route-group format'%s' at path %s", xRouteGroup, path)
 				}
 
 				groupRoute = xRouteGroups[0]
