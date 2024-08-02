@@ -2,7 +2,6 @@ package builder
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"time"
 
@@ -133,16 +132,10 @@ func (m *Main) generate() error {
 
 func (m *Main) initializeModule() error {
 	fmt.Printf("%s%s\n", lineLast, "Go module")
-	// Change the current working directory to the specific directory
-	err := os.Chdir(_baseproject.ProjectName)
-	if err != nil {
-		return fmt.Errorf("failed to change directory to %s: %v", _baseproject.ProjectName, err)
-	}
-
 	// Initialize the Go module
 	cmd := exec.Command("go", "mod", "init", _baseproject.PackagePath)
 	cmd.Dir = _baseproject.ProjectName
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to initialize go module: %v", err)
 	}
