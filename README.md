@@ -26,6 +26,7 @@ Table of contents
 2. [Parameters](#parameters)
 3. [OperationId](#operationid)
 4. [RequestBody](#requestbody)
+5. [Tags](#tags)
 
 ### Grouping Route
 
@@ -171,3 +172,8 @@ func UpdatePartnerHandler() func(c *fiber.Ctx) error {
 	}
 }
 ```
+
+### Tags
+
+Every route should have one or more tags. The tag will be used for filename of domain
+model.
