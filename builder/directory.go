@@ -6,8 +6,8 @@ import (
 )
 
 func initializeDirProject(projectName string) error {
-	_, err := os.Stat(projectName)
-	if os.IsExist(err) {
+	_, err := os.ReadDir(projectName)
+	if err == nil {
 		return fmt.Errorf("project %s already exists", projectName)
 	}
 

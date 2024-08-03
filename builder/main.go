@@ -49,6 +49,15 @@ func New(doc *openapi3.T, packagePath, projectName string) *Main {
 
 func (m *Main) Generate() error {
 	var err error
+	// slog.Info("Creating new project", "project", _baseproject.ProjectName)
+	fmt.Println("Creating new project", _baseproject.ProjectName)
+
+	// create project
+	err = initializeDirProject(_baseproject.ProjectName)
+	if err != nil {
+		return err
+	}
+
 	defer func() {
 		if err == nil {
 			return
@@ -60,15 +69,6 @@ func (m *Main) Generate() error {
 			return
 		}
 	}()
-
-	// slog.Info("Creating new project", "project", _baseproject.ProjectName)
-	fmt.Println("Creating new project", _baseproject.ProjectName)
-
-	// create project
-	err = initializeDirProject(_baseproject.ProjectName)
-	if err != nil {
-		return err
-	}
 
 	err = m.initMain()
 	if err != nil {

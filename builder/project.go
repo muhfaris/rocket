@@ -24,6 +24,14 @@ type Project struct {
 	RoutesGroup     []RouterGroup
 	RestPortService RestPortService
 	Domains         DomainModel
+	RegistryService RegistryService
+}
+
+type RegistryService struct {
+	dirpath  string
+	filepath string
+	template []byte
+	Services []string
 }
 
 type DomainModel struct {
@@ -121,6 +129,8 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 			"internal/core/domain",
 			"internal/core/service",
 			"internal/core/port/inbound/adapter",
+			"internal/core/port/inbound/registry",
+			"internal/core/port/inbound/service",
 			"internal/core/port/outbound",
 			"internal/core/port/outbound/datastore",
 			"shared",
@@ -174,6 +184,11 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/domain", projectName),
 			template: templates.GetDomainModel(),
 		},
+		RegistryService: RegistryService{
+			dirpath:  fmt.Sprintf("%s/internal/core/port/inbound/registry", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/inbound/registry/registry.go", projectName),
+			template: templates.GetRegistryServiceTemplate(),
+		},
 	}
 }
 
@@ -213,6 +228,11 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate rest adapter
 	err = p.GenerateRestPortAdapter()
+	if err != nil {
+		return err
+	}
+
+	err = p.GenerateRegistryService()
 	if err != nil {
 		return err
 	}
@@ -340,7 +360,12 @@ func (p *Project) GenerateRestPortService() error {
 		}
 	}
 
-	raw, err := libos.ExecuteTemplate(p.RestPortService.template, p.RestPortService.Data)
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+		"ServiceName": p.RestPortService.Data.ServiceName,
+		"Methods":     p.RestPortService.Data.Methods,
+	}
+	raw, err := libos.ExecuteTemplate(p.RestPortService.template, data)
 	if err != nil {
 		return err
 	}
@@ -467,11 +492,12 @@ type ChildRouterGroup struct {
 
 func (p *Project) GenerateRestHandlers() error {
 	var (
-		childsRouter   []ChildRouterGroup
-		handlerDir     = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
-		routesGroupMap = make(map[string]RouterGroup)
-		serviceHandler DataRestPortService
-		domainMap      = make(map[string]DataDomainModel)
+		childsRouter       []ChildRouterGroup
+		handlerDir         = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
+		routesGroupMap     = make(map[string]RouterGroup)
+		domainMap          = make(map[string]DataDomainModel)
+		serviceRegistryMap = make(map[string]bool)
+		serviceHandler     DataRestPortService
 	)
 
 	fmt.Printf(" %s%s\n", lineOnProgress, handlerDir)
@@ -550,32 +576,10 @@ func (p *Project) GenerateRestHandlers() error {
 				return err
 			}
 
-			raw, err := libos.ExecuteTemplate(templates.GetRestHandlerTemplate(), handlerData)
-			if err != nil {
-				return err
-			}
-
-			var (
-				filename = fmt.Sprintf("%s.go", libcase.ToSnakeCase(handlerData.HandlerName))
-				filepath = fmt.Sprintf("%s/%s", handlerDir, filename)
-			)
-
-			_, err = os.Stat(handlerDir)
-			if os.IsNotExist(err) {
-				err := os.MkdirAll(handlerDir, os.ModePerm)
-				if err != nil {
-					return err
-				}
-			}
-
-			err = libos.CreateFile(filepath, raw)
-			if err != nil {
-				return fmt.Errorf("error creating file %s: %w", filepath, err)
-			}
-
 			// Prepare service handler
+			svcMethodFunc := strings.ReplaceAll(operationID, "Handler", "") // Handler name, remnove Handler for service name
 			handlerService := PortServiceMethods{
-				MethodName: operationID,
+				MethodName: svcMethodFunc,
 				ReturnTypes: []PortServiceReturnType{
 					{Type: "error"},
 				},
@@ -620,6 +624,10 @@ func (p *Project) GenerateRestHandlers() error {
 			serviceHandler.Methods = append(serviceHandler.Methods, handlerService)
 			serviceHandler.ServiceName = serviceName
 
+			// handler call service
+			handlerData.HasService = true
+			handlerData.Service = handlerService
+
 			// assinging domain model
 			existDomain, exist := domainMap[domainModel.filename]
 			if exist {
@@ -628,8 +636,18 @@ func (p *Project) GenerateRestHandlers() error {
 			} else {
 				domainMap[domainModel.filename] = domainModel
 			}
-		}
-	}
+
+			// create handler file
+			err = p.createHandlerFile(handlerDir, *handlerData)
+			if err != nil {
+				return err
+			}
+
+			// add to service registry
+			serviceRegistryMap[serviceName] = true
+
+		} // end look operations
+	} // end look paths
 
 	var routesGroup []RouterGroup
 	for _, routeGroup := range routesGroupMap {
@@ -644,6 +662,12 @@ func (p *Project) GenerateRestHandlers() error {
 		domainsModel = append(domainsModel, dm)
 	}
 
+	var servicesRegistry []string
+	for k := range serviceRegistryMap {
+		servicesRegistry = append(servicesRegistry, k)
+	}
+
+	p.RegistryService.Services = servicesRegistry
 	p.Domains.Data = domainsModel
 	return nil
 }
@@ -669,6 +693,78 @@ func (p *Project) GenerateDomainModel() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// createHandlerFile is create 2 file
+// 1. handler.go
+// 2. <handler namne>.go
+func (p *Project) createHandlerFile(handlerDir string, handlerData HandlerData) error {
+	initData := map[string]any{
+		"PackagePath": handlerData.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(templates.GetRestInitHandlerTemplate(), initData)
+	if err != nil {
+		return err
+	}
+
+	initFilepath := fmt.Sprintf("%s/handler.go", handlerDir)
+	err = libos.CreateFile(initFilepath, raw)
+	if err != nil {
+		return fmt.Errorf("error creating file %s: %w", initFilepath, err)
+	}
+
+	raw, err = libos.ExecuteTemplate(templates.GetRestHandlerTemplate(), handlerData)
+	if err != nil {
+		return err
+	}
+
+	var (
+		filename = fmt.Sprintf("%s.go", libcase.ToSnakeCase(handlerData.HandlerName))
+		filepath = fmt.Sprintf("%s/%s", handlerDir, filename)
+	)
+
+	_, err = os.Stat(handlerDir)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(handlerDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = libos.CreateFile(filepath, raw)
+	if err != nil {
+		return fmt.Errorf("error creating file %s: %w", filepath, err)
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateRegistryService() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.RegistryService.dirpath)
+	_, err := os.Stat(p.RegistryService.dirpath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(p.RegistryService.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+		"Services":    p.RegistryService.Services,
+	}
+	raw, err := libos.ExecuteTemplate(p.RegistryService.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.RegistryService.filepath, raw)
+	if err != nil {
+		return err
 	}
 
 	return nil

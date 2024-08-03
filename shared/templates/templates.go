@@ -35,11 +35,17 @@ var (
 	//go:embed internal/adapter/inbound/rest/routers/v1/handlers/handler.tmpl
 	_restHandlerTemplate []byte
 
+	//go:embed internal/adapter/inbound/rest/routers/v1/handlers/init.tmpl
+	_restInitHandlerTemplate []byte
+
 	//go:embed internal/adapter/inbound/rest/routers/v1/response/response.tmpl
 	_restResponseTemplate []byte
 
 	//go:embed internal/core/port/inbound/service/service.tmpl
 	_restPortServiceTemplate []byte
+
+	//go:embed internal/core/port/inbound/registry/registry.tmpl
+	_registryServiceTemplate []byte
 
 	//go:embed internal/core/domain/domain.tmpl
 	_domainModel []byte
@@ -85,6 +91,10 @@ func GetRestHandlerTemplate() []byte {
 	return _restHandlerTemplate
 }
 
+func GetRestInitHandlerTemplate() []byte {
+	return _restInitHandlerTemplate
+}
+
 func GetRestResponseTemplate() []byte {
 	return _restResponseTemplate
 }
@@ -95,4 +105,8 @@ func GetRestPortServiceTemplate() []byte {
 
 func GetDomainModel() []byte {
 	return _domainModel
+}
+
+func GetRegistryServiceTemplate() []byte {
+	return _registryServiceTemplate
 }

@@ -15,8 +15,17 @@ import (
 	{{- end}}
 {{end}}
 
-func {{.HandlerName}}() func(c *fiber.Ctx) error {
+func(h *Handler) {{.HandlerName}}() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		{{if .HasService}}
+			/*
+				var (
+					ctx = c.UserContext()
+					svc = h.services.{{.Service.MethodName}}()
+					)
+			*/
+		{{end}}
+
 		{{if .HasParams}}
 			var {{.ParamsName}} {{.ParamsStructName}}
 			if err := c.ParamsParser(&{{.ParamsName}}); err != nil {
@@ -37,6 +46,16 @@ func {{.HandlerName}}() func(c *fiber.Ctx) error {
 			if err := c.BodyParser(&{{.BodyName}}); err != nil {
 				return err
 			}
+		{{end}}
+
+		{{if .HasService}}
+			/*
+				// Transform request into domain model
+				result, err:=  portservice.{{.Service.MethodName}}(ctx {{range .Service.Params}}, {{.Name}} {{end}}) 
+				if err != nil {
+					return err
+				}
+			*/
 		{{end}}
 
 		return response.Success(c, "I'm Alive!")

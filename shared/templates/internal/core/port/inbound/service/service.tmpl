@@ -1,5 +1,9 @@
 package portservice
 
+import (
+"{{.PackagePath}}/internal/core/domain"
+)
+
 type {{.ServiceName}} interface {
   {{- range .Methods}}
     {{.MethodName}}(ctx context.Context {{range .Params}}, {{.Name}} {{.Type}} {{end}}) ({{range .ReturnTypes}}{{.Type}} {{end}})
