@@ -17,7 +17,7 @@ tags:
 paths:
   /register/partners:
     post:
-      operationId: GetPartners
+      operationId: GetPartners::PartnerSvc
       tags:
         - Register Partner
       summary: Register new account
@@ -121,7 +121,7 @@ paths:
                     latency: 174.41µs
   /register/partners/{partner_id}:
     get:
-      operationId: GetDetailPartner
+      operationId: GetDetailPartner::PartnerSvc
       x-route-group: partnerGroup::/api
       tags:
         - Register Partner
@@ -222,7 +222,7 @@ paths:
                     error: AcceptedTnC is a required field
                     latency: 174.41µs
     patch:
-      operationId: UpdatePartnerHandler
+      operationId: UpdatePartnerHandler::PartnerSvc
       x-route-group: partnerGroup::/api
       tags:
         - Register Partner

@@ -88,13 +88,15 @@ func (m *Main) Generate() error {
 	}
 
 	// format file go
-	fmt.Println("└── Formatting directory", _baseproject.ProjectName, "...")
+	fmt.Println("└── Formatting directory")
 	time.Sleep(10 * time.Millisecond)
+	fmt.Printf(" %s goimports\n", lineOnProgress)
 	err = m.GoImports(_baseproject.ProjectName)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf(" %s gofmt\n", lineLast)
 	err = m.GoFmt(_baseproject.ProjectName)
 	if err != nil {
 		return err

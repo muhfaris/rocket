@@ -37,6 +37,12 @@ var (
 
 	//go:embed internal/adapter/inbound/rest/routers/v1/response/response.tmpl
 	_restResponseTemplate []byte
+
+	//go:embed internal/core/port/inbound/service/service.tmpl
+	_restPortServiceTemplate []byte
+
+	//go:embed internal/core/domain/domain.tmpl
+	_domainModel []byte
 )
 
 func GetMainTemplate() []byte {
@@ -81,4 +87,12 @@ func GetRestHandlerTemplate() []byte {
 
 func GetRestResponseTemplate() []byte {
 	return _restResponseTemplate
+}
+
+func GetRestPortServiceTemplate() []byte {
+	return _restPortServiceTemplate
+}
+
+func GetDomainModel() []byte {
+	return _domainModel
 }

@@ -1,0 +1,10 @@
+package domain
+
+{{- range .Structs}}
+ type {{.StructName}} struct {
+ 	{{- range .Fields}}
+ 		{{.FieldName}} {{.FieldType}} {{RawHTML .Tag}}
+ 	{{- end}}
+ }
+{{- end}}
+
