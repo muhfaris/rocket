@@ -21,7 +21,7 @@ func(h *Handler) {{.HandlerName}}() func(c *fiber.Ctx) error {
 			/*
 				var (
 					ctx = c.UserContext()
-					svc = h.services.{{.Service.MethodName}}()
+					svc = h.services.{{.ServiceName}}()
 					)
 			*/
 		{{end}}
@@ -51,7 +51,7 @@ func(h *Handler) {{.HandlerName}}() func(c *fiber.Ctx) error {
 		{{if .HasService}}
 			/*
 				// Transform request into domain model
-				result, err:=  portservice.{{.Service.MethodName}}(ctx {{range .Service.Params}}, {{.Name}} {{end}}) 
+				result, err:=  svc.{{.Service.MethodName}}(ctx {{range .Service.Params}}, {{.Name}} {{end}}) 
 				if err != nil {
 					return err
 				}

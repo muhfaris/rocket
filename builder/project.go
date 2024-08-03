@@ -627,6 +627,7 @@ func (p *Project) GenerateRestHandlers() error {
 			// handler call service
 			handlerData.HasService = true
 			handlerData.Service = handlerService
+			handlerData.ServiceName = serviceName
 
 			// assinging domain model
 			existDomain, exist := domainMap[domainModel.filename]

@@ -19,6 +19,7 @@ type HandlerData struct {
 	HasStructs  bool
 	HasService  bool
 	Service     PortServiceMethods
+	ServiceName string
 	ParamsData
 	QueryData
 	BodyData
