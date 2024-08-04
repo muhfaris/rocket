@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 var _baseproject BaseProject
 
 type Main struct {
+	content           []byte
 	doc               *openapi3.T
 	template          []byte
 	tempalteGitignore []byte
@@ -27,7 +29,7 @@ type MainData struct {
 	Path        string
 }
 
-func New(doc *openapi3.T, packagePath, projectName string) *Main {
+func New(content []byte, doc *openapi3.T, packagePath, projectName string) *Main {
 	_baseproject = BaseProject{
 		AppName:     projectName,
 		ProjectName: projectName,
@@ -35,6 +37,7 @@ func New(doc *openapi3.T, packagePath, projectName string) *Main {
 	}
 
 	return &Main{
+		content:           content,
 		doc:               doc,
 		template:          templates.GetMainTemplate(),
 		tempalteGitignore: templates.GetGitIgnore(),
@@ -54,6 +57,11 @@ func (m *Main) Generate() error {
 
 	// create project
 	err = initializeDirProject(_baseproject.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	err = m.specStore()
 	if err != nil {
 		return err
 	}
@@ -199,4 +207,19 @@ func (m *Main) GoImports(directory string) error {
 func (m *Main) GoFmt(directory string) error {
 	cmd := exec.Command("gofmt", "-w", directory)
 	return cmd.Run()
+}
+
+func (m *Main) specStore() error {
+	dirpath := fmt.Sprintf("%s/spec", _baseproject.ProjectName)
+	err := os.MkdirAll(dirpath, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("error creating dir %s: %w", dirpath, err)
+	}
+
+	filepath := fmt.Sprintf("%s/openapi.yaml", dirpath)
+	err = libos.CreateFile(filepath, m.content)
+	if err != nil {
+		return fmt.Errorf("error creating file %s: %w", m.filename, err)
+	}
+	return nil
 }

@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/muhfaris/rocket/builder"
+	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,8 +19,6 @@ var openapiCmd = &cobra.Command{
 
 func openapiRunE(cmd *cobra.Command, args []string) error {
 	var (
-		ctx              = context.Background()
-		loader           = &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 		packageNameParam = viper.Get("package")
 		projectNameParam = viper.Get("project")
 		openapiFileParam = viper.Get("openapi")
@@ -54,11 +51,11 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("project name can't contain space or special character")
 	}
 
-	doc, err := loader.LoadFromFile(openapiFilePath)
+	content, doc, err := libos.LoadOpenapi(openapiFilePath)
 	if err != nil {
 		return err
 	}
 
-	m := builder.New(doc, packageName, projectName)
+	m := builder.New(content, doc, packageName, projectName)
 	return m.Generate()
 }
