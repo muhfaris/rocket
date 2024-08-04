@@ -86,6 +86,7 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			parameterName, _ = xParameterName.(string)
 			_, structName    = libcase.Format(parameterName)
 			s                = Struct{StructName: structName}
+			hasStruct        bool
 		)
 
 		for _, parameter := range operation.Parameters {
@@ -106,6 +107,7 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 				}
 
 				s.Fields = append(s.Fields, field)
+				hasStruct = true
 			}
 
 			if parameter.Value.In == "query" {
@@ -123,11 +125,15 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 				}
 
 				s.Fields = append(s.Fields, field)
+				hasStruct = true
 			}
 		}
 
-		h.Structs = append(h.Structs, s)
-		h.HasStructs = len(h.Structs) > 0
+		if hasStruct {
+			h.Structs = append(h.Structs, s)
+			h.HasStructs = hasStruct
+		}
+
 		return nil
 
 	case "POST", "PATCH", "PUT", "DELETE":
