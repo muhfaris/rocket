@@ -635,11 +635,12 @@ func (p *Project) GenerateRestHandlers() error {
 				existDomain.Structs = append(existDomain.Structs, handlerData.Structs...)
 				domainMap[domainModel.filename] = existDomain
 			} else {
+				domainModel.Structs = handlerData.Structs
 				domainMap[domainModel.filename] = domainModel
 			}
 
 			// create handler file
-			err = p.createHandlerFile(handlerDir, *handlerData)
+			err = p.createHandlerFile(handlerDir, handlerData)
 			if err != nil {
 				return err
 			}
@@ -702,7 +703,7 @@ func (p *Project) GenerateDomainModel() error {
 // createHandlerFile is create 2 file
 // 1. handler.go
 // 2. <handler namne>.go
-func (p *Project) createHandlerFile(handlerDir string, handlerData HandlerData) error {
+func (p *Project) createHandlerFile(handlerDir string, handlerData *HandlerData) error {
 	initData := map[string]any{
 		"PackagePath": handlerData.PackagePath,
 	}
