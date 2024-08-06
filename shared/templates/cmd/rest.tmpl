@@ -9,12 +9,7 @@ import (
 var restCmd = &cobra.Command{
   Use:     "{{.Entrypoint}}",
 	Short:   "Run rest server",
-	PreRunE: loadRestConfig,
 	RunE:    restRunE,
-}
-
-func loadRestConfig(cmd *cobra.Command, args []string) error {
-	return config.LoadConfig()
 }
 
 func restRunE(cmd *cobra.Command, args []string) error {

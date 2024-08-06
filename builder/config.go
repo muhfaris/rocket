@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	template   []byte
+	configFile []byte
 	dirpath    string
 	filepath   string
 	ConfigName string
@@ -19,6 +20,7 @@ type Config struct {
 func NewConfig(configName, configType, projectName string) *Config {
 	return &Config{
 		template:   templates.GetConfigTemplate(),
+		configFile: templates.GetConfigFileTemplate(),
 		dirpath:    fmt.Sprintf("%s/config", projectName),
 		filepath:   fmt.Sprintf("%s/config/%s.go", projectName, configName),
 		ConfigName: configName,
@@ -46,6 +48,11 @@ func (c *Config) Generate() error {
 	}
 
 	err = libos.CreateFile(c.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(fmt.Sprintf("%s/config.yaml", c.dirpath), c.configFile)
 	if err != nil {
 		return err
 	}

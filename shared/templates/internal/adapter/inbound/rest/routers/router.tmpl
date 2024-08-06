@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
+	"{{.PackagePath}}/config"
 	handlersv1 "{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/handlers"
 	"{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/middlewares"
 	portadapter "{{.PackagePath}}/internal/core/port/inbound/adapter"
@@ -22,8 +23,9 @@ type Router struct {
 
 func Init(port int) portadapter.Rest {
 	r := fiber.New(fiber.Config{
-	AppName:                  "{{.AppName}}",
-		EnableSplittingOnParsers: true,
+		AppName:                  "{{.AppName}}",
+		EnableSplittingOnParsers: config.App.Fiber.EnableSplittingOnParsers,
+		EnablePrintRoutes:        config.App.Fiber.EnablePrintRoutes,
 		<!-- ErrorHandler:             middlewares.Error(), -->
 	})
 
@@ -40,7 +42,7 @@ func Init(port int) portadapter.Rest {
   	{{$groupName:= .GroupName}}
     {{$groupName}} := r.Group("{{.GroupPath}}")
     {{- range .Routes}}
-      {{$groupName}}.{{.Method}}("{{.Path}}", h.{{.Handler}}())
+      {{$groupName}}.{{.Method}}("{{.Path}}", h.{{.Handler}}()).Name("{{.Handler}}")
     {{- end}}
   {{- end}}
 

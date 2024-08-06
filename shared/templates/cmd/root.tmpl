@@ -10,17 +10,16 @@ import (
 
 var rootCmd = &cobra.Command{
 Use:     "{{.AppName}}",
-	PreRunE: preRunE,
 	RunE:    mainRunE,
 }
 
-func preRunE(cmd *cobra.Command, args []string) error {
+func readConfig() {
 	err := config.LoadConfig()
 	if err != nil {
-		return err
+		return
 	}
 
-	return nil
+	return
 }
 
 func mainRunE(cmd *cobra.Command, args []string) error {
@@ -29,6 +28,7 @@ func mainRunE(cmd *cobra.Command, args []string) error {
 
 // Execute is root function
 func Execute() {
+	cobra.OnInitialize(readConfig)
 	rootCmd.AddCommand(restCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

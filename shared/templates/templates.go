@@ -15,7 +15,10 @@ var (
 	_cmdTemplate []byte
 
 	//go:embed config/config.tmpl
-	_tomlTemplate []byte
+	_configTemplate []byte
+
+	//go:embed config/config.yaml
+	_configFileTemplate []byte
 
 	//go:embed cmd/rest.tmpl
 	_restTemplate []byte
@@ -64,7 +67,7 @@ func GetCMDTemplate() []byte {
 }
 
 func GetConfigTemplate() []byte {
-	return _tomlTemplate
+	return _configTemplate
 }
 
 func GetRestTemplate() []byte {
@@ -109,4 +112,8 @@ func GetDomainModel() []byte {
 
 func GetRegistryServiceTemplate() []byte {
 	return _registryServiceTemplate
+}
+
+func GetConfigFileTemplate() []byte {
+	return _configFileTemplate
 }
