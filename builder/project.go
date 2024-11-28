@@ -25,6 +25,20 @@ type Project struct {
 	RestPortService RestPortService
 	Domains         DomainModel
 	RegistryService RegistryService
+	Service         Service
+}
+
+type Service struct {
+	dirpath  string
+	filepath string
+	template []byte
+	Services []ServiceParams
+}
+
+type ServiceParams struct {
+	PackagePath string
+	ServiceName string
+	Methods     []PortServiceMethods
 }
 
 type RegistryService struct {
@@ -189,6 +203,11 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 			filepath: fmt.Sprintf("%s/internal/core/port/inbound/registry/registry.go", projectName),
 			template: templates.GetRegistryServiceTemplate(),
 		},
+		Service: Service{
+			dirpath:  fmt.Sprintf("%s/internal/core/service", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/service/%%s.go", projectName),
+			template: templates.GetServiceTemplate(),
+		},
 	}
 }
 
@@ -249,6 +268,12 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
+	// Generate service
+	err = p.GenerateRestService()
+	if err != nil {
+		return err
+	}
+
 	// Generate rest middlewares
 	err = p.GenerateRestMiddlewares()
 	if err != nil {
@@ -274,7 +299,7 @@ func (p *Project) GenerateRest() error {
 	fmt.Printf(" %s%s\n", lineOnProgress, p.Rest.dirpathCmd)
 	_, err := os.Stat(p.Rest.dirpathCmd)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.Rest.dirpathCmd, os.ModePerm)
+		err = os.MkdirAll(p.Rest.dirpathCmd, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -302,7 +327,7 @@ func (p *Project) GenerateRestRouter() error {
 	fmt.Printf(" %s%s\n", lineOnProgress, p.RestRouter.dirpath)
 	_, err := os.Stat(p.RestRouter.dirpath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.RestRouter.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.RestRouter.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -331,7 +356,7 @@ func (p *Project) GenerateRestPortAdapter() error {
 	fmt.Printf(" %s%s\n", lineOnProgress, p.RestPortAdapter.dirpath)
 	_, err := os.Stat(p.RestPortAdapter.dirpath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.RestPortAdapter.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.RestPortAdapter.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -354,7 +379,7 @@ func (p *Project) GenerateRestPortService() error {
 	fmt.Printf(" %s%s\n", lineOnProgress, p.RestPortService.dirpath)
 	_, err := os.Stat(p.RestPortService.dirpath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.RestPortService.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.RestPortService.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -421,7 +446,7 @@ func (p *Project) GenerateSharedLibrary() error {
 		path := fmt.Sprintf("%s/%s", p.SharedLibrary.dirpath, data.name)
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
-			err := os.MkdirAll(path, os.ModePerm)
+			err = os.MkdirAll(path, os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -446,7 +471,7 @@ func (p *Project) GenerateRestResponse() error {
 	fmt.Printf(" %s%s\n", lineLast, p.RestResponse.dirpath)
 	_, err := os.Stat(p.RestResponse.dirpath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -454,7 +479,7 @@ func (p *Project) GenerateRestResponse() error {
 
 	_, err = os.Stat(p.RestResponse.dirpath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -498,6 +523,7 @@ func (p *Project) GenerateRestHandlers() error {
 		domainMap          = make(map[string]DataDomainModel)
 		serviceRegistryMap = make(map[string]bool)
 		serviceHandler     DataRestPortService
+		servicesMap        = make(map[string]ServiceParams)
 	)
 
 	fmt.Printf(" %s%s\n", lineOnProgress, handlerDir)
@@ -551,7 +577,8 @@ func (p *Project) GenerateRestHandlers() error {
 				routesGroupMap[groupRoute] = RouterGroup{
 					GroupName: groupRoute,
 					GroupPath: groupRoutePath,
-					Routes:    []ChildRouterGroup{childRouter}}
+					Routes:    []ChildRouterGroup{childRouter},
+				}
 			} else {
 				existRoute.Routes = append(existRoute.Routes, childRouter)
 				routesGroupMap[groupRoute] = existRoute
@@ -586,7 +613,7 @@ func (p *Project) GenerateRestHandlers() error {
 			}
 
 			if handlerData.HasQuery {
-				var structType = fmt.Sprintf("domain.%s", handlerData.QueryData.QueryStructName)
+				structType := fmt.Sprintf("domain.%s", handlerData.QueryData.QueryStructName)
 				if strings.Contains(handlerData.QueryData.QueryStructName, "map") {
 					structType = handlerData.QueryData.QueryStructName
 				}
@@ -597,7 +624,7 @@ func (p *Project) GenerateRestHandlers() error {
 			}
 
 			if handlerData.HasParams {
-				var structType = fmt.Sprintf("domain.%s", handlerData.ParamsData.ParamsStructName)
+				structType := fmt.Sprintf("domain.%s", handlerData.ParamsData.ParamsStructName)
 				if strings.Contains(handlerData.ParamsData.ParamsStructName, "map") {
 					structType = handlerData.ParamsData.ParamsStructName
 				}
@@ -609,7 +636,7 @@ func (p *Project) GenerateRestHandlers() error {
 			}
 
 			if handlerData.HasBody {
-				var structType = fmt.Sprintf("domain.%s", handlerData.BodyData.BodyStructName)
+				structType := fmt.Sprintf("domain.%s", handlerData.BodyData.BodyStructName)
 				if strings.Contains(handlerData.BodyData.BodyStructName, "map") {
 					structType = handlerData.BodyData.BodyStructName
 				}
@@ -623,6 +650,19 @@ func (p *Project) GenerateRestHandlers() error {
 			// service handler
 			serviceHandler.Methods = append(serviceHandler.Methods, handlerService)
 			serviceHandler.ServiceName = serviceName
+
+			// service service
+			if _, exist = servicesMap[serviceName]; !exist {
+				servicesMap[serviceName] = ServiceParams{
+					PackagePath: _baseproject.PackagePath,
+					ServiceName: serviceName,
+					Methods:     serviceHandler.Methods,
+				}
+			} else {
+				service := servicesMap[serviceName]
+				service.Methods = append(service.Methods, handlerService)
+				servicesMap[serviceName] = service
+			}
 
 			// handler call service
 			handlerData.HasService = true
@@ -671,6 +711,13 @@ func (p *Project) GenerateRestHandlers() error {
 
 	p.RegistryService.Services = servicesRegistry
 	p.Domains.Data = domainsModel
+
+	var services []ServiceParams
+	for _, service := range servicesMap {
+		services = append(services, service)
+	}
+
+	p.Service.Services = services
 	return nil
 }
 
@@ -731,7 +778,7 @@ func (p *Project) createHandlerFile(handlerDir string, handlerData *HandlerData)
 
 	_, err = os.Stat(handlerDir)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(handlerDir, os.ModePerm)
+		err = os.MkdirAll(handlerDir, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -749,7 +796,7 @@ func (p *Project) GenerateRegistryService() error {
 	fmt.Printf(" %s%s\n", lineOnProgress, p.RegistryService.dirpath)
 	_, err := os.Stat(p.RegistryService.dirpath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(p.RegistryService.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.RegistryService.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -767,6 +814,40 @@ func (p *Project) GenerateRegistryService() error {
 	err = libos.CreateFile(p.RegistryService.filepath, raw)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateRestService() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.Service.dirpath)
+
+	_, err := os.Stat(p.Service.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.Service.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, service := range p.Service.Services {
+		data := map[string]any{
+			"PackagePath": _baseproject.PackagePath,
+			"ServiceName": service.ServiceName,
+			"Methods":     p.RestPortService.Data.Methods,
+		}
+
+		raw, err := libos.ExecuteTemplate(p.Service.template, data)
+		if err != nil {
+			return err
+		}
+
+		svcLowercase := strings.ToLower(service.ServiceName)
+		filePath := fmt.Sprintf(p.Service.filepath, svcLowercase)
+		err = libos.CreateFile(filePath, raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

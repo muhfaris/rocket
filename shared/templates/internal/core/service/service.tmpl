@@ -1,0 +1,19 @@
+package service
+
+import (
+  "{{.PackagePath}}/internal/core/domain"
+  portservice "{{.PackagePath}}/internal/core/port/inbound/service"
+)
+
+type {{.ServiceName}} struct { }
+
+func New{{.ServiceName}}() portservice.{{.ServiceName}} {
+  return &{{.ServiceName}}{}
+}
+
+{{- range .Methods}}
+  func (s *{{$.ServiceName}}) {{.MethodName}}(ctx context.Context {{range .Params}}, {{.Name}} {{.Type}} {{end}}) ({{range .ReturnTypes}}{{.Type}} {{end}}){
+    return nil
+  }
+
+{{- end}}

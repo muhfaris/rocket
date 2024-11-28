@@ -13,7 +13,7 @@ import (
 var openapiCmd = &cobra.Command{
 	Use:     "new",
 	Short:   "Create new project",
-	Example: "new --package myproject --project myproject --openapi myopenapi.yaml",
+	Example: "new --package github.com/muhfaris/myproject --project myproject --openapi myopenapi.yaml",
 	RunE:    openapiRunE,
 }
 

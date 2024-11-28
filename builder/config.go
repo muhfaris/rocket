@@ -36,7 +36,7 @@ func (c *Config) Generate() error {
 	}
 
 	if os.IsNotExist(err) {
-		err := os.Mkdir(c.dirpath, os.ModePerm)
+		err = os.Mkdir(c.dirpath, os.ModePerm)
 		if err != nil {
 			return fmt.Errorf("error creating directory config %s: %w", c.dirpath, err)
 		}

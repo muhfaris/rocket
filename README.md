@@ -18,6 +18,13 @@ Flags:
   -q, --queue string      queue fro new project (e.g rabbitmq) (default "none")
 ```
 
+Example to generate new project with specific :
+
+- name: rocket1
+- package: github.com/muhfaris/rocket1
+
+and then run `go run main.go new -o <path>/<openapi>.yaml -n rocket1 -p github.com/muhfaris/rocket1`
+
 ## Openapi
 
 Table of contents

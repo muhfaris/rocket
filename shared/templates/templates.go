@@ -47,6 +47,9 @@ var (
 	//go:embed internal/core/port/inbound/service/service.tmpl
 	_restPortServiceTemplate []byte
 
+	//go:embed internal/core/service/service.tmpl
+	_restServiceTemplate []byte
+
 	//go:embed internal/core/port/inbound/registry/registry.tmpl
 	_registryServiceTemplate []byte
 
@@ -116,4 +119,8 @@ func GetRegistryServiceTemplate() []byte {
 
 func GetConfigFileTemplate() []byte {
 	return _configFileTemplate
+}
+
+func GetServiceTemplate() []byte {
+	return _restServiceTemplate
 }
