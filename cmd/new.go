@@ -5,6 +5,7 @@ import (
 
 	"github.com/muhfaris/rocket/builder"
 	libos "github.com/muhfaris/rocket/shared/os"
+	"github.com/muhfaris/rocket/shared/templates"
 	"github.com/muhfaris/rocket/shared/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,6 +47,9 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 	if openapiFilePath == "" {
 		return fmt.Errorf("openapi file must be set")
 	}
+
+	archLayout := viper.Get("arch").(string)
+	templates.SetArchLayout(archLayout)
 
 	if has := utils.ContainsSpaceOrSpecialChar(projectName); has {
 		return fmt.Errorf("project name can't contain space or special character")

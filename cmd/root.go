@@ -39,6 +39,10 @@ func init() {
 	openapiCmd.Flags().StringP("openapi", "o", "", "path openapi file")
 	viper.BindPFlag("openapi", openapiCmd.Flags().Lookup("openapi"))
 
+	// architecture e.g unclebob
+	openapiCmd.Flags().StringP("arch", "a", "unclebob", "architecture layout")
+	viper.BindPFlag("arch", openapiCmd.Flags().Lookup("arch"))
+
 	rootCmd.AddCommand(openapiCmd)
 }
 

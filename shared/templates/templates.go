@@ -1,126 +1,163 @@
 package templates
 
-import (
-	_ "embed"
-)
+import "github.com/muhfaris/rocket/shared/templates/unclebob"
 
-var (
-	//go:embed main.tmpl
-	_mainTemplate []byte
+var archType string
 
-	//go:embed gitignore.tmpl
-	_gitIgnoreTemplate []byte
-
-	//go:embed cmd/root.tmpl
-	_cmdTemplate []byte
-
-	//go:embed config/config.tmpl
-	_configTemplate []byte
-
-	//go:embed config/config.yaml
-	_configFileTemplate []byte
-
-	//go:embed cmd/rest.tmpl
-	_restTemplate []byte
-
-	//go:embed internal/adapter/inbound/rest/routers/router.tmpl
-	_restRouterTemplate []byte
-
-	//go:embed internal/core/port/inbound/adapter/rest.tmpl
-	_restAdapterTemplate []byte
-
-	//go:embed internal/adapter/inbound/rest/routers/v1/middlewares/latency.tmpl
-	_restLatencyMiddlewareTemplate []byte
-
-	//go:embed shared/context/context.tmpl
-	_sharedContextTemplate []byte
-
-	//go:embed internal/adapter/inbound/rest/routers/v1/handlers/handler.tmpl
-	_restHandlerTemplate []byte
-
-	//go:embed internal/adapter/inbound/rest/routers/v1/handlers/init.tmpl
-	_restInitHandlerTemplate []byte
-
-	//go:embed internal/adapter/inbound/rest/routers/v1/response/response.tmpl
-	_restResponseTemplate []byte
-
-	//go:embed internal/core/port/inbound/service/service.tmpl
-	_restPortServiceTemplate []byte
-
-	//go:embed internal/core/service/service.tmpl
-	_restServiceTemplate []byte
-
-	//go:embed internal/core/port/inbound/registry/registry.tmpl
-	_registryServiceTemplate []byte
-
-	//go:embed internal/core/domain/domain.tmpl
-	_domainModel []byte
-)
+func SetArchLayout(templateType string) {
+	archType = templateType
+}
 
 func GetMainTemplate() []byte {
-	return _mainTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.MainTemplate
+
+	default:
+		return nil
+	}
 }
 
 func GetGitIgnore() []byte {
-	return _gitIgnoreTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.GitIgnoreTemplate
+	default:
+		return nil
+	}
 }
 
 func GetCMDTemplate() []byte {
-	return _cmdTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.CMDTemplate
+	default:
+		return nil
+	}
 }
 
 func GetConfigTemplate() []byte {
-	return _configTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.ConfigTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestTemplate() []byte {
-	return _restTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestRouterTemplate() []byte {
-	return _restRouterTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestRouterTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestAdapterTemplate() []byte {
-	return _restAdapterTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestAdapterTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestLatencyMiddlewareTemplate() []byte {
-	return _restLatencyMiddlewareTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestLatencyMiddlewareTemplate
+	default:
+		return nil
+	}
 }
 
 func GetSharedContextTemplate() []byte {
-	return _sharedContextTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.SharedContextTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestHandlerTemplate() []byte {
-	return _restHandlerTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestHandlerTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestInitHandlerTemplate() []byte {
-	return _restInitHandlerTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestInitHandlerTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestResponseTemplate() []byte {
-	return _restResponseTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestResponseTemplate
+	default:
+		return nil
+	}
 }
 
 func GetRestPortServiceTemplate() []byte {
-	return _restPortServiceTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestPortServiceTemplate
+	default:
+		return nil
+	}
 }
 
 func GetDomainModel() []byte {
-	return _domainModel
+	switch archType {
+	case "unclebob":
+		return unclebob.DomainModel
+	default:
+		return nil
+	}
 }
 
 func GetRegistryServiceTemplate() []byte {
-	return _registryServiceTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RegistryServiceTemplate
+	default:
+		return nil
+	}
 }
 
 func GetConfigFileTemplate() []byte {
-	return _configFileTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.ConfigFileTemplate
+	default:
+		return nil
+	}
 }
 
 func GetServiceTemplate() []byte {
-	return _restServiceTemplate
+	switch archType {
+	case "unclebob":
+		return unclebob.RestServiceTemplate
+	default:
+		return nil
+	}
 }
