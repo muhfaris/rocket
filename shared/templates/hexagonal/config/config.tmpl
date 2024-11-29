@@ -22,6 +22,9 @@ type Config struct {
 	{{if .IsCache}}
 	Cache Cache       `mapstructure:"cache"`
 	{{end}}
+	{{if .IsDatabase}}
+	Datatore Datastore   `mapstructure:"datatore"`
+	{{end}}
 }
 
 type Debugging struct {
@@ -46,6 +49,24 @@ type RedisConfig struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
+}
+{{end}}
+{{end}}
+
+{{if .IsDatabase}}
+type Datastore struct {
+{{if .IsPSQL}}
+	PSQL PSQLConfig `mapstructure:"psql"`
+{{end}}
+}
+
+{{if .IsPSQL}}
+type PSQLConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       string `mapstructure:"db"`
 }
 {{end}}
 {{end}}

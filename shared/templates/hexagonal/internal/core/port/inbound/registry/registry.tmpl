@@ -15,4 +15,7 @@ type Repository interface {
 {{if .IsCache}}
 	CacheRepository() repository.CacheRepository
 {{end}}
+{{if .IsPSQL}}
+  PSQLRepository() repository.PSQLRepository
+{{end}}
 }

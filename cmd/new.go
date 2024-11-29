@@ -24,6 +24,7 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 		projectNameParam = viper.Get("project")
 		openapiFileParam = viper.Get("openapi")
 		cacheParam       = viper.GetString("cache")
+		dbParam          = viper.GetString("db")
 	)
 
 	if packageNameParam == "" || projectNameParam == "" {
@@ -61,6 +62,6 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	m := builder.New(content, doc, packageName, projectName, cacheParam)
+	m := builder.New(content, doc, packageName, projectName, cacheParam, dbParam)
 	return m.Generate()
 }

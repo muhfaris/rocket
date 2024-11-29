@@ -17,7 +17,7 @@ var (
 	//go:embed config/config.tmpl
 	ConfigTemplate []byte
 
-	//go:embed config/config.yaml
+	//go:embed config/config-file.tmpl
 	ConfigFileTemplate []byte
 
 	//go:embed cmd/rest.tmpl
@@ -67,4 +67,13 @@ var (
 
 	//go:embed internal/core/port/outbound/repository/cache.tmpl
 	RedisRepositoryTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/psql/psql.tmpl
+	PSQLAdapterTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/psql/command.tmpl
+	PSQLCommandTemplate []byte
+
+	//go:embed internal/core/port/outbound/repository/psql.tmpl
+	PSQLRepositoryTemplate []byte
 )

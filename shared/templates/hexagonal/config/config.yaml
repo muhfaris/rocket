@@ -1,8 +1,0 @@
-app:
-  name: rocket-app
-  port: 7000
-  debug:
-    config: false
-  fiber:
-    enable_print_routes: true
-    enable_splitting_on_parsers: true

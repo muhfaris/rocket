@@ -21,6 +21,7 @@ type Main struct {
 	filename          string
 	filepath          string
 	cacheType         string
+	dbType            string
 	BasePackage
 }
 
@@ -30,7 +31,7 @@ type MainData struct {
 	Path        string
 }
 
-func New(content []byte, doc *openapi3.T, packagePath, projectName, cacheParam string) *Main {
+func New(content []byte, doc *openapi3.T, packagePath, projectName, cacheParam, dbParam string) *Main {
 	_baseproject = BaseProject{
 		AppName:     projectName,
 		ProjectName: projectName,
@@ -45,6 +46,7 @@ func New(content []byte, doc *openapi3.T, packagePath, projectName, cacheParam s
 		filename:          "main.go",
 		filepath:          fmt.Sprintf("%s/main.go", projectName),
 		cacheType:         cacheParam,
+		dbType:            dbParam,
 		BasePackage: BasePackage{
 			PackageName: "main",
 			PackagePath: packagePath,
@@ -122,7 +124,7 @@ func (m *Main) generate() error {
 		return err
 	}
 
-	cfg := NewConfig("config", "yaml", _baseproject.ProjectName, m.cacheType)
+	cfg := NewConfig("config", "yaml", _baseproject.ProjectName, m.cacheType, m.dbType)
 	err = cfg.Generate()
 	if err != nil {
 		return err

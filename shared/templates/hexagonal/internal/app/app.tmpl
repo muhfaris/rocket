@@ -9,6 +9,7 @@ import (
 
 type App struct {
 	cacheRepository repository.CacheRepository
+	psqlRepository  repository.PSQLRepository
 }
 
 func InitializeRepository() portregistry.Repository {
@@ -23,9 +24,22 @@ func InitializeRepository() portregistry.Repository {
 			},
 		),
 	{{end}}
+	{{if .IsPSQL}}
+		psqlRepository: psqladapter.New(psqladapter.PSQLConfig{
+			Host:     config.App.Datatore.PSQL.Host,
+			Port:     config.App.Datatore.PSQL.Port,
+			Username: config.App.Datatore.PSQL.Username,
+			Password: config.App.Datatore.PSQL.Password,
+			DB:       config.App.Datatore.PSQL.DB,
+		}),
+	{{end}}
 	}
 }
 
 func (a *App) CacheRepository() repository.CacheRepository {
 	return a.cacheRepository
+}
+
+func (a *App) PSQLRepository() repository.PSQLRepository {
+	return a.psqlRepository
 }

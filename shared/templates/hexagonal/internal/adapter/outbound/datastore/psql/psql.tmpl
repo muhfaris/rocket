@@ -1,0 +1,51 @@
+package psqladapter
+
+import (
+	"context"
+	"fmt"
+	"sync"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+var (
+	psqlPool *pgxpool.Pool
+	once     sync.Once
+)
+
+type PSQLConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	DB       string
+}
+
+func New(opt PSQLConfig) repository.PSQLRepository {
+	var (
+		ctx = context.Background()
+		dsn = fmt.Sprintf("postgres://%s:%s@%s:%d/%s", opt.Username, opt.Password, opt.Host, opt.Port, opt.DB)
+	)
+
+	if psqlPool != nil {
+		return psqlPool
+	}
+
+	once.Do(func() {
+		pool, err := pgxpool.Connect(ctx, dsn)
+		if err != nil {
+			panic(err)
+		}
+
+		if err := pool.Ping(context.Background()); err != nil {
+			panic(err)
+		}
+
+		psqlPool = pool
+	})
+
+	return &Client{
+		conn: psqlPool,
+	}
+}

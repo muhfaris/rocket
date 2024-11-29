@@ -14,7 +14,8 @@ import (
 
 type Project struct {
 	doc                 *openapi3.T
-	cacheParam          string
+	cacheType           string
+	dbType              string
 	App                 App
 	Dirs                []string
 	Rest                Rest
@@ -31,6 +32,9 @@ type Project struct {
 	RedisAdapter        RedisAdapter
 	RedisCommandAdapter RedisCommandAdapter
 	CacheRepository     CacheRepository
+	PSQLAdapter         PSQLAdapter
+	PSQLCommandAdapter  PSQLCommandAdapter
+	PSQLRepository      PSQLRepository
 }
 
 type App struct {
@@ -161,10 +165,28 @@ type CacheRepository struct {
 	filepath string
 }
 
+type PSQLAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type PSQLCommandAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type PSQLRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
 func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 	return &Project{
-		doc:        doc,
-		cacheParam: cacheParam,
+		doc:       doc,
+		cacheType: cacheParam,
 		App: App{
 			dirpath:  fmt.Sprintf("%s/internal/app", projectName),
 			filepath: fmt.Sprintf("%s/internal/app/app.go", projectName),
@@ -257,6 +279,21 @@ func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 			template: templates.GetRedisRepositoryTemplate(),
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/cache.go", projectName),
+		},
+		PSQLAdapter: PSQLAdapter{
+			template: templates.GetPSQLAdapterTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/psql", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/psql/psql.go", projectName),
+		},
+		PSQLCommandAdapter: PSQLCommandAdapter{
+			template: templates.GetPSQLCommandTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/psql", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/psql/command.go", projectName),
+		},
+		PSQLRepository: PSQLRepository{
+			template: templates.GetPSQLRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/psql.go", projectName),
 		},
 	}
 }
@@ -356,6 +393,18 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate cache repository
 	err = p.GenerateCacheRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate psql adapter
+	err = p.GeneratePSQLAdapter()
+	if err != nil {
+		return err
+	}
+
+	// Generate psql repository
+	err = p.GeneratePSQLRepository()
 	if err != nil {
 		return err
 	}
@@ -873,8 +922,8 @@ func (p *Project) GenerateRegistryService() error {
 	data := map[string]any{
 		"PackagePath": _baseproject.PackagePath,
 		"Services":    p.RegistryService.Services,
-		"IsCache":     p.cacheParam != "",
-		"IsRedis":     p.cacheParam == "redis",
+		"IsCache":     p.cacheType != "",
+		"IsRedis":     p.cacheType == "redis",
 	}
 	raw, err := libos.ExecuteTemplate(p.RegistryService.template, data)
 	if err != nil {
@@ -935,7 +984,8 @@ func (p *Project) GenerateApp() error {
 
 	data := map[string]any{
 		"PackagePath": _baseproject.PackagePath,
-		"IsRedis":     p.cacheParam == "redis",
+		"IsRedis":     p.cacheType == "redis",
+		"IsPSQL":      p.dbType == "postgres",
 	}
 
 	raw, err := libos.ExecuteTemplate(p.App.template, data)
@@ -1007,6 +1057,69 @@ func (p *Project) GenerateCacheRepository() error {
 	}
 
 	err = libos.CreateFile(p.CacheRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GeneratePSQLAdapter() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.PSQLAdapter.dirpath)
+	_, err := os.Stat(p.PSQLAdapter.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.PSQLAdapter.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	rawPSQLAdapter, err := libos.ExecuteTemplate(p.PSQLAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.PSQLAdapter.filepath, rawPSQLAdapter)
+	if err != nil {
+		return err
+	}
+
+	rawPSQLCommand, err := libos.ExecuteTemplate(p.PSQLCommandAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.PSQLCommandAdapter.filepath, rawPSQLCommand)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Project) GeneratePSQLRepository() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.PSQLRepository.dirpath)
+	_, err := os.Stat(p.PSQLRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.PSQLRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.PSQLRepository.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.PSQLRepository.filepath, raw)
 	if err != nil {
 		return err
 	}

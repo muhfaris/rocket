@@ -202,3 +202,30 @@ func GetRedisRepositoryTemplate() []byte {
 		return nil
 	}
 }
+
+func GetPSQLAdapterTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.PSQLAdapterTemplate
+	default:
+		return nil
+	}
+}
+
+func GetPSQLCommandTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.PSQLCommandTemplate
+	default:
+		return nil
+	}
+}
+
+func GetPSQLRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.PSQLRepositoryTemplate
+	default:
+		return nil
+	}
+}

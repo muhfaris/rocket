@@ -9,26 +9,30 @@ import (
 )
 
 type Config struct {
-	template   []byte
-	configFile []byte
-	dirpath    string
-	filepath   string
-	ConfigName string
-	ConfigType string
-	IsCache    bool
-	IsRedis    bool
+	template       []byte
+	configTemplate []byte
+	dirpath        string
+	filepath       string
+	ConfigName     string
+	ConfigType     string
+	IsCache        bool
+	IsRedis        bool
+	IsDatabase     bool
+	IsPSQL         bool
 }
 
-func NewConfig(configName, configType, projectName, cacheParam string) *Config {
+func NewConfig(configName, configType, projectName, cacheType, dbType string) *Config {
 	return &Config{
-		template:   templates.GetConfigTemplate(),
-		configFile: templates.GetConfigFileTemplate(),
-		dirpath:    fmt.Sprintf("%s/config", projectName),
-		filepath:   fmt.Sprintf("%s/config/%s.go", projectName, configName),
-		ConfigName: configName,
-		ConfigType: configType,
-		IsCache:    cacheParam != "",
-		IsRedis:    cacheParam == "redis",
+		template:       templates.GetConfigTemplate(),
+		configTemplate: templates.GetConfigFileTemplate(),
+		dirpath:        fmt.Sprintf("%s/config", projectName),
+		filepath:       fmt.Sprintf("%s/config/%s.go", projectName, configName),
+		ConfigName:     configName,
+		ConfigType:     configType,
+		IsCache:        cacheType != "",
+		IsRedis:        cacheType == "redis",
+		IsDatabase:     dbType != "",
+		IsPSQL:         dbType == "postgres",
 	}
 }
 
@@ -56,7 +60,17 @@ func (c *Config) Generate() error {
 		return err
 	}
 
-	err = libos.CreateFile(fmt.Sprintf("%s/config.yaml", c.dirpath), c.configFile)
+	data := map[string]any{
+		"IsRedis": c.IsRedis,
+		"IsPSQL":  c.IsPSQL,
+	}
+
+	rawConfig, err := libos.ExecuteTemplate(c.configTemplate, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(fmt.Sprintf("%s/config.yaml", c.dirpath), rawConfig)
 	if err != nil {
 		return err
 	}
