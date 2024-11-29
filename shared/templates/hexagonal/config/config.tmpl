@@ -18,6 +18,10 @@ type Config struct {
 	Port  int    `mapstructure:"port"`
 	Fiber FiberConfig `mapstructure:"fiber"`
 	Debug Debugging   `mapstructure:"debug"`
+
+	{{if .IsCache}}
+	Cache Cache       `mapstructure:"cache"`
+	{{end}}
 }
 
 type Debugging struct {
@@ -28,6 +32,23 @@ type FiberConfig struct {
 	EnablePrintRoutes        bool `mapstructure:"enable_print_routes"`
 	EnableSplittingOnParsers bool `mapstructure:"enable_splitting_on_parsers"`
 }
+
+{{if .IsCache}}
+type Cache struct {
+	{{if .IsRedis}}
+		Redis RedisConfig `mapstructure:"redis"`
+	{{end}}
+}
+
+{{if .IsRedis}}
+type RedisConfig struct {
+	Addr     string `mapstructure:"addr"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+}
+{{end}}
+{{end}}
 
 func LoadConfig() error {
   viper.SetConfigName("{{.ConfigName}}")

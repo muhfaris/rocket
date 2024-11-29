@@ -20,6 +20,7 @@ type Main struct {
 	tempalteGitignore []byte
 	filename          string
 	filepath          string
+	cacheType         string
 	BasePackage
 }
 
@@ -29,7 +30,7 @@ type MainData struct {
 	Path        string
 }
 
-func New(content []byte, doc *openapi3.T, packagePath, projectName string) *Main {
+func New(content []byte, doc *openapi3.T, packagePath, projectName, cacheParam string) *Main {
 	_baseproject = BaseProject{
 		AppName:     projectName,
 		ProjectName: projectName,
@@ -43,6 +44,7 @@ func New(content []byte, doc *openapi3.T, packagePath, projectName string) *Main
 		tempalteGitignore: templates.GetGitIgnore(),
 		filename:          "main.go",
 		filepath:          fmt.Sprintf("%s/main.go", projectName),
+		cacheType:         cacheParam,
 		BasePackage: BasePackage{
 			PackageName: "main",
 			PackagePath: packagePath,
@@ -120,13 +122,13 @@ func (m *Main) generate() error {
 		return err
 	}
 
-	cfg := NewConfig("config", "yaml", _baseproject.ProjectName)
+	cfg := NewConfig("config", "yaml", _baseproject.ProjectName, m.cacheType)
 	err = cfg.Generate()
 	if err != nil {
 		return err
 	}
 
-	project := NewProject(m.doc, _baseproject.ProjectName)
+	project := NewProject(m.doc, _baseproject.ProjectName, m.cacheType)
 	err = project.GenerateDirectories()
 	if err != nil {
 		return err

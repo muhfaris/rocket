@@ -1,0 +1,31 @@
+package app
+
+import (
+	"{{.PackagePath}}/config"
+	redisadapter "{{.PackagePath}}/internal/adapter/outbound/cache/redis"
+	portregistry "{{.PackagePath}}/internal/core/port/inbound/registry"
+	"{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+type App struct {
+	cacheRepository repository.CacheRepository
+}
+
+func InitializeRepository() portregistry.Repository {
+	return &App{
+	{{if .IsRedis}}
+		cacheRepository: redisadapter.New(
+			redisadapter.RedisOptions{
+				Addr:     config.App.Cache.Redis.Addr,
+				Username: config.App.Cache.Redis.Username,
+				Password: config.App.Cache.Redis.Password,
+				DB:       config.App.Cache.Redis.DB,
+			},
+		),
+	{{end}}
+	}
+}
+
+func (a *App) CacheRepository() repository.CacheRepository {
+	return a.cacheRepository
+}

@@ -1,9 +1,0 @@
-package portregistry
-
-import portservice "{{.PackagePath}}/internal/core/port/inbound/service"
-
-type Service interface {
-  {{- range .Services}}
-    {{.}}() portservice.{{.}}
-  {{- end}}
-}

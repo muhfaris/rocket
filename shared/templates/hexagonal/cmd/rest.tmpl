@@ -3,13 +3,20 @@ package cmd
 import (
 "{{.PackagePath}}/config"
 "{{.PackagePath}}/internal/adapter/inbound/rest/routers"
+"{{.PackagePath}}/internal/app"
 	"github.com/spf13/cobra"
 )
 
 var restCmd = &cobra.Command{
   Use:     "{{.Entrypoint}}",
 	Short:   "Run rest server",
+	PreRunE: restPreRunE,
 	RunE:    restRunE,
+}
+
+func restPreRunE(cmd *cobra.Command, args []string) error {
+	app.InitializeRepository()
+	return nil
 }
 
 func restRunE(cmd *cobra.Command, args []string) error {

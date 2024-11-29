@@ -1,0 +1,18 @@
+package portregistry
+
+import (
+  portservice "{{.PackagePath}}/internal/core/port/inbound/service"
+  "{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+type Service interface {
+  {{- range .Services}}
+    {{.}}() portservice.{{.}}
+  {{- end}}
+}
+
+type Repository interface {
+{{if .IsCache}}
+	CacheRepository() repository.CacheRepository
+{{end}}
+}

@@ -15,9 +15,11 @@ type Config struct {
 	filepath   string
 	ConfigName string
 	ConfigType string
+	IsCache    bool
+	IsRedis    bool
 }
 
-func NewConfig(configName, configType, projectName string) *Config {
+func NewConfig(configName, configType, projectName, cacheParam string) *Config {
 	return &Config{
 		template:   templates.GetConfigTemplate(),
 		configFile: templates.GetConfigFileTemplate(),
@@ -25,6 +27,8 @@ func NewConfig(configName, configType, projectName string) *Config {
 		filepath:   fmt.Sprintf("%s/config/%s.go", projectName, configName),
 		ConfigName: configName,
 		ConfigType: configType,
+		IsCache:    cacheParam != "",
+		IsRedis:    cacheParam == "redis",
 	}
 }
 

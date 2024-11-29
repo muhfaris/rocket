@@ -6,7 +6,6 @@ import (
 	"go/format"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -75,12 +74,12 @@ func (cmd *CMDBuilder) Generate() error {
 
 	// project name
 	if _, err := os.Stat(cmd.Project); os.IsNotExist(err) {
-		os.Mkdir(cmd.Project, 0755)
+		os.Mkdir(cmd.Project, 0o755)
 	}
 
 	pathCMD := fmt.Sprintf("%s/%s", cmd.Project, cmd.Pkg)
 	if _, err := os.Stat(pathCMD); os.IsNotExist(err) {
-		os.Mkdir(pathCMD, 0755)
+		os.Mkdir(pathCMD, 0o755)
 	}
 
 	data := []generateTemplate{
@@ -140,7 +139,7 @@ func generateFiles(params []generateTemplate) error {
 			return fmt.Errorf("error format source data cmd, %v", err)
 		}
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s.go", param.pathMain, param.name), p, 0644)
+		err = os.WriteFile(fmt.Sprintf("%s/%s.go", param.pathMain, param.name), p, 0o644)
 		if err != nil {
 			return fmt.Errorf("error re-write cmd file, %v", err)
 		}

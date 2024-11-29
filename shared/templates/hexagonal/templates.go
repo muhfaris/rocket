@@ -1,4 +1,4 @@
-package unclebob
+package hexagonal
 
 import (
 	_ "embed"
@@ -55,4 +55,16 @@ var (
 
 	//go:embed internal/core/domain/domain.tmpl
 	DomainModel []byte
+
+	//go:embed internal/app/app.tmpl
+	AppTemplate []byte
+
+	//go:embed internal/adapter/outbound/cache/redis/redis.tmpl
+	RedisAdapterTemplate []byte
+
+	//go:embed internal/adapter/outbound/cache/redis/command.tmpl
+	RedisCommandTemplate []byte
+
+	//go:embed internal/core/port/outbound/repository/cache.tmpl
+	RedisRepositoryTemplate []byte
 )

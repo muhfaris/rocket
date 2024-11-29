@@ -13,19 +13,30 @@ import (
 )
 
 type Project struct {
-	doc             *openapi3.T
-	Dirs            []string
-	Rest            Rest
-	RestRouter      RestRouter
-	RestPortAdapter RestPortAdapter
-	RestMiddlewares RestMiddlewares
-	SharedLibrary   SharedLibrary
-	RestResponse    RestResponse
-	RoutesGroup     []RouterGroup
-	RestPortService RestPortService
-	Domains         DomainModel
-	RegistryService RegistryService
-	Service         Service
+	doc                 *openapi3.T
+	cacheParam          string
+	App                 App
+	Dirs                []string
+	Rest                Rest
+	RestRouter          RestRouter
+	RestPortAdapter     RestPortAdapter
+	RestMiddlewares     RestMiddlewares
+	SharedLibrary       SharedLibrary
+	RestResponse        RestResponse
+	RoutesGroup         []RouterGroup
+	RestPortService     RestPortService
+	Domains             DomainModel
+	RegistryService     RegistryService
+	Service             Service
+	RedisAdapter        RedisAdapter
+	RedisCommandAdapter RedisCommandAdapter
+	CacheRepository     CacheRepository
+}
+
+type App struct {
+	dirpath  string
+	filepath string
+	template []byte
 }
 
 type Service struct {
@@ -132,9 +143,33 @@ type DataSharedLibrary struct {
 	template []byte
 }
 
-func NewProject(doc *openapi3.T, projectName string) *Project {
+type RedisAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type RedisCommandAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type CacheRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 	return &Project{
-		doc: doc,
+		doc:        doc,
+		cacheParam: cacheParam,
+		App: App{
+			dirpath:  fmt.Sprintf("%s/internal/app", projectName),
+			filepath: fmt.Sprintf("%s/internal/app/app.go", projectName),
+			template: templates.GetAppTemplate(),
+		},
 		Dirs: []string{
 			"internal/adapter/inbound/rest/routers",
 			"internal/adapter/inbound/rest/routers/v1/handlers",
@@ -207,6 +242,21 @@ func NewProject(doc *openapi3.T, projectName string) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/service", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/service/%%s.go", projectName),
 			template: templates.GetServiceTemplate(),
+		},
+		RedisAdapter: RedisAdapter{
+			template: templates.GetRedisAdapterTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/cache/redis", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/cache/redis/redis.go", projectName),
+		},
+		RedisCommandAdapter: RedisCommandAdapter{
+			template: templates.GetRedisCommandTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/cache/redis", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/cache/redis/command.go", projectName),
+		},
+		CacheRepository: CacheRepository{
+			template: templates.GetRedisRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/cache.go", projectName),
 		},
 	}
 }
@@ -288,6 +338,24 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate rest response
 	err = p.GenerateRestResponse()
+	if err != nil {
+		return err
+	}
+
+	// Generate App
+	err = p.GenerateApp()
+	if err != nil {
+		return err
+	}
+
+	// Generate redis adapter
+	err = p.GenerateRedisAdapter()
+	if err != nil {
+		return err
+	}
+
+	// Generate cache repository
+	err = p.GenerateCacheRepository()
 	if err != nil {
 		return err
 	}
@@ -805,6 +873,8 @@ func (p *Project) GenerateRegistryService() error {
 	data := map[string]any{
 		"PackagePath": _baseproject.PackagePath,
 		"Services":    p.RegistryService.Services,
+		"IsCache":     p.cacheParam != "",
+		"IsRedis":     p.cacheParam == "redis",
 	}
 	raw, err := libos.ExecuteTemplate(p.RegistryService.template, data)
 	if err != nil {
@@ -848,6 +918,97 @@ func (p *Project) GenerateRestService() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateApp() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.App.dirpath)
+	_, err := os.Stat(p.App.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.App.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+		"IsRedis":     p.cacheParam == "redis",
+	}
+
+	raw, err := libos.ExecuteTemplate(p.App.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.App.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateRedisAdapter() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.RedisAdapter.dirpath)
+	_, err := os.Stat(p.RedisAdapter.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.RedisAdapter.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	rawRedisAdapter, err := libos.ExecuteTemplate(p.RedisAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.RedisAdapter.filepath, rawRedisAdapter)
+	if err != nil {
+		return err
+	}
+
+	rawRedisCommand, err := libos.ExecuteTemplate(p.RedisCommandAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.RedisCommandAdapter.filepath, rawRedisCommand)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Project) GenerateCacheRepository() error {
+	fmt.Printf(" %s%s\n", lineOnProgress, p.CacheRepository.dirpath)
+	_, err := os.Stat(p.CacheRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.CacheRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.CacheRepository.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.CacheRepository.filepath, raw)
+	if err != nil {
+		return err
 	}
 
 	return nil

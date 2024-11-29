@@ -29,19 +29,23 @@ var rootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initconfig)
 
-	openapiCmd.Flags().StringP("package", "p", "", "package project")
+	openapiCmd.Flags().StringP("package", "p", "", "package project e.g github.com/muhfaris/myproject")
 	viper.BindPFlag("package", openapiCmd.Flags().Lookup("package"))
 
-	openapiCmd.Flags().StringP("project", "n", "", "project name")
+	openapiCmd.Flags().StringP("project", "n", "", "project name e.g myproject")
 	viper.BindPFlag("project", openapiCmd.Flags().Lookup("project"))
 
 	// add openapi flag project name
 	openapiCmd.Flags().StringP("openapi", "o", "", "path openapi file")
 	viper.BindPFlag("openapi", openapiCmd.Flags().Lookup("openapi"))
 
-	// architecture e.g unclebob
-	openapiCmd.Flags().StringP("arch", "a", "unclebob", "architecture layout")
+	// architecture e.g hexagonal
+	openapiCmd.Flags().StringP("arch", "a", "hexagonal", "architecture layout e.g hexagonal, cleancode")
 	viper.BindPFlag("arch", openapiCmd.Flags().Lookup("arch"))
+
+	// redis
+	openapiCmd.Flags().StringP("cache", "c", "", "cache connection string e.g redis, memory")
+	viper.BindPFlag("cache", openapiCmd.Flags().Lookup("cache"))
 
 	rootCmd.AddCommand(openapiCmd)
 }

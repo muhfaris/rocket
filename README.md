@@ -5,17 +5,22 @@ is generator golang project based ddd.
 ## overview
 
 ```
-> go run main.go --help
+muhfaris@ichiro ~/D/p/s/s/g/m/rocket (master)> go run main.go  new --help
+Create new project
+
 Usage:
-  rocket [flags]
+  rocket new [flags]
+
+Examples:
+new --package github.com/muhfaris/myproject --project myproject --openapi myopenapi.yaml
 
 Flags:
-  -e, --cache string      cache for new project (e.g redis) (default "none")
-  -c, --config string     config for new project (e.g toml) (default "toml")
-  -d, --database string   database for new project (e.g mysql,  postgresql) (default "postgresql")
-  -h, --help              help for rocket
-  -n, --new string        name for new project (default "rocker-sample")
-  -q, --queue string      queue fro new project (e.g rabbitmq) (default "none")
+  -a, --arch string      architecture layout (default "hexagonal")
+  -c, --cache string     cache connection string
+  -h, --help             help for new
+  -o, --openapi string   path openapi file
+  -p, --package string   package project
+  -n, --project string   project name
 ```
 
 Example to generate new project with specific :
