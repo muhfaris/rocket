@@ -15,12 +15,12 @@ Examples:
 new --package github.com/muhfaris/myproject --project myproject --openapi myopenapi.yaml
 
 Flags:
-  -a, --arch string      architecture layout (default "hexagonal")
-  -c, --cache string     cache connection string
+  -a, --arch string      architecture layout e.g hexagonal, cleancode (default "hexagonal")
+  -c, --cache string     cache connection string e.g redis, memory
   -h, --help             help for new
   -o, --openapi string   path openapi file
-  -p, --package string   package project
-  -n, --project string   project name
+  -p, --package string   package project e.g github.com/muhfaris/myproject
+  -n, --project string   project name e.g myproject
 ```
 
 Example to generate new project with specific :
