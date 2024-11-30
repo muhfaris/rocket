@@ -44,6 +44,7 @@ type Project struct {
 	MongoAdapter         MongoAdapter
 	MongoCommandAdapter  MongoCommandAdapter
 	MongoRepository      MongoRepository
+	Dockerfile           Dockerfile
 }
 
 type App struct {
@@ -246,6 +247,11 @@ type MongoRepository struct {
 	filepath string
 }
 
+type Dockerfile struct {
+	filepath string
+	template []byte
+}
+
 func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 	return &Project{
 		doc:       doc,
@@ -403,6 +409,10 @@ func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/mongo.go", projectName),
 		},
+		Dockerfile: Dockerfile{
+			template: templates.GetDockerfileTemplate(),
+			filepath: fmt.Sprintf("%s/Dockerfile", projectName),
+		},
 	}
 }
 
@@ -549,6 +559,12 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate mongo repository
 	err = p.GenerateMongoRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate dockerfile
+	err = p.GenerateDockerfile()
 	if err != nil {
 		return err
 	}
@@ -1488,6 +1504,20 @@ func (p *Project) GenerateMongoRepository() error {
 	}
 
 	err = libos.CreateFile(p.MongoRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateDockerfile() error {
+	raw, err := libos.ExecuteTemplate(p.Dockerfile.template, nil)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.Dockerfile.filepath, raw)
 	if err != nil {
 		return err
 	}

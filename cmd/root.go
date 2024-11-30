@@ -51,6 +51,9 @@ func init() {
 	openapiCmd.Flags().StringP("db", "d", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
 	viper.BindPFlag("db", openapiCmd.Flags().Lookup("db"))
 
+	// docker
+	openapiCmd.Flags().BoolP("docker", "", false, "generate dockerfile")
+	viper.BindPFlag("docker", openapiCmd.Flags().Lookup("docker"))
 	rootCmd.AddCommand(openapiCmd)
 }
 

@@ -103,4 +103,7 @@ var (
 
 	//go:embed internal/core/port/outbound/repository/mongodb.tmpl
 	MongoDBRepositoryTemplate []byte
+
+	//go:embed Dockerfile.tmpl
+	DockerfileTemplate []byte
 )

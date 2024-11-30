@@ -310,3 +310,12 @@ func GetMongoDBCommandTemplate() []byte {
 		return nil
 	}
 }
+
+func GetDockerfileTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.DockerfileTemplate
+	default:
+		return nil
+	}
+}
