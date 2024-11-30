@@ -1,10 +1,11 @@
-name: Tag-Based Release
+name: Release with Goreleaser
 on:
   push:
     tags:
       - "v*" # Trigger only on tags starting with "v"
 jobs:
-  build-and-release:
+  release:
+    name: Goreleaser Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -13,36 +14,11 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.22"
-      - name: Cache Go modules
-        uses: actions/cache@v3
+      - name: Install Goreleaser
+        uses: goreleaser/goreleaser-action@v4
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Install dependencies
-        run: go mod tidy
-      - name: Build the project
-        run: |
-          mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -o dist/rocket main.go
-        env:
-          CGO_ENABLED: 0
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
+          version: latest
+      - name: Run Goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: ${{ contains(github.ref_name, '-rc') }}
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/rocket
-          asset_name: rocket-${{ github.ref_name }}
-          asset_content_type: application/octet-stream
+        run: goreleaser release --rm-dist
