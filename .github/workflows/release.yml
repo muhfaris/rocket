@@ -19,6 +19,8 @@ jobs:
         with:
           version: latest
       - name: Run Goreleaser
+        uses: goreleaser/goreleaser-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: goreleaser release --rm-dist
+        with:
+          args: release --rm-dist
