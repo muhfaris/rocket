@@ -2,7 +2,7 @@ name: Tag-Based Release
 on:
   push:
     tags:
-      - "v*" # Trigger on tags starting with "v"
+      - "v*" # Trigger only on tags starting with "v"
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
@@ -28,11 +28,6 @@ jobs:
           GOOS=linux GOARCH=amd64 go build -o dist/rocket main.go
         env:
           CGO_ENABLED: 0
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: rocket-${{ github.ref_name }}
-          path: dist/rocket
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
@@ -42,4 +37,12 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') }}
-          files: dist/rocket
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/rocket
+          asset_name: rocket-${{ github.ref_name }}
+          asset_content_type: application/octet-stream
