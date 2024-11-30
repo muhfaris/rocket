@@ -58,9 +58,12 @@ func init() {
 }
 
 func initconfig() {
-	viper.SetConfigType("toml")
+	viper.SetConfigType("yaml")
 	// search config in home directory with name "config" (without extension)
-	viper.AddConfigPath("./configs")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("./config")
+	viper.AddConfigPath("$HOME/.config")
+
 	viper.SetConfigName("config")
 
 	// read env
