@@ -25,3 +25,4 @@ release:
     prerelease: "{{ .Tag | contains `-rc` }}"
 changelog:
   use: true
+version: 2
