@@ -14,12 +14,34 @@ app:
       password:
       db: 0
   {{- end}}
-  {{- if .IsPSQL}}
-  databases:
+  datatore:
+    {{- if .IsPSQL}}
     psql:
       host: localhost
       port: 5432
-      user: postgres
+      username: postgres
       password: postgres
-      database: postgres
-  {{- end}}
+      db: postgres
+    {{- end}}
+    {{- if .IsSQLite}}
+    sqlite:
+      path: ./app.db
+      mode: rwc
+    {{- end}}
+    {{- if .IsMySQL}}
+    mysql:
+      host: localhost
+      port: 3306
+      username: mysql
+      password: mysql
+      db: myapp
+    {{- end}}
+    {{- if .IsMongoDB}}
+    mongodb:
+      host: localhost
+      port: 27017
+      username: mongo
+      password: mongo
+      db: myapp
+      auth_db: admin
+    {{- end}}

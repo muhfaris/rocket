@@ -229,3 +229,84 @@ func GetPSQLRepositoryTemplate() []byte {
 		return nil
 	}
 }
+
+func GetMySQLAdapterTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MySQLAdapterTemplate
+	default:
+		return nil
+	}
+}
+
+func GetMySQLCommandTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MySQLCommandTemplate
+	default:
+		return nil
+	}
+}
+
+func GetMySQLRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MySQLRepositoryTemplate
+	default:
+		return nil
+	}
+}
+
+func GetSQLiteAdapterTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.SQLiteAdapterTemplate
+	default:
+		return nil
+	}
+}
+
+func GetSQLiteCommandTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.SQLiteCommandTemplate
+	default:
+		return nil
+	}
+}
+
+func GetSQLiteRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.SQLiteRepositoryTemplate
+	default:
+		return nil
+	}
+}
+
+func GetMongoDBRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MongoDBRepositoryTemplate
+	default:
+		return nil
+	}
+}
+
+func GetMongoDBAdapterTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MongoDBAdapterTemplate
+	default:
+		return nil
+	}
+}
+
+func GetMongoDBCommandTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MongoDBCommandTemplate
+	default:
+		return nil
+	}
+}

@@ -5,3 +5,30 @@ import "github.com/jackc/pgx/v4/pgxpool"
 type Client struct {
 	conn *pgxpool.Pool
 }
+
+func (c *Client) WithTx(ctx context.Context, funcs ...func(tx pgx.Tx) (interface{}, error)) (interface{}, error) {
+	conn, err := c.conn.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer conn.Release()
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fn := range funcs {
+		_, err := fn(tx)
+		if err != nil {
+			err = tx.Rollback(ctx)
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}

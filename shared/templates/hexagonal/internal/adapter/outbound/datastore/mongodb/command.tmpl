@@ -1,0 +1,48 @@
+package mongoadapter
+
+import  "go.mongodb.org/mongo-driver/mongo"
+
+type Client struct {
+	client *mongo.Client
+	dbName string
+}
+
+// WithTx implements a transaction method for MongoDB
+func (c *Client) WithTx(ctx context.Context, funcs ...func(session mongo.Session) (interface{}, error)) (interface{}, error) {
+	// Start a session
+	session, err := c.client.StartSession()
+	if err != nil {
+		return nil, fmt.Errorf("failed to start MongoDB session: %v", err)
+	}
+	defer session.EndSession(ctx)
+
+	// Start transaction
+	err = session.StartTransaction()
+	if err != nil {
+		return nil, fmt.Errorf("failed to start transaction: %v", err)
+	}
+
+	// Execute transaction functions
+	for _, fn := range funcs {
+		_, err := fn(session)
+		if err != nil {
+			// Abort transaction on error
+			if abortErr := session.AbortTransaction(ctx); abortErr != nil {
+				return nil, fmt.Errorf("transaction error: %v, abort error: %v", err, abortErr)
+			}
+			return nil, err
+		}
+	}
+
+	// Commit transaction
+	if err := session.CommitTransaction(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	return nil, nil
+}
+
+// GetDatabase returns the MongoDB database
+func (c *Client) GetDatabase() *mongo.Database {
+	return c.client.Database(c.dbName)
+}

@@ -19,6 +19,9 @@ type Config struct {
 	IsRedis        bool
 	IsDatabase     bool
 	IsPSQL         bool
+	IsMySQL        bool
+	IsSQLite       bool
+	IsMongoDB      bool
 }
 
 func NewConfig(configName, configType, projectName, cacheType, dbType string) *Config {
@@ -33,6 +36,9 @@ func NewConfig(configName, configType, projectName, cacheType, dbType string) *C
 		IsRedis:        cacheType == "redis",
 		IsDatabase:     dbType != "",
 		IsPSQL:         dbType == "postgres",
+		IsMySQL:        dbType == "mysql",
+		IsSQLite:       dbType == "sqlite",
+		IsMongoDB:      dbType == "mongodb",
 	}
 }
 
@@ -61,8 +67,12 @@ func (c *Config) Generate() error {
 	}
 
 	data := map[string]any{
-		"IsRedis": c.IsRedis,
-		"IsPSQL":  c.IsPSQL,
+		"IsRedis":    c.IsRedis,
+		"IsPSQL":     c.IsPSQL,
+		"IsDatabase": c.IsDatabase,
+		"IsMySQL":    c.IsMySQL,
+		"IsSQLite":   c.IsSQLite,
+		"IsMongoDB":  c.IsMongoDB,
 	}
 
 	rawConfig, err := libos.ExecuteTemplate(c.configTemplate, data)

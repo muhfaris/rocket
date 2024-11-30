@@ -48,7 +48,7 @@ func init() {
 	viper.BindPFlag("cache", openapiCmd.Flags().Lookup("cache"))
 
 	// db
-	openapiCmd.Flags().StringP("db", "d", "", "db connection string e.g mysql, postgres, mongodb")
+	openapiCmd.Flags().StringP("db", "d", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
 	viper.BindPFlag("db", openapiCmd.Flags().Lookup("db"))
 
 	rootCmd.AddCommand(openapiCmd)

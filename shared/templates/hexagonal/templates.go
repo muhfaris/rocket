@@ -76,4 +76,31 @@ var (
 
 	//go:embed internal/core/port/outbound/repository/psql.tmpl
 	PSQLRepositoryTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/mysql/mysql.tmpl
+	MySQLAdapterTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/mysql/command.tmpl
+	MySQLCommandTemplate []byte
+
+	//go:embed internal/core/port/outbound/repository/mysql.tmpl
+	MySQLRepositoryTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/sqlite/sqlite.tmpl
+	SQLiteAdapterTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/sqlite/command.tmpl
+	SQLiteCommandTemplate []byte
+
+	//go:embed internal/core/port/outbound/repository/sqlite.tmpl
+	SQLiteRepositoryTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/mongodb/mongodb.tmpl
+	MongoDBAdapterTemplate []byte
+
+	//go:embed internal/adapter/outbound/datastore/mongodb/command.tmpl
+	MongoDBCommandTemplate []byte
+
+	//go:embed internal/core/port/outbound/repository/mongodb.tmpl
+	MongoDBRepositoryTemplate []byte
 )

@@ -13,28 +13,37 @@ import (
 )
 
 type Project struct {
-	doc                 *openapi3.T
-	cacheType           string
-	dbType              string
-	App                 App
-	Dirs                []string
-	Rest                Rest
-	RestRouter          RestRouter
-	RestPortAdapter     RestPortAdapter
-	RestMiddlewares     RestMiddlewares
-	SharedLibrary       SharedLibrary
-	RestResponse        RestResponse
-	RoutesGroup         []RouterGroup
-	RestPortService     RestPortService
-	Domains             DomainModel
-	RegistryService     RegistryService
-	Service             Service
-	RedisAdapter        RedisAdapter
-	RedisCommandAdapter RedisCommandAdapter
-	CacheRepository     CacheRepository
-	PSQLAdapter         PSQLAdapter
-	PSQLCommandAdapter  PSQLCommandAdapter
-	PSQLRepository      PSQLRepository
+	doc                  *openapi3.T
+	cacheType            string
+	dbType               string
+	App                  App
+	Dirs                 []string
+	Rest                 Rest
+	RestRouter           RestRouter
+	RestPortAdapter      RestPortAdapter
+	RestMiddlewares      RestMiddlewares
+	SharedLibrary        SharedLibrary
+	RestResponse         RestResponse
+	RoutesGroup          []RouterGroup
+	RestPortService      RestPortService
+	Domains              DomainModel
+	RegistryService      RegistryService
+	Service              Service
+	RedisAdapter         RedisAdapter
+	RedisCommandAdapter  RedisCommandAdapter
+	CacheRepository      CacheRepository
+	PSQLAdapter          PSQLAdapter
+	PSQLCommandAdapter   PSQLCommandAdapter
+	PSQLRepository       PSQLRepository
+	MySQLAdapter         MySQLAdapter
+	MySQLCommandAdapter  MySQLCommandAdapter
+	MySQLRepository      MySQLRepository
+	SQLiteAdapter        SQLiteAdapter
+	SQLiteCommandAdapter SQLiteCommandAdapter
+	SQLiteRepository     SQLiteRepository
+	MongoAdapter         MongoAdapter
+	MongoCommandAdapter  MongoCommandAdapter
+	MongoRepository      MongoRepository
 }
 
 type App struct {
@@ -183,6 +192,60 @@ type PSQLRepository struct {
 	filepath string
 }
 
+type MySQLAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type MySQLCommandAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type MySQLRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type SQLiteAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type SQLiteCommandAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type SQLiteRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type MongoAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type MongoCommandAdapter struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type MongoRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
 func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 	return &Project{
 		doc:       doc,
@@ -295,6 +358,51 @@ func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/psql.go", projectName),
 		},
+		MySQLAdapter: MySQLAdapter{
+			template: templates.GetMySQLAdapterTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql/mysql.go", projectName),
+		},
+		MySQLCommandAdapter: MySQLCommandAdapter{
+			template: templates.GetMySQLCommandTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql/command.go", projectName),
+		},
+		MySQLRepository: MySQLRepository{
+			template: templates.GetMySQLRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/mysql.go", projectName),
+		},
+		SQLiteAdapter: SQLiteAdapter{
+			template: templates.GetSQLiteAdapterTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite/sqlite.go", projectName),
+		},
+		SQLiteCommandAdapter: SQLiteCommandAdapter{
+			template: templates.GetSQLiteCommandTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite/command.go", projectName),
+		},
+		SQLiteRepository: SQLiteRepository{
+			template: templates.GetSQLiteRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/sqlite.go", projectName),
+		},
+		MongoAdapter: MongoAdapter{
+			template: templates.GetMongoDBAdapterTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mongo", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/mongo/mongo.go", projectName),
+		},
+		MongoCommandAdapter: MongoCommandAdapter{
+			template: templates.GetMongoDBCommandTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mongo", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/mongo/command.go", projectName),
+		},
+		MongoRepository: MongoRepository{
+			template: templates.GetMongoDBRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/mongo.go", projectName),
+		},
 	}
 }
 
@@ -405,6 +513,42 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate psql repository
 	err = p.GeneratePSQLRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate mysql adapter
+	err = p.GenerateMySQLAdapter()
+	if err != nil {
+		return err
+	}
+
+	// Generate mysql repository
+	err = p.GenerateMySQLRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate sqlite adapter
+	err = p.GenerateSQLiteAdapter()
+	if err != nil {
+		return err
+	}
+
+	// Generate sqlite repository
+	err = p.GenerateSQLiteRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate mongo adapter
+	err = p.GenerateMongoAdapter()
+	if err != nil {
+		return err
+	}
+
+	// Generate mongo repository
+	err = p.GenerateMongoRepository()
 	if err != nil {
 		return err
 	}
@@ -986,6 +1130,9 @@ func (p *Project) GenerateApp() error {
 		"PackagePath": _baseproject.PackagePath,
 		"IsRedis":     p.cacheType == "redis",
 		"IsPSQL":      p.dbType == "postgres",
+		"IsMySQL":     p.dbType == "mysql",
+		"IsSQLite":    p.dbType == "sqlite",
+		"IsMongo":     p.dbType == "mongodb",
 	}
 
 	raw, err := libos.ExecuteTemplate(p.App.template, data)
@@ -1065,6 +1212,10 @@ func (p *Project) GenerateCacheRepository() error {
 }
 
 func (p *Project) GeneratePSQLAdapter() error {
+	if p.dbType != "postgres" {
+		return nil
+	}
+
 	fmt.Printf(" %s%s\n", lineOnProgress, p.PSQLAdapter.dirpath)
 	_, err := os.Stat(p.PSQLAdapter.dirpath)
 	if os.IsNotExist(err) {
@@ -1101,6 +1252,10 @@ func (p *Project) GeneratePSQLAdapter() error {
 }
 
 func (p *Project) GeneratePSQLRepository() error {
+	if p.dbType != "postgres" {
+		return nil
+	}
+
 	fmt.Printf(" %s%s\n", lineOnProgress, p.PSQLRepository.dirpath)
 	_, err := os.Stat(p.PSQLRepository.dirpath)
 	if os.IsNotExist(err) {
@@ -1120,6 +1275,219 @@ func (p *Project) GeneratePSQLRepository() error {
 	}
 
 	err = libos.CreateFile(p.PSQLRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateMySQLAdapter() error {
+	if p.dbType != "mysql" {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", lineOnProgress, p.MySQLAdapter.dirpath)
+	_, err := os.Stat(p.MySQLAdapter.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.MySQLAdapter.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	rawMySQLAdapter, err := libos.ExecuteTemplate(p.MySQLAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.PSQLAdapter.filepath, rawMySQLAdapter)
+	if err != nil {
+		return err
+	}
+
+	rawMySQLCommand, err := libos.ExecuteTemplate(p.MySQLCommandAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.MySQLCommandAdapter.filepath, rawMySQLCommand)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Project) GenerateMySQLRepository() error {
+	if p.dbType != "mysql" {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", lineOnProgress, p.MySQLRepository.dirpath)
+	_, err := os.Stat(p.MySQLRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.MySQLRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.MySQLRepository.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.MySQLRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateSQLiteAdapter() error {
+	if p.dbType != "sqlite" {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", lineOnProgress, p.SQLiteAdapter.dirpath)
+	_, err := os.Stat(p.SQLiteAdapter.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.SQLiteAdapter.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	rawSQLiteAdapter, err := libos.ExecuteTemplate(p.SQLiteAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.PSQLAdapter.filepath, rawSQLiteAdapter)
+	if err != nil {
+		return err
+	}
+
+	rawSQLiteCommand, err := libos.ExecuteTemplate(p.SQLiteCommandAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.SQLiteCommandAdapter.filepath, rawSQLiteCommand)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Project) GenerateSQLiteRepository() error {
+	if p.dbType != "sqlite" {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", lineOnProgress, p.SQLiteRepository.dirpath)
+	_, err := os.Stat(p.SQLiteRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.SQLiteRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.SQLiteRepository.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.SQLiteRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateMongoAdapter() error {
+	if p.dbType != "mongodb" {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", lineOnProgress, p.MongoAdapter.dirpath)
+	_, err := os.Stat(p.MongoAdapter.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.MongoAdapter.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	rawPSQLAdapter, err := libos.ExecuteTemplate(p.MongoAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.MongoAdapter.filepath, rawPSQLAdapter)
+	if err != nil {
+		return err
+	}
+
+	rawMongoCommand, err := libos.ExecuteTemplate(p.MongoCommandAdapter.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.MongoCommandAdapter.filepath, rawMongoCommand)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Project) GenerateMongoRepository() error {
+	if p.dbType != "mongodb" {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", lineOnProgress, p.MongoRepository.dirpath)
+	_, err := os.Stat(p.MongoRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.MongoRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	data := map[string]any{
+		"PackagePath": _baseproject.PackagePath,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.MongoRepository.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.MongoRepository.filepath, raw)
 	if err != nil {
 		return err
 	}

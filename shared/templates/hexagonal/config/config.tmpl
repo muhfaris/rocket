@@ -58,6 +58,17 @@ type Datastore struct {
 {{if .IsPSQL}}
 	PSQL PSQLConfig `mapstructure:"psql"`
 {{end}}
+{{if .IsSQLite}}
+	SQLite  SQLiteConfig `mapstructure:"sqlite"`
+{{end}}
+
+{{if .IsMySQL}}
+	MySQL   MySQLConfig  `mapstructure:"mysql"`
+{{end}}
+
+{{if .IsMongoDB}}
+	MongoDB MongoConfig  `mapstructure:"mongodb"`
+{{end}}
 }
 
 {{if .IsPSQL}}
@@ -67,6 +78,33 @@ type PSQLConfig struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	DB       string `mapstructure:"db"`
+}
+{{end}}
+{{if .IsSQLite}}
+type SQLiteConfig struct {
+	Path string `mapstructure:"path"`
+	Mode string `mapstructure:"mode"`
+}
+{{end}}
+
+{{if .IsMySQL}}
+type MySQLConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       string `mapstructure:"db"`
+}
+{{end}}
+
+{{if .IsMongoDB}}
+type MongoConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       string `mapstructure:"db"`
+	AuthDB   string `mapstructure:"auth_db"`
 }
 {{end}}
 {{end}}

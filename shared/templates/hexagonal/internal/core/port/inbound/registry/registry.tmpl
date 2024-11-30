@@ -12,10 +12,19 @@ type Service interface {
 }
 
 type Repository interface {
-{{if .IsCache}}
+{{- if .IsCache}}
 	CacheRepository() repository.CacheRepository
-{{end}}
-{{if .IsPSQL}}
+{{- end}}
+{{- if .IsPSQL}}
   PSQLRepository() repository.PSQLRepository
-{{end}}
+{{- end}}
+{{- if .IsMySQL}}
+  MySQLRepository() repository.MySQLRepository
+{{- end}}
+{{- if .IsSQLite}}
+  SQLiteRepository() repository.SQLiteRepository
+{{- end}}
+{{- if .MongoDB}}
+  MongoRepository() repository.MongoRepository
+{{- end}}
 }

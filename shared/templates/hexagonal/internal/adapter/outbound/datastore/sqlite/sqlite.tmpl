@@ -1,0 +1,65 @@
+package sqliteadapter
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"sync"
+
+	_ "github.com/mattn/go-sqlite3"
+	"{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+var (
+	sqliteConn *sql.DB
+	once       sync.Once
+)
+
+type SQLiteConfig struct {
+	Path string // Path to the SQLite database file
+	Mode string // Optional mode (e.g., "rwc" for read-write-create)
+}
+
+func New(opt SQLiteConfig) repository.SQLiteRepository {
+	var (
+		ctx = context.Background()
+		dsn string
+	)
+
+	// If no mode specified, default to read-write-create
+	if opt.Mode == "" {
+		opt.Mode = "rwc"
+	}
+
+	// Construct DSN with optional mode
+	dsn = fmt.Sprintf("file:%s?mode=%s", opt.Path, opt.Mode)
+
+	if sqliteConn != nil {
+		return &Client{
+			conn: sqliteConn,
+		}
+	}
+
+	once.Do(func() {
+		db, err := sql.Open("sqlite3", dsn)
+		if err != nil {
+			panic(err)
+		}
+
+		// Verify connection
+		if err = db.PingContext(ctx); err != nil {
+			panic(err)
+		}
+
+		// Configure connection pool
+		db.SetMaxOpenConns(1) // SQLite typically uses a single connection
+		db.SetMaxIdleConns(1)
+		db.SetConnMaxLifetime(5 * time.Minute)
+
+		sqliteConn = db
+	})
+
+	return &Client{
+		conn: sqliteConn,
+	}
+}

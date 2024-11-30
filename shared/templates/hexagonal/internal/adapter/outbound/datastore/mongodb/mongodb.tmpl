@@ -1,0 +1,92 @@
+package mongoadapter
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+var (
+	mongoClient *mongo.Client
+	once        sync.Once
+)
+
+type MongoConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	DB       string
+	AuthDB   string // Optional authentication database
+}
+
+func New(opt MongoConfig) repository.MongoRepository {
+	var (
+		ctx = context.Background()
+		
+		// Construct MongoDB connection URI
+		uri string
+	)
+
+	// Construct connection URI with authentication if credentials are provided
+	if opt.Username != "" && opt.Password != "" {
+		authDB := opt.AuthDB
+		if authDB == "" {
+			authDB = opt.DB
+		}
+		uri = fmt.Sprintf("mongodb://%s:%s@%s:%d/%s?authSource=%s", 
+			opt.Username, 
+			opt.Password, 
+			opt.Host, 
+			opt.Port, 
+			opt.DB, 
+			authDB,
+		)
+	} else {
+		uri = fmt.Sprintf("mongodb://%s:%d/%s", 
+			opt.Host, 
+			opt.Port, 
+			opt.DB,
+		)
+	}
+
+	if mongoClient != nil {
+		return &Client{
+			client: mongoClient,
+			dbName: opt.DB,
+		}
+	}
+
+	once.Do(func() {
+		// Set client options
+		clientOptions := options.Client().
+			ApplyURI(uri).
+			SetMaxPoolSize(50).
+			SetMinPoolSize(10).
+			SetMaxConnIdleTime(5 * time.Minute)
+
+		// Connect to MongoDB
+		client, err := mongo.Connect(ctx, clientOptions)
+		if err != nil {
+			panic(fmt.Errorf("failed to connect to MongoDB: %v", err))
+		}
+
+		// Verify connection
+		if err = client.Ping(ctx, readpref.Primary()); err != nil {
+			panic(fmt.Errorf("failed to ping MongoDB: %v", err))
+		}
+
+		mongoClient = client
+	})
+
+	return &Client{
+		client: mongoClient,
+		dbName: opt.DB,
+	}
+}
