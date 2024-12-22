@@ -10,6 +10,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.0
 	golang.org/x/text v0.3.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -36,5 +37,4 @@ require (
 	golang.org/x/sys v0.0.0-20190624142023-c5567b49c5d0 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
