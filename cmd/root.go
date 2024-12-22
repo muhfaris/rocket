@@ -17,8 +17,6 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var cfgfile string
-
 func init() {
 	cmdproject.OpenapiCMD.Flags().StringP("package", "", "", "package project e.g github.com/muhfaris/myproject")
 	viper.BindPFlag("package", cmdproject.OpenapiCMD.Flags().Lookup("package"))
@@ -48,6 +46,7 @@ func init() {
 
 	// config rocket.yaml
 	cmdproject.OpenapiCMD.Flags().StringP("config", "c", "", "config file(default is $HOME/config.yaml)")
+	viper.BindPFlag("config", cmdproject.OpenapiCMD.Flags().Lookup("config"))
 }
 
 // Execute is root function

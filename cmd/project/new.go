@@ -42,6 +42,11 @@ func init() {
 }
 
 func initconfig() {
+	cfg := viper.GetString("config")
+	if cfg != "" {
+		viper.SetConfigFile(cfg)
+		return
+	}
 	// search config in home directory with name "config" (without extension)
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./config")
