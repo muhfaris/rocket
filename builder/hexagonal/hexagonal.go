@@ -8,6 +8,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/muhfaris/rocket/helper/ui"
 	libcase "github.com/muhfaris/rocket/shared/case"
+	liboas "github.com/muhfaris/rocket/shared/oas"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 	"github.com/muhfaris/rocket/shared/utils"
@@ -706,6 +707,12 @@ func (p *Project) GenerateRestHandlers() error {
 				domainMap[domainModel.filename] = domainModel
 			}
 
+			annotation, err := liboas.CreateSwaggerAnnotation(path, method, operation)
+			if err != nil {
+				return err
+			}
+
+			handlerData.Annotation = annotation
 			// create handler file
 			err = p.createHandlerFile(handlerDir, handlerData)
 			if err != nil {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/muhfaris/rocket/builder/hexagonal"
+	liboas "github.com/muhfaris/rocket/shared/oas"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
@@ -24,6 +25,7 @@ type Main struct {
 	filepath          string
 	cacheType         string
 	dbType            string
+	Annotation        string
 	BasePackage
 }
 
@@ -31,6 +33,7 @@ type MainData struct {
 	PackagePath string
 	ProjectName string
 	Path        string
+	Annotation  string
 }
 
 func New(content []byte, doc *openapi3.T, packagePath, projectName, arch, cacheParam, dbParam string) *Main {
@@ -40,7 +43,13 @@ func New(content []byte, doc *openapi3.T, packagePath, projectName, arch, cacheP
 		PackagePath: packagePath,
 	}
 
+	annotation, err := liboas.OASDescriptionSwagger(doc)
+	if err != nil {
+		return nil
+	}
+
 	return &Main{
+		Annotation:        annotation,
 		arch:              arch,
 		content:           content,
 		doc:               doc,
@@ -189,6 +198,7 @@ func (m *Main) initMain() error {
 	data := MainData{
 		PackagePath: m.PackagePath,
 		Path:        "cmd",
+		Annotation:  m.Annotation,
 	}
 
 	raw, err := libos.ExecuteTemplate(m.template, data)

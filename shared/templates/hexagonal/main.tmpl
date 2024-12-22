@@ -2,6 +2,7 @@ package main
 
 import "{{.PackagePath}}/{{.Path}}"
 
+{{if .Annotation}} {{.Annotation}} {{end}}
 func main() {
 {{.Path}}.Execute()
 }
