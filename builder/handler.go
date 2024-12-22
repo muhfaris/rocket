@@ -25,6 +25,21 @@ type HandlerData struct {
 	BodyData
 }
 
+type PortServiceMethods struct {
+	MethodName  string
+	Params      []PortServiceMethodParams
+	ReturnTypes []PortServiceReturnType
+}
+
+type PortServiceMethodParams struct {
+	Name string
+	Type string
+}
+
+type PortServiceReturnType struct {
+	Type string
+}
+
 type Struct struct {
 	StructName string
 	Fields     []Field
