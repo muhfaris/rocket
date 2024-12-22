@@ -13,11 +13,13 @@ import (
 var rootCmd = &cobra.Command{
 	Use: "rocket",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		project := viper.GetString("project")
-		db := viper.GetString("db")
-		cache := viper.GetString("cache")
-		queue := viper.GetString("queue")
-		config := viper.GetString("config")
+		var (
+			project = viper.GetString("project")
+			db      = viper.GetString("db")
+			cache   = viper.GetString("cache")
+			queue   = viper.GetString("queue")
+			config  = viper.GetString("config")
+		)
 
 		b := builder.NewBuilder(project, db, cache, queue, config)
 		b.Generate()

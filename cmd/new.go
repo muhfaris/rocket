@@ -62,6 +62,6 @@ func openapiRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	m := builder.New(content, doc, packageName, projectName, cacheParam, dbParam)
+	m := builder.New(content, doc, packageName, projectName, archLayout, cacheParam, dbParam)
 	return m.Generate()
 }

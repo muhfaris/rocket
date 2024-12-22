@@ -1,4 +1,4 @@
-package builder
+package hexagonal
 
 import (
 	"fmt"
@@ -6,254 +6,16 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/muhfaris/rocket/helper/ui"
 	libcase "github.com/muhfaris/rocket/shared/case"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 	"github.com/muhfaris/rocket/shared/utils"
 )
 
-type Project struct {
-	doc                  *openapi3.T
-	cacheType            string
-	dbType               string
-	App                  App
-	Dirs                 []string
-	Rest                 Rest
-	RestRouter           RestRouter
-	RestPortAdapter      RestPortAdapter
-	RestMiddlewares      RestMiddlewares
-	SharedLibrary        SharedLibrary
-	RestResponse         RestResponse
-	RoutesGroup          []RouterGroup
-	RestPortService      RestPortService
-	Domains              DomainModel
-	RegistryService      RegistryService
-	Service              Service
-	RedisAdapter         RedisAdapter
-	RedisCommandAdapter  RedisCommandAdapter
-	CacheRepository      CacheRepository
-	PSQLAdapter          PSQLAdapter
-	PSQLCommandAdapter   PSQLCommandAdapter
-	PSQLRepository       PSQLRepository
-	MySQLAdapter         MySQLAdapter
-	MySQLCommandAdapter  MySQLCommandAdapter
-	MySQLRepository      MySQLRepository
-	SQLiteAdapter        SQLiteAdapter
-	SQLiteCommandAdapter SQLiteCommandAdapter
-	SQLiteRepository     SQLiteRepository
-	MongoAdapter         MongoAdapter
-	MongoCommandAdapter  MongoCommandAdapter
-	MongoRepository      MongoRepository
-	Dockerfile           Dockerfile
-}
-
-type App struct {
-	dirpath  string
-	filepath string
-	template []byte
-}
-
-type Service struct {
-	dirpath  string
-	filepath string
-	template []byte
-	Services []ServiceParams
-}
-
-type ServiceParams struct {
-	PackagePath string
-	ServiceName string
-	Methods     []PortServiceMethods
-}
-
-type RegistryService struct {
-	dirpath  string
-	filepath string
-	template []byte
-	Services []string
-}
-
-type DomainModel struct {
-	dirpath  string
-	template []byte
-	Data     []DataDomainModel
-}
-
-type DataDomainModel struct {
-	filename string
-	Structs  []Struct
-}
-
-type RestPortService struct {
-	dirpath  string
-	filepath string
-	template []byte
-	Data     DataRestPortService
-}
-
-type DataRestPortService struct {
-	ServiceName string
-	Methods     []PortServiceMethods
-}
-
-type PortServiceMethods struct {
-	MethodName  string
-	Params      []PortServiceMethodParams
-	ReturnTypes []PortServiceReturnType
-}
-
-type PortServiceMethodParams struct {
-	Name string
-	Type string
-}
-
-type PortServiceReturnType struct {
-	Type string
-}
-
-type RestResponse struct {
-	dirpath  string
-	template []byte
-	filepath string
-}
-
-type Rest struct {
-	templateCmd []byte
-	dirpathCmd  string
-	filepathCmd string
-	entrypoint  string
-}
-
-type RestRouter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type RestPortAdapter struct {
-	dirpath  string
-	filepath string
-	template []byte
-}
-
-type RestMiddlewares struct {
-	dirpath string
-	data    []DataRestMiddleware
-}
-
-type DataRestMiddleware struct {
-	filepaths string
-	template  []byte
-}
-
-type SharedLibrary struct {
-	dirpath string
-	data    []DataSharedLibrary
-}
-
-type DataSharedLibrary struct {
-	name     string
-	filepath string
-	template []byte
-}
-
-type RedisAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type RedisCommandAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type CacheRepository struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type PSQLAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type PSQLCommandAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type PSQLRepository struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type MySQLAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type MySQLCommandAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type MySQLRepository struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type SQLiteAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type SQLiteCommandAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type SQLiteRepository struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type MongoAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type MongoCommandAdapter struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type MongoRepository struct {
-	template []byte
-	dirpath  string
-	filepath string
-}
-
-type Dockerfile struct {
-	filepath string
-	template []byte
-}
-
-func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
+func NewProject(doc *openapi3.T, based Based, projectName, cacheParam string) *Project {
 	return &Project{
+		based:     based,
 		doc:       doc,
 		cacheType: cacheParam,
 		App: App{
@@ -418,9 +180,9 @@ func NewProject(doc *openapi3.T, projectName, cacheParam string) *Project {
 
 func (p *Project) GenerateDirectories() error {
 	// slog.Info("└── Creating based project directories")
-	fmt.Printf("%s%s\n", LineLast, "Creating based project directories")
+	fmt.Printf("%s%s\n", ui.LineLast, "Creating based project directories")
 	for _, dir := range p.Dirs {
-		dirpath := fmt.Sprintf("%s/%s", _baseproject.ProjectName, dir)
+		dirpath := fmt.Sprintf("%s/%s", p.based.Project.ProjectName, dir)
 		_, err := os.Stat(dirpath)
 		if os.IsExist(err) {
 			continue
@@ -573,7 +335,7 @@ func (p *Project) GenerateDirectories() error {
 }
 
 func (p *Project) GenerateRest() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.Rest.dirpathCmd)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.Rest.dirpathCmd)
 	_, err := os.Stat(p.Rest.dirpathCmd)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.Rest.dirpathCmd, os.ModePerm)
@@ -583,7 +345,7 @@ func (p *Project) GenerateRest() error {
 	}
 
 	restData := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 		"Entrypoint":  p.Rest.entrypoint,
 	}
 
@@ -601,7 +363,7 @@ func (p *Project) GenerateRest() error {
 }
 
 func (p *Project) GenerateRestRouter() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.RestRouter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RestRouter.dirpath)
 	_, err := os.Stat(p.RestRouter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.RestRouter.dirpath, os.ModePerm)
@@ -611,8 +373,8 @@ func (p *Project) GenerateRestRouter() error {
 	}
 
 	routerData := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
-		"AppName":     _baseproject.AppName,
+		"PackagePath": p.based.Project.PackagePath,
+		"AppName":     p.based.Project.AppName,
 		"Groups":      p.RoutesGroup,
 	}
 
@@ -630,7 +392,7 @@ func (p *Project) GenerateRestRouter() error {
 }
 
 func (p *Project) GenerateRestPortAdapter() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.RestPortAdapter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RestPortAdapter.dirpath)
 	_, err := os.Stat(p.RestPortAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.RestPortAdapter.dirpath, os.ModePerm)
@@ -653,7 +415,7 @@ func (p *Project) GenerateRestPortAdapter() error {
 }
 
 func (p *Project) GenerateRestPortService() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.RestPortService.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RestPortService.dirpath)
 	_, err := os.Stat(p.RestPortService.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.RestPortService.dirpath, os.ModePerm)
@@ -663,7 +425,7 @@ func (p *Project) GenerateRestPortService() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 		"ServiceName": p.RestPortService.Data.ServiceName,
 		"Methods":     p.RestPortService.Data.Methods,
 	}
@@ -681,7 +443,7 @@ func (p *Project) GenerateRestPortService() error {
 }
 
 func (p *Project) GenerateRestMiddlewares() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.RestMiddlewares.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RestMiddlewares.dirpath)
 	_, err := os.Stat(p.RestMiddlewares.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.RestMiddlewares.dirpath, os.ModePerm)
@@ -691,7 +453,7 @@ func (p *Project) GenerateRestMiddlewares() error {
 	}
 
 	dataMiddleware := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	for _, middleware := range p.RestMiddlewares.data {
@@ -710,7 +472,7 @@ func (p *Project) GenerateRestMiddlewares() error {
 }
 
 func (p *Project) GenerateSharedLibrary() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.SharedLibrary.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.SharedLibrary.dirpath)
 	_, err := os.Stat(p.SharedLibrary.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.SharedLibrary.dirpath, os.ModePerm)
@@ -745,7 +507,7 @@ func (p *Project) GenerateSharedLibrary() error {
 }
 
 func (p *Project) GenerateRestResponse() error {
-	fmt.Printf(" %s%s\n", LineLast, p.RestResponse.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineLast, p.RestResponse.dirpath)
 	_, err := os.Stat(p.RestResponse.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.RestResponse.dirpath, os.ModePerm)
@@ -763,7 +525,7 @@ func (p *Project) GenerateRestResponse() error {
 	}
 
 	dataResponse := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.RestResponse.template, dataResponse)
@@ -780,22 +542,10 @@ func (p *Project) GenerateRestResponse() error {
 	return nil
 }
 
-type RouterGroup struct {
-	GroupName string
-	GroupPath string
-	Routes    []ChildRouterGroup
-}
-
-type ChildRouterGroup struct {
-	Method  string
-	Path    string
-	Handler string
-}
-
 func (p *Project) GenerateRestHandlers() error {
 	var (
 		childsRouter       []ChildRouterGroup
-		handlerDir         = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", _baseproject.ProjectName)
+		handlerDir         = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", p.based.Project.ProjectName)
 		routesGroupMap     = make(map[string]RouterGroup)
 		domainMap          = make(map[string]DataDomainModel)
 		serviceRegistryMap = make(map[string]bool)
@@ -803,7 +553,7 @@ func (p *Project) GenerateRestHandlers() error {
 		servicesMap        = make(map[string]ServiceParams)
 	)
 
-	fmt.Printf(" %s%s\n", LineOnProgress, handlerDir)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, handlerDir)
 
 	for path, pathItem := range p.doc.Paths.Map() {
 		var (
@@ -864,7 +614,7 @@ func (p *Project) GenerateRestHandlers() error {
 			childsRouter = append(childsRouter, childRouter)
 
 			handlerData := &HandlerData{
-				PackagePath: _baseproject.PackagePath,
+				PackagePath: p.based.Project.PackagePath,
 				HandlerName: operationsID[0],
 				Structs:     make([]Struct, 0),
 				HasParams:   false,
@@ -931,7 +681,7 @@ func (p *Project) GenerateRestHandlers() error {
 			// service service
 			if _, exist = servicesMap[serviceName]; !exist {
 				servicesMap[serviceName] = ServiceParams{
-					PackagePath: _baseproject.PackagePath,
+					PackagePath: p.based.Project.PackagePath,
 					ServiceName: serviceName,
 					Methods:     serviceHandler.Methods,
 				}
@@ -999,7 +749,7 @@ func (p *Project) GenerateRestHandlers() error {
 }
 
 func (p *Project) GenerateDomainModel() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.Domains.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.Domains.dirpath)
 	_, err := os.Stat(p.Domains.dirpath)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(p.Domains.dirpath, os.ModePerm)
@@ -1070,7 +820,7 @@ func (p *Project) createHandlerFile(handlerDir string, handlerData *HandlerData)
 }
 
 func (p *Project) GenerateRegistryService() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.RegistryService.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RegistryService.dirpath)
 	_, err := os.Stat(p.RegistryService.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.RegistryService.dirpath, os.ModePerm)
@@ -1080,7 +830,7 @@ func (p *Project) GenerateRegistryService() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 		"Services":    p.RegistryService.Services,
 		"IsCache":     p.cacheType != "",
 		"IsRedis":     p.cacheType == "redis",
@@ -1099,7 +849,7 @@ func (p *Project) GenerateRegistryService() error {
 }
 
 func (p *Project) GenerateRestService() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.Service.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.Service.dirpath)
 
 	_, err := os.Stat(p.Service.dirpath)
 	if os.IsNotExist(err) {
@@ -1111,7 +861,7 @@ func (p *Project) GenerateRestService() error {
 
 	for _, service := range p.Service.Services {
 		data := map[string]any{
-			"PackagePath": _baseproject.PackagePath,
+			"PackagePath": p.based.Project.PackagePath,
 			"ServiceName": service.ServiceName,
 			"Methods":     p.RestPortService.Data.Methods,
 		}
@@ -1133,7 +883,7 @@ func (p *Project) GenerateRestService() error {
 }
 
 func (p *Project) GenerateApp() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.App.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.App.dirpath)
 	_, err := os.Stat(p.App.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.App.dirpath, os.ModePerm)
@@ -1143,7 +893,7 @@ func (p *Project) GenerateApp() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 		"IsRedis":     p.cacheType == "redis",
 		"IsPSQL":      p.dbType == "postgres",
 		"IsMySQL":     p.dbType == "mysql",
@@ -1165,7 +915,7 @@ func (p *Project) GenerateApp() error {
 }
 
 func (p *Project) GenerateRedisAdapter() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.RedisAdapter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RedisAdapter.dirpath)
 	_, err := os.Stat(p.RedisAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.RedisAdapter.dirpath, os.ModePerm)
@@ -1175,7 +925,7 @@ func (p *Project) GenerateRedisAdapter() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	rawRedisAdapter, err := libos.ExecuteTemplate(p.RedisAdapter.template, data)
@@ -1201,7 +951,7 @@ func (p *Project) GenerateRedisAdapter() error {
 }
 
 func (p *Project) GenerateCacheRepository() error {
-	fmt.Printf(" %s%s\n", LineOnProgress, p.CacheRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.CacheRepository.dirpath)
 	_, err := os.Stat(p.CacheRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.CacheRepository.dirpath, os.ModePerm)
@@ -1211,7 +961,7 @@ func (p *Project) GenerateCacheRepository() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.CacheRepository.template, data)
@@ -1232,7 +982,7 @@ func (p *Project) GeneratePSQLAdapter() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.PSQLAdapter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.PSQLAdapter.dirpath)
 	_, err := os.Stat(p.PSQLAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.PSQLAdapter.dirpath, os.ModePerm)
@@ -1242,7 +992,7 @@ func (p *Project) GeneratePSQLAdapter() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	rawPSQLAdapter, err := libos.ExecuteTemplate(p.PSQLAdapter.template, data)
@@ -1272,7 +1022,7 @@ func (p *Project) GeneratePSQLRepository() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.PSQLRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.PSQLRepository.dirpath)
 	_, err := os.Stat(p.PSQLRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.PSQLRepository.dirpath, os.ModePerm)
@@ -1282,7 +1032,7 @@ func (p *Project) GeneratePSQLRepository() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.PSQLRepository.template, data)
@@ -1303,7 +1053,7 @@ func (p *Project) GenerateMySQLAdapter() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.MySQLAdapter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MySQLAdapter.dirpath)
 	_, err := os.Stat(p.MySQLAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MySQLAdapter.dirpath, os.ModePerm)
@@ -1313,7 +1063,7 @@ func (p *Project) GenerateMySQLAdapter() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	rawMySQLAdapter, err := libos.ExecuteTemplate(p.MySQLAdapter.template, data)
@@ -1343,7 +1093,7 @@ func (p *Project) GenerateMySQLRepository() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.MySQLRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MySQLRepository.dirpath)
 	_, err := os.Stat(p.MySQLRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MySQLRepository.dirpath, os.ModePerm)
@@ -1353,7 +1103,7 @@ func (p *Project) GenerateMySQLRepository() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.MySQLRepository.template, data)
@@ -1374,7 +1124,7 @@ func (p *Project) GenerateSQLiteAdapter() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.SQLiteAdapter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.SQLiteAdapter.dirpath)
 	_, err := os.Stat(p.SQLiteAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.SQLiteAdapter.dirpath, os.ModePerm)
@@ -1384,7 +1134,7 @@ func (p *Project) GenerateSQLiteAdapter() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	rawSQLiteAdapter, err := libos.ExecuteTemplate(p.SQLiteAdapter.template, data)
@@ -1414,7 +1164,7 @@ func (p *Project) GenerateSQLiteRepository() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.SQLiteRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.SQLiteRepository.dirpath)
 	_, err := os.Stat(p.SQLiteRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.SQLiteRepository.dirpath, os.ModePerm)
@@ -1424,7 +1174,7 @@ func (p *Project) GenerateSQLiteRepository() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.SQLiteRepository.template, data)
@@ -1445,7 +1195,7 @@ func (p *Project) GenerateMongoAdapter() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.MongoAdapter.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MongoAdapter.dirpath)
 	_, err := os.Stat(p.MongoAdapter.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MongoAdapter.dirpath, os.ModePerm)
@@ -1455,7 +1205,7 @@ func (p *Project) GenerateMongoAdapter() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	rawPSQLAdapter, err := libos.ExecuteTemplate(p.MongoAdapter.template, data)
@@ -1485,7 +1235,7 @@ func (p *Project) GenerateMongoRepository() error {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", LineOnProgress, p.MongoRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MongoRepository.dirpath)
 	_, err := os.Stat(p.MongoRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MongoRepository.dirpath, os.ModePerm)
@@ -1495,7 +1245,7 @@ func (p *Project) GenerateMongoRepository() error {
 	}
 
 	data := map[string]any{
-		"PackagePath": _baseproject.PackagePath,
+		"PackagePath": p.based.Project.PackagePath,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.MongoRepository.template, data)
