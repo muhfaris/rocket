@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/muhfaris/rocket/builder"
+	cmdproject "github.com/muhfaris/rocket/cmd/project"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -13,73 +12,48 @@ import (
 var rootCmd = &cobra.Command{
 	Use: "rocket",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var (
-			project = viper.GetString("project")
-			db      = viper.GetString("db")
-			cache   = viper.GetString("cache")
-			queue   = viper.GetString("queue")
-			config  = viper.GetString("config")
-		)
-
-		b := builder.NewBuilder(project, db, cache, queue, config)
-		b.Generate()
-
+		fmt.Println("what to do")
 		return nil
 	},
 }
 
+var cfgfile string
+
 func init() {
-	cobra.OnInitialize(initconfig)
+	cmdproject.OpenapiCMD.Flags().StringP("package", "", "", "package project e.g github.com/muhfaris/myproject")
+	viper.BindPFlag("package", cmdproject.OpenapiCMD.Flags().Lookup("package"))
 
-	openapiCmd.Flags().StringP("package", "p", "", "package project e.g github.com/muhfaris/myproject")
-	viper.BindPFlag("package", openapiCmd.Flags().Lookup("package"))
-
-	openapiCmd.Flags().StringP("project", "n", "", "project name e.g myproject")
-	viper.BindPFlag("project", openapiCmd.Flags().Lookup("project"))
+	cmdproject.OpenapiCMD.Flags().StringP("project", "", "", "project name e.g myproject")
+	viper.BindPFlag("project", cmdproject.OpenapiCMD.Flags().Lookup("project"))
 
 	// add openapi flag project name
-	openapiCmd.Flags().StringP("openapi", "o", "", "path openapi file")
-	viper.BindPFlag("openapi", openapiCmd.Flags().Lookup("openapi"))
+	cmdproject.OpenapiCMD.Flags().StringP("openapi", "", "", "path openapi file")
+	viper.BindPFlag("openapi", cmdproject.OpenapiCMD.Flags().Lookup("openapi"))
 
 	// architecture e.g hexagonal
-	openapiCmd.Flags().StringP("arch", "a", "hexagonal", "architecture layout e.g hexagonal, cleancode")
-	viper.BindPFlag("arch", openapiCmd.Flags().Lookup("arch"))
+	cmdproject.OpenapiCMD.Flags().StringP("arch", "", "hexagonal", "architecture layout e.g hexagonal, cleancode")
+	viper.BindPFlag("arch", cmdproject.OpenapiCMD.Flags().Lookup("arch"))
 
 	// redis
-	openapiCmd.Flags().StringP("cache", "c", "", "cache connection string e.g redis, memory")
-	viper.BindPFlag("cache", openapiCmd.Flags().Lookup("cache"))
+	cmdproject.OpenapiCMD.Flags().StringP("cache", "", "", "cache connection string e.g redis, memory")
+	viper.BindPFlag("cache", cmdproject.OpenapiCMD.Flags().Lookup("cache"))
 
 	// db
-	openapiCmd.Flags().StringP("db", "d", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
-	viper.BindPFlag("db", openapiCmd.Flags().Lookup("db"))
+	cmdproject.OpenapiCMD.Flags().StringP("db", "", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
+	viper.BindPFlag("db", cmdproject.OpenapiCMD.Flags().Lookup("db"))
 
 	// docker
-	openapiCmd.Flags().BoolP("docker", "", false, "generate dockerfile")
-	viper.BindPFlag("docker", openapiCmd.Flags().Lookup("docker"))
-	rootCmd.AddCommand(openapiCmd)
-}
+	cmdproject.OpenapiCMD.Flags().BoolP("docker", "", false, "generate dockerfile")
+	viper.BindPFlag("docker", cmdproject.OpenapiCMD.Flags().Lookup("docker"))
 
-func initconfig() {
-	viper.SetConfigType("yaml")
-	// search config in home directory with name "config" (without extension)
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("./config")
-	viper.AddConfigPath("$HOME/.config")
-
-	viper.SetConfigName("config")
-
-	// read env
-	viper.AutomaticEnv()
-
-	// if a config file is found, read it in.
-	err := viper.ReadInConfig()
-	if err == nil {
-		log.Println("using config file:", viper.ConfigFileUsed())
-	}
+	// config rocket.yaml
+	cmdproject.OpenapiCMD.Flags().StringP("config", "c", "", "config file(default is $HOME/config.yaml)")
 }
 
 // Execute is root function
 func Execute() {
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(cmdproject.OpenapiCMD)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

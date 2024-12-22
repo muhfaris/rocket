@@ -1,0 +1,8 @@
+openapi: "spec/openapi.yaml"
+app:
+  package: "github.com/muhfaris/r1"
+  project: "r1"
+  arch: "hexagonal"
+  docker: false
+  database: "postgres"
+  cache: "redis"

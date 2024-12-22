@@ -143,6 +143,7 @@ func (m *Main) generate() error {
 			},
 			Package: hexagonal.BasePackage{},
 		}
+
 		project := hexagonal.NewProject(m.doc, based, _baseproject.ProjectName, m.cacheType)
 		project.GenerateDirectories()
 	}
