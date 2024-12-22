@@ -24,4 +24,4 @@ jobs:
       # Optional: Verify the run succeeded
       - name: Verify application execution
         if: success()
-        run: go run mian.go new
+        run: go run main.go new
