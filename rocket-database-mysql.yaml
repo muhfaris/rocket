@@ -1,0 +1,8 @@
+openapi: "spec/openapi.yaml"
+app:
+  package: "github.com/muhfaris/mysql"
+  project: "mysql"
+  arch: "hexagonal"
+  docker: false
+  database: "mysql"
+  cache: ""
