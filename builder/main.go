@@ -148,12 +148,6 @@ func (m *Main) generate() error {
 		project.GenerateDirectories()
 	}
 
-	// project := NewProject(m.doc, _baseproject.ProjectName, m.cacheType)
-	// err = project.GenerateDirectories()
-	// if err != nil {
-	// 	return err
-	// }
-
 	err = m.initializeModule()
 	if err != nil {
 		return err
