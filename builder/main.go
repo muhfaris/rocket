@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/muhfaris/rocket/builder/hexagonal"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
@@ -14,6 +15,7 @@ import (
 var _baseproject BaseProject
 
 type Main struct {
+	arch              string
 	content           []byte
 	doc               *openapi3.T
 	template          []byte
@@ -31,7 +33,7 @@ type MainData struct {
 	Path        string
 }
 
-func New(content []byte, doc *openapi3.T, packagePath, projectName, cacheParam, dbParam string) *Main {
+func New(content []byte, doc *openapi3.T, packagePath, projectName, arch, cacheParam, dbParam string) *Main {
 	_baseproject = BaseProject{
 		AppName:     projectName,
 		ProjectName: projectName,
@@ -39,6 +41,7 @@ func New(content []byte, doc *openapi3.T, packagePath, projectName, cacheParam, 
 	}
 
 	return &Main{
+		arch:              arch,
 		content:           content,
 		doc:               doc,
 		template:          templates.GetMainTemplate(),
@@ -65,7 +68,7 @@ func (m *Main) Generate() error {
 		return err
 	}
 
-	err = m.specStore()
+	err = m.CreateOASSpec()
 	if err != nil {
 		return err
 	}
@@ -102,13 +105,13 @@ func (m *Main) Generate() error {
 	// format file go
 	fmt.Println("└── Formatting directory")
 	time.Sleep(10 * time.Millisecond)
-	fmt.Printf(" %s goimports\n", lineOnProgress)
+	fmt.Printf(" %s goimports\n", LineOnProgress)
 	err = m.GoImports(_baseproject.ProjectName)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf(" %s gofmt\n", lineLast)
+	fmt.Printf(" %s gofmt\n", LineLast)
 	err = m.GoFmt(_baseproject.ProjectName)
 	if err != nil {
 		return err
@@ -130,10 +133,19 @@ func (m *Main) generate() error {
 		return err
 	}
 
-	project := NewProject(m.doc, _baseproject.ProjectName, m.cacheType)
-	err = project.GenerateDirectories()
-	if err != nil {
-		return err
+	switch m.arch {
+	case "hexagonal":
+		based := hexagonal.Based{
+			Project: hexagonal.BaseProject{
+				AppName:     _baseproject.AppName,
+				ProjectName: _baseproject.ProjectName,
+				PackagePath: _baseproject.PackagePath,
+			},
+			Package: hexagonal.BasePackage{},
+		}
+
+		project := hexagonal.NewProject(m.doc, based, _baseproject.ProjectName, m.cacheType)
+		project.GenerateDirectories()
 	}
 
 	err = m.initializeModule()
@@ -145,7 +157,7 @@ func (m *Main) generate() error {
 }
 
 func (m *Main) initializeModule() error {
-	fmt.Printf("%s%s\n", lineLast, "Go module")
+	fmt.Printf("%s%s\n", LineLast, "Go module")
 	// Initialize the Go module
 	cmd := exec.Command("go", "mod", "init", _baseproject.PackagePath)
 	cmd.Dir = _baseproject.ProjectName
@@ -172,7 +184,7 @@ func (m *Main) initializeModule() error {
 }
 
 func (m *Main) initMain() error {
-	fmt.Printf("%s%s\n", lineOnProgress, m.filename)
+	fmt.Printf("%s%s\n", LineOnProgress, m.filename)
 	// create main.go
 	data := MainData{
 		PackagePath: m.PackagePath,
@@ -193,7 +205,7 @@ func (m *Main) initMain() error {
 }
 
 func (m *Main) initGitignore() error {
-	fmt.Printf("%s%s\n", lineOnProgress, ".gitignore")
+	fmt.Printf("%s%s\n", LineOnProgress, ".gitignore")
 	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
 	err := libos.CreateFile(filepathGitignore, m.tempalteGitignore)
 	if err != nil {
@@ -213,7 +225,7 @@ func (m *Main) GoFmt(directory string) error {
 	return cmd.Run()
 }
 
-func (m *Main) specStore() error {
+func (m *Main) CreateOASSpec() error {
 	dirpath := fmt.Sprintf("%s/spec", _baseproject.ProjectName)
 	err := os.MkdirAll(dirpath, os.ModePerm)
 	if err != nil {

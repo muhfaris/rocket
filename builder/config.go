@@ -43,7 +43,7 @@ func NewConfig(configName, configType, projectName, cacheType, dbType string) *C
 }
 
 func (c *Config) Generate() error {
-	fmt.Printf("%s%s\n", lineOnProgress, "config")
+	fmt.Printf("%s%s\n", LineOnProgress, "config")
 	_, err := os.Stat(c.dirpath)
 	if os.IsExist(err) {
 		return fmt.Errorf("directory config %s already exists", c.dirpath)

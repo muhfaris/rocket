@@ -1,4 +1,4 @@
-package builder
+package hexagonal
 
 import (
 	"fmt"
@@ -23,32 +23,6 @@ type HandlerData struct {
 	ParamsData
 	QueryData
 	BodyData
-}
-
-type PortServiceMethods struct {
-	MethodName  string
-	Params      []PortServiceMethodParams
-	ReturnTypes []PortServiceReturnType
-}
-
-type PortServiceMethodParams struct {
-	Name string
-	Type string
-}
-
-type PortServiceReturnType struct {
-	Type string
-}
-
-type Struct struct {
-	StructName string
-	Fields     []Field
-}
-
-type Field struct {
-	FieldName string
-	FieldType string
-	Tag       string
 }
 
 type ParamsData struct {
