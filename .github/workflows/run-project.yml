@@ -32,7 +32,7 @@ jobs:
         run: go run main.go new -c rocket-cache.yaml
       - name: Verify application execution database mongo
         if: success()
-        run: go run main.go new -c rocket-datatabse-mongo.yaml
+        run: go run main.go new -c rocket-database-mongo.yaml
       - name: Verify application execution database mysql
         if: success()
         run: go run main.go new -c rocket-database-mysql.yaml
