@@ -104,12 +104,17 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("package must be string")
 	}
 
-	packageName = utils.SanitizeString(packageName)
+	err = utils.ValidateImportPath(packageName)
+	if err != nil {
+		return err
+	}
 
 	projectName, ok := projectNameParam.(string)
 	if !ok {
 		return fmt.Errorf("project name must be string")
 	}
+
+	projectName = utils.SanitizeString(projectName)
 
 	openapiFilePath, ok := openapiFileParam.(string)
 	if !ok {
