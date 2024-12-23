@@ -53,7 +53,7 @@ jobs:
         run: |
           rm -rf pg
           go run main.go new -c rocket-database-pg.yaml
-          cd pq && go mod tidy && go mod vendor
+          cd pg && go mod tidy && go mod vendor
       - name: Verify application execution docker
         if: success()
         run: |
