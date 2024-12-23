@@ -26,22 +26,38 @@ jobs:
       # Optional: Verify the run succeeded
       - name: Verify application execution basic
         if: success()
-        run: go run main.go new -c rocket-basic.yaml
+        run: |
+          rm -rf basic
+          go run main.go new -c rocket-basic.yaml
       - name: Verify application execution cache redis
         if: success()
-        run: go run main.go new -c rocket-cache.yaml
+        run: |
+          rm -rf cacher
+          go run main.go new -c rocket-cache.yaml
       - name: Verify application execution database mongo
         if: success()
-        run: go run main.go new -c rocket-database-mongo.yaml
+        run: |
+          rm -rf mongodb
+          go run main.go new -c rocket-database-mongo.yaml
       - name: Verify application execution database mysql
         if: success()
-        run: go run main.go new -c rocket-database-mysql.yaml
+        run: |
+          rm -rf mysql
+          go run main.go new -c rocket-database-mysql.yaml
       - name: Verify application execution pg
         if: success()
-        run: go run main.go new -c rocket-database-pg.yaml
+        run: |
+          rm -rf pg
+          go run main.go new -c rocket-database-pg.yaml
       - name: Verify application execution docker
         if: success()
-        run: go run main.go new -c rocket-docker.yaml
+        run: |
+          rm -rf r1
+          go run main.go new -c rocket-docker.yaml
+      - name: Remove all dummy data
+        if: success()
+        run: |
+          rm -rf basic cacher mongodb mysql pg r1
       - name: Verify application execution all
         if: success()
         run: go run main.go new -c rocket.yaml
