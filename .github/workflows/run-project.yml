@@ -47,7 +47,7 @@ jobs:
         run: |
           rm -rf mysql
           go run main.go new -c rocket-database-mysql.yaml
-          cd mysql && go mod tidy && go mod vendor
+          cd dbmysql && go mod tidy && go mod vendor
       - name: Verify application execution pg
         if: success()
         run: |
