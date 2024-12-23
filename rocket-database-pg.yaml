@@ -1,0 +1,8 @@
+openapi: "spec/openapi.yaml"
+app:
+  package: "github.com/muhfaris/pg"
+  project: "pg"
+  arch: "hexagonal"
+  docker: false
+  database: "postgres"
+  cache: ""
