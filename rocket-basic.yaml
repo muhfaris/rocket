@@ -4,5 +4,5 @@ app:
   project: "basic"
   arch: "hexagonal"
   docker: false
-  database: "postgres"
+  database: "postgresql"
   cache: "redis"
