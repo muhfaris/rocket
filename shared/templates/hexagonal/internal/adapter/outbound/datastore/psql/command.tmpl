@@ -1,6 +1,9 @@
 package psqladapter
 
-import "github.com/jackc/pgx/v4/pgxpool"
+import (
+"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v4"
+)
 
 type Client struct {
 	conn *pgxpool.Pool

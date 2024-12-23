@@ -10,6 +10,7 @@ import (
 	"os/exec"
 
 	"github.com/joncalhoun/pipe"
+	"github.com/muhfaris/rocket/shared/constanta"
 )
 
 // CMDBuilder is wrap cmd data
@@ -42,11 +43,11 @@ func (cmd *CMDBuilder) ChangeFormatType(formatType string) {
 }
 
 func (cmd *CMDBuilder) IsRedis() bool {
-	return cmd.CacheType == "redis"
+	return cmd.CacheType == constanta.CacheRedis
 }
 
 func (cmd *CMDBuilder) IsPosgresSQL() bool {
-	return cmd.StorageType == "postgresql"
+	return cmd.StorageType == constanta.DBPostgres
 }
 
 func (cmd *CMDBuilder) generateData() map[string]interface{} {

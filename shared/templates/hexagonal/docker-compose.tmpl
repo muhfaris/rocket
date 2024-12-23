@@ -1,0 +1,68 @@
+version: "3.9"
+services:
+  {{- if .IsRedis}}
+  redis:
+    image: redis:7-alpine3.20
+    container_name: redis_dev
+    ports:
+      - "6379:6379"
+    command: ["redis-server"]
+    networks:
+      - dev-network
+  {{- end}}
+  {{- if .IsMySQL}}
+  mysql:
+    image: mysql:8
+    container_name: mysql_dev
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: myapp
+      MYSQL_USER: myapp
+      MYSQL_PASSWORD: myapp
+    ports:
+      - "3306:3306"
+    networks:
+      - dev-network
+    volumes:
+      - mysql_data:/var/lib/mysql
+  {{- end}}
+  {{- if .IsPSQL}}
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_dev
+    environment:
+      POSTGRES_USER: myapp
+      POSTGRES_PASSWORD: myapp
+      POSTGRES_DB: myapp 
+    ports:
+      - "5432:5432"
+    networks:
+      - dev-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  {{- end}}
+  {{- if .IsMongoDB}}
+  mongodb:
+    image: mongo:6
+    container_name: mongodb_dev
+    ports:
+      - "27017:27017"
+    networks:
+      - dev-network
+    volumes:
+      - mongodb_data:/data/db
+  {{- end}}
+{{- if or .IsMySQL .IsPSQL .IsMongoDB}}
+volumes:
+  {{- if .IsMySQL}}
+  mysql_data:
+  {{- end}}
+  {{- if .IsPSQL}}
+  postgres_data:
+  {{- end}}
+  {{- if .IsMongoDB}}
+  mongodb_data:
+  {{- end}}
+{{- end}}
+networks:
+  dev-network:

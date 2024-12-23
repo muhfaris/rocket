@@ -62,7 +62,7 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		packageNameParam = viper.Get("app.package")
 		projectNameParam = viper.Get("app.project")
 		cacheParam       = viper.GetString("app.cache")
-		dbParam          = viper.GetString("app.db")
+		dbParam          = viper.GetString("app.database")
 	)
 
 	// Header
@@ -104,10 +104,17 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("package must be string")
 	}
 
+	err = utils.ValidateImportPath(packageName)
+	if err != nil {
+		return err
+	}
+
 	projectName, ok := projectNameParam.(string)
 	if !ok {
 		return fmt.Errorf("project name must be string")
 	}
+
+	projectName = utils.SanitizeString(projectName)
 
 	openapiFilePath, ok := openapiFileParam.(string)
 	if !ok {

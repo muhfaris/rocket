@@ -9,7 +9,7 @@ type AppConfig struct {
 	Package  string `mapstructure:"package"`
 	Project  string `mapstructure:"project"`
 	Arch     string `mapstructure:"arch"`
-	Docket   bool   `mapstructure:"docket"`
+	Docket   bool   `mapstructure:"docker"`
 	Database string `mapstructure:"database"`
 	Cache    string `mapstructure:"cache"`
 }

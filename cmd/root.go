@@ -37,8 +37,8 @@ func init() {
 	viper.BindPFlag("cache", cmdproject.OpenapiCMD.Flags().Lookup("cache"))
 
 	// db
-	cmdproject.OpenapiCMD.Flags().StringP("db", "", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
-	viper.BindPFlag("db", cmdproject.OpenapiCMD.Flags().Lookup("db"))
+	cmdproject.OpenapiCMD.Flags().StringP("database", "", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
+	viper.BindPFlag("database", cmdproject.OpenapiCMD.Flags().Lookup("database"))
 
 	// docker
 	cmdproject.OpenapiCMD.Flags().BoolP("docker", "", false, "generate dockerfile")

@@ -1,7 +1,7 @@
 openapi: "spec/openapi.yaml"
 app:
-  package: "github.com/muhfaris/mysql"
-  project: "mysql"
+  package: "github.com/muhfaris/dbmysql"
+  project: "dbmysql"
   arch: "hexagonal"
   docker: false
   database: "mysql"

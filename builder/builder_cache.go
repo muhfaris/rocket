@@ -1,7 +1,12 @@
 package builder
 
+import "github.com/muhfaris/rocket/shared/constanta"
+
 func availableCache() []string {
-	return []string{"redis"}
+	return []string{
+		constanta.CacheRedis,
+		constanta.CacheInMemory,
+	}
 }
 
 func findCache(c string) bool {

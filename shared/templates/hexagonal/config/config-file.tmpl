@@ -1,5 +1,5 @@
 app:
-  name: rocket-app
+  name: {{.AppName}}
   port: 7000
   debug:
     config: false
@@ -14,14 +14,14 @@ app:
       password:
       db: 0
   {{- end}}
-  datatore:
+  datastore:
     {{- if .IsPSQL}}
     psql:
       host: localhost
       port: 5432
-      username: postgres
-      password: postgres
-      db: postgres
+      username: myapp
+      password: myapp
+      db: myapp
     {{- end}}
     {{- if .IsSQLite}}
     sqlite:
@@ -32,8 +32,8 @@ app:
     mysql:
       host: localhost
       port: 3306
-      username: mysql
-      password: mysql
+      username: myapp
+      password: myapp
       db: myapp
     {{- end}}
     {{- if .IsMongoDB}}
