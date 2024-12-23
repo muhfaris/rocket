@@ -2,15 +2,24 @@ package app
 
 import (
 	"{{.PackagePath}}/config"
+	{{- if .IsRedis}}
 	redisadapter "{{.PackagePath}}/internal/adapter/outbound/cache/redis"
+	{{- end}}
+	{{- if .IsPSQL}}
+	psqladapter "{{.PackagePath}}/internal/adapter/outbound/datastore/psql"
+	{{- end}}
+	{{- if .IsSQLite}}
+	sqliteadapter "{{.PackagePath}}/internal/adapter/outbound/datastore/sqlite"
+	{{- end}}
+	{{- if .IsMySQL}}
+	mysqladapter "{{.PackagePath}}/internal/adapter/outbound/datastore/mysql"
+	{{- end}}
+	{{- if .IsMongoDB}}
+	mongoadapter "{{.PackagePath}}/internal/adapter/outbound/datastore/mongo"
+	{{- end}}
 	portregistry "{{.PackagePath}}/internal/core/port/inbound/registry"
 	"{{.PackagePath}}/internal/core/port/outbound/repository"
 )
-
-type App struct {
-	cacheRepository repository.CacheRepository
-	psqlRepository  repository.PSQLRepository
-}
 
 func InitializeRepository() portregistry.Repository {
 	return &App{
@@ -27,39 +36,39 @@ func InitializeRepository() portregistry.Repository {
 
 		{{if .IsPSQL}}
 		psqlRepository: psqladapter.New(psqladapter.PSQLConfig{
-			Host:     config.App.Datatore.PSQL.Host,
-			Port:     config.App.Datatore.PSQL.Port,
-			Username: config.App.Datatore.PSQL.Username,
-			Password: config.App.Datatore.PSQL.Password,
-			DB:       config.App.Datatore.PSQL.DB,
+			Host:     config.App.Datastore.PSQL.Host,
+			Port:     config.App.Datastore.PSQL.Port,
+			Username: config.App.Datastore.PSQL.Username,
+			Password: config.App.Datastore.PSQL.Password,
+			DB:       config.App.Datastore.PSQL.DB,
 		}),
 		{{end}}
 
 		{{if .IsSQLite}}
 		sqliteRepository: sqliteadapter.New(sqliteadapter.SQLiteConfig{
-			Path: config.App.Datatore.SQLite.Path,
-			Mode: config.App.Datatore.SQLite.Mode, // Optional
+			Path: config.App.Datastore.SQLite.Path,
+			Mode: config.App.Datastore.SQLite.Mode, // Optional
 		}),
 		{{end}}
 
 		{{if .IsMySQL}}
 		mysqlRepository: mysqladapter.New(mysqladapter.MySQLConfig{
-			Host:     config.App.Datatore.MySQL.Host,
-			Port:     config.App.Datatore.MySQL.Port,
-			Username: config.App.Datatore.MySQL.Username,
-			Password: config.App.Datatore.MySQL.Password,
-			DB:       config.App.Datatore.MySQL.DB,
+			Host:     config.App.Datastore.MySQL.Host,
+			Port:     config.App.Datastore.MySQL.Port,
+			Username: config.App.Datastore.MySQL.Username,
+			Password: config.App.Datastore.MySQL.Password,
+			DB:       config.App.Datastore.MySQL.DB,
 		}),
 		{{end}}
 
 		{{if .IsMongoDB}}
 		mongoRepository: mongoadapter.New(mongoadapter.MongoConfig{
-			Host:     config.App.Datatore.MongoDB.Host,
-			Port:     config.App.Datatore.MongoDB.Port,
-			Username: config.App.Datatore.MongoDB.Username,
-			Password: config.App.Datatore.MongoDB.Password,
-			DB:       config.App.Datatore.MongoDB.DB,
-			AuthDB:   config.App.Datatore.MongoDB.AuthDB, // Optional
+			Host:     config.App.Datastore.MongoDB.Host,
+			Port:     config.App.Datastore.MongoDB.Port,
+			Username: config.App.Datastore.MongoDB.Username,
+			Password: config.App.Datastore.MongoDB.Password,
+			DB:       config.App.Datastore.MongoDB.DB,
+			AuthDB:   config.App.Datastore.MongoDB.AuthDB, // Optional
 		}),
 		{{end}}
 	}
@@ -67,30 +76,53 @@ func InitializeRepository() portregistry.Repository {
 
 // App struct would need to be updated to include new repository types
 type App struct {
-	{{if .IsRedis}}
+	{{- if .IsRedis}}
 	cacheRepository repository.CacheRepository
-	{{end}}
+	{{- end}}
 
-	{{if .IsPSQL}}
+	{{- if .IsPSQL}}
 	psqlRepository repository.PSQLRepository
-	{{end}}
+	{{- end}}
 
-	{{if .IsSQLite}}
+	{{- if .IsSQLite}}
 	sqliteRepository repository.SQLiteRepository
-	{{end}}
+	{{- end}}
 
-	{{if .IsMySQL}}
+	{{- if .IsMySQL}}
 	mysqlRepository repository.MySQLRepository
-	{{end}}
+	{{- end}}
 
-	{{if .IsMongoDB}}
+	{{- if .IsMongoDB}}
 	mongoRepository repository.MongoRepository
-	{{end}}
+	{{- end}}
 }
+
+{{if .IsRedis}}
 func (a *App) CacheRepository() repository.CacheRepository {
 	return a.cacheRepository
 }
+{{end}}
 
+{{if .IsPSQL}}
 func (a *App) PSQLRepository() repository.PSQLRepository {
 	return a.psqlRepository
 }
+{{end}}
+
+{{if .IsSQLite}}
+func (a *App) SQLiteRepository() repository.SQLiteRepository {
+	return a.sqliteRepository
+}
+{{end}}
+
+{{if .IsMySQL}}
+func (a *App) MySQLRepository() repository.MyQLRepository {
+	return a.mysqlRepository
+}
+{{end}}
+
+{{if .IsMongoDB}}
+func (a *App) MongoRepository() repository.MongoRepository {
+	return a.mongoRepository
+}
+{{end}}

@@ -62,7 +62,7 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		packageNameParam = viper.Get("app.package")
 		projectNameParam = viper.Get("app.project")
 		cacheParam       = viper.GetString("app.cache")
-		dbParam          = viper.GetString("app.db")
+		dbParam          = viper.GetString("app.database")
 	)
 
 	// Header

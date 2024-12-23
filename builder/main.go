@@ -153,7 +153,7 @@ func (m *Main) generate() error {
 			Package: hexagonal.BasePackage{},
 		}
 
-		project := hexagonal.NewProject(m.doc, based, _baseproject.ProjectName, m.cacheType)
+		project := hexagonal.NewProject(m.doc, based, _baseproject.ProjectName, m.cacheType, m.dbType)
 		project.GenerateDirectories()
 	}
 
@@ -176,10 +176,11 @@ func (m *Main) initializeModule() error {
 	}
 
 	cmd = exec.Command("go", "mod", "tidy")
+	cmd.Env = append(os.Environ(), "GO111MODULE=on") // Add necessary env vars
 	cmd.Dir = _baseproject.ProjectName
-	err = cmd.Run()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to tidy go module: %v", err)
+		return fmt.Errorf("failed to tidy go module: %v\nOutput: %s", err, string(output))
 	}
 
 	cmd = exec.Command("go", "mod", "vendor")

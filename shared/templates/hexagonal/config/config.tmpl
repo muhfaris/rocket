@@ -22,8 +22,8 @@ type Config struct {
 	{{if .IsCache}}
 	Cache Cache       `mapstructure:"cache"`
 	{{end}}
-	{{if .IsDatabase}}
-	Datatore Datastore   `mapstructure:"datatore"`
+	{{if .HasDatabase}}
+	Datastore Datastore   `mapstructure:"datastore"`
 	{{end}}
 }
 
@@ -53,7 +53,7 @@ type RedisConfig struct {
 {{end}}
 {{end}}
 
-{{if .IsDatabase}}
+{{if .HasDatabase}}
 type Datastore struct {
 {{if .IsPSQL}}
 	PSQL PSQLConfig `mapstructure:"psql"`

@@ -3,7 +3,9 @@ package builder
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/muhfaris/rocket/shared/constanta"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
@@ -17,15 +19,17 @@ type Config struct {
 	ConfigType     string
 	IsCache        bool
 	IsRedis        bool
-	IsDatabase     bool
+	HasDatabase    bool
 	IsPSQL         bool
 	IsMySQL        bool
 	IsSQLite       bool
 	IsMongoDB      bool
+	AppName        string
 }
 
 func NewConfig(configName, configType, projectName, cacheType, dbType string) *Config {
 	return &Config{
+		AppName:        strings.ToLower(projectName),
 		template:       templates.GetConfigTemplate(),
 		configTemplate: templates.GetConfigFileTemplate(),
 		dirpath:        fmt.Sprintf("%s/config", projectName),
@@ -33,12 +37,12 @@ func NewConfig(configName, configType, projectName, cacheType, dbType string) *C
 		ConfigName:     configName,
 		ConfigType:     configType,
 		IsCache:        cacheType != "",
-		IsRedis:        cacheType == "redis",
-		IsDatabase:     dbType != "",
-		IsPSQL:         dbType == "postgres",
-		IsMySQL:        dbType == "mysql",
-		IsSQLite:       dbType == "sqlite",
-		IsMongoDB:      dbType == "mongodb",
+		IsRedis:        cacheType == constanta.CacheRedis,
+		HasDatabase:    dbType != "",
+		IsPSQL:         dbType == constanta.DBPostgres,
+		IsMySQL:        dbType == constanta.DBMySQL,
+		IsSQLite:       dbType == constanta.DBSQLite,
+		IsMongoDB:      dbType == constanta.DBMongo,
 	}
 }
 
@@ -67,12 +71,13 @@ func (c *Config) Generate() error {
 	}
 
 	data := map[string]any{
-		"IsRedis":    c.IsRedis,
-		"IsPSQL":     c.IsPSQL,
-		"IsDatabase": c.IsDatabase,
-		"IsMySQL":    c.IsMySQL,
-		"IsSQLite":   c.IsSQLite,
-		"IsMongoDB":  c.IsMongoDB,
+		"IsRedis":     c.IsRedis,
+		"IsPSQL":      c.IsPSQL,
+		"HasDatabase": c.HasDatabase,
+		"IsMySQL":     c.IsMySQL,
+		"IsSQLite":    c.IsSQLite,
+		"IsMongoDB":   c.IsMongoDB,
+		"AppName":     c.AppName,
 	}
 
 	rawConfig, err := libos.ExecuteTemplate(c.configTemplate, data)

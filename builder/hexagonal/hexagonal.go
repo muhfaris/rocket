@@ -8,17 +8,19 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/muhfaris/rocket/helper/ui"
 	libcase "github.com/muhfaris/rocket/shared/case"
+	"github.com/muhfaris/rocket/shared/constanta"
 	liboas "github.com/muhfaris/rocket/shared/oas"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 	"github.com/muhfaris/rocket/shared/utils"
 )
 
-func NewProject(doc *openapi3.T, based Based, projectName, cacheParam string) *Project {
+func NewProject(doc *openapi3.T, based Based, projectName, cacheParam, dbParam string) *Project {
 	return &Project{
 		based:     based,
 		doc:       doc,
 		cacheType: cacheParam,
+		dbType:    dbParam,
 		App: App{
 			dirpath:  fmt.Sprintf("%s/internal/app", projectName),
 			filepath: fmt.Sprintf("%s/internal/app/app.go", projectName),
@@ -176,6 +178,18 @@ func NewProject(doc *openapi3.T, based Based, projectName, cacheParam string) *P
 			template: templates.GetDockerfileTemplate(),
 			filepath: fmt.Sprintf("%s/Dockerfile", projectName),
 		},
+		DockerCompose: DockerCompose{
+			template: templates.GetDockerComposeTemplate(),
+			filepath: fmt.Sprintf("%s/docker-compose.yml", projectName),
+		},
+		Makefile: Makefile{
+			template: templates.GetMakefileTemplate(),
+			filepath: fmt.Sprintf("%s/Makefile", projectName),
+		},
+		ReadmeFile: ReadmeFile{
+			template: templates.GetReadmeTemplate(),
+			filepath: fmt.Sprintf("%s/README.md", projectName),
+		},
 	}
 }
 
@@ -328,6 +342,24 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate dockerfile
 	err = p.GenerateDockerfile()
+	if err != nil {
+		return err
+	}
+
+	// Generate docker compose
+	err = p.GenerateDockerCompose()
+	if err != nil {
+		return err
+	}
+
+	// Generate makefile
+	err = p.GenerateMakefile()
+	if err != nil {
+		return err
+	}
+
+	// Generate readme
+	err = p.GenerateReadmeFile()
 	if err != nil {
 		return err
 	}
@@ -901,11 +933,11 @@ func (p *Project) GenerateApp() error {
 
 	data := map[string]any{
 		"PackagePath": p.based.Project.PackagePath,
-		"IsRedis":     p.cacheType == "redis",
-		"IsPSQL":      p.dbType == "postgres",
-		"IsMySQL":     p.dbType == "mysql",
-		"IsSQLite":    p.dbType == "sqlite",
-		"IsMongo":     p.dbType == "mongodb",
+		"IsRedis":     p.cacheType == constanta.CacheRedis,
+		"IsPSQL":      p.dbType == constanta.DBPostgres,
+		"IsMySQL":     p.dbType == constanta.DBMySQL,
+		"IsSQLite":    p.dbType == constanta.DBSQLite,
+		"IsMongo":     p.dbType == constanta.DBMongo,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.App.template, data)
@@ -922,6 +954,10 @@ func (p *Project) GenerateApp() error {
 }
 
 func (p *Project) GenerateRedisAdapter() error {
+	if p.cacheType != constanta.CacheRedis {
+		return nil
+	}
+
 	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.RedisAdapter.dirpath)
 	_, err := os.Stat(p.RedisAdapter.dirpath)
 	if os.IsNotExist(err) {
@@ -958,6 +994,10 @@ func (p *Project) GenerateRedisAdapter() error {
 }
 
 func (p *Project) GenerateCacheRepository() error {
+	if p.cacheType == "" {
+		return nil
+	}
+
 	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.CacheRepository.dirpath)
 	_, err := os.Stat(p.CacheRepository.dirpath)
 	if os.IsNotExist(err) {
@@ -985,7 +1025,7 @@ func (p *Project) GenerateCacheRepository() error {
 }
 
 func (p *Project) GeneratePSQLAdapter() error {
-	if p.dbType != "postgres" {
+	if p.dbType != constanta.DBPostgres {
 		return nil
 	}
 
@@ -1025,7 +1065,7 @@ func (p *Project) GeneratePSQLAdapter() error {
 }
 
 func (p *Project) GeneratePSQLRepository() error {
-	if p.dbType != "postgres" {
+	if p.dbType != constanta.DBPostgres {
 		return nil
 	}
 
@@ -1056,7 +1096,7 @@ func (p *Project) GeneratePSQLRepository() error {
 }
 
 func (p *Project) GenerateMySQLAdapter() error {
-	if p.dbType != "mysql" {
+	if p.dbType != constanta.DBMySQL {
 		return nil
 	}
 
@@ -1096,11 +1136,11 @@ func (p *Project) GenerateMySQLAdapter() error {
 }
 
 func (p *Project) GenerateMySQLRepository() error {
-	if p.dbType != "mysql" {
+	if p.dbType != constanta.DBMySQL {
 		return nil
 	}
 
-	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MySQLRepository.dirpath)
+	fmt.Printf(ui.LineOnProgress, p.MySQLRepository.dirpath)
 	_, err := os.Stat(p.MySQLRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MySQLRepository.dirpath, os.ModePerm)
@@ -1127,7 +1167,7 @@ func (p *Project) GenerateMySQLRepository() error {
 }
 
 func (p *Project) GenerateSQLiteAdapter() error {
-	if p.dbType != "sqlite" {
+	if p.dbType != constanta.DBSQLite {
 		return nil
 	}
 
@@ -1167,7 +1207,7 @@ func (p *Project) GenerateSQLiteAdapter() error {
 }
 
 func (p *Project) GenerateSQLiteRepository() error {
-	if p.dbType != "sqlite" {
+	if p.dbType != constanta.DBSQLite {
 		return nil
 	}
 
@@ -1198,7 +1238,7 @@ func (p *Project) GenerateSQLiteRepository() error {
 }
 
 func (p *Project) GenerateMongoAdapter() error {
-	if p.dbType != "mongodb" {
+	if p.dbType != constanta.DBMongo {
 		return nil
 	}
 
@@ -1238,7 +1278,7 @@ func (p *Project) GenerateMongoAdapter() error {
 }
 
 func (p *Project) GenerateMongoRepository() error {
-	if p.dbType != "mongodb" {
+	if p.dbType != constanta.DBMongo {
 		return nil
 	}
 
@@ -1275,6 +1315,69 @@ func (p *Project) GenerateDockerfile() error {
 	}
 
 	err = libos.CreateFile(p.Dockerfile.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateDockerCompose() error {
+	if p.dbType == "" && p.cacheType == "" {
+		return nil
+	}
+
+	data := map[string]bool{
+		"IsRedis":   p.cacheType == constanta.CacheRedis,
+		"IsMySQL":   p.dbType == constanta.DBMySQL,
+		"IsPSQL":    p.dbType == constanta.DBPostgres,
+		"IsMongoDB": p.dbType == constanta.DBMongo,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.DockerCompose.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.DockerCompose.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateMakefile() error {
+	data := map[string]string{
+		"AppName": p.based.Project.AppName,
+	}
+	raw, err := libos.ExecuteTemplate(p.Makefile.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.Makefile.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Readme
+func (p *Project) GenerateReadmeFile() error {
+	data := map[string]string{
+		"ProjectName": p.based.Project.ProjectName,
+		"PackagePath": p.based.Project.PackagePath,
+		"AppName":     p.based.Project.AppName,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.ReadmeFile.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.ReadmeFile.filepath, raw)
 	if err != nil {
 		return err
 	}

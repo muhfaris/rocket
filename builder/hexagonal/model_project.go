@@ -36,6 +36,9 @@ type Project struct {
 	MongoCommandAdapter  MongoCommandAdapter
 	MongoRepository      MongoRepository
 	Dockerfile           Dockerfile
+	DockerCompose        DockerCompose
+	Makefile             Makefile
+	ReadmeFile           ReadmeFile
 }
 
 type Based struct {
@@ -255,6 +258,21 @@ type MongoRepository struct {
 }
 
 type Dockerfile struct {
+	filepath string
+	template []byte
+}
+
+type DockerCompose struct {
+	filepath string
+	template []byte
+}
+
+type Makefile struct {
+	filepath string
+	template []byte
+}
+
+type ReadmeFile struct {
 	filepath string
 	template []byte
 }

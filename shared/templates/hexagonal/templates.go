@@ -106,4 +106,13 @@ var (
 
 	//go:embed Dockerfile.tmpl
 	DockerfileTemplate []byte
+
+	//go:embed docker-compose.tmpl
+	DockerCompose []byte
+
+	//go:embed Makefile.tmpl
+	MakefileTemplate []byte
+
+	//go:embed README.tmpl
+	ReadmeTemplate []byte
 )
