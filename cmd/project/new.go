@@ -104,6 +104,8 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("package must be string")
 	}
 
+	packageName = utils.SanitizeString(packageName)
+
 	projectName, ok := projectNameParam.(string)
 	if !ok {
 		return fmt.Errorf("project name must be string")
