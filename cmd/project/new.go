@@ -125,7 +125,10 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("openapi file must be set")
 	}
 
-	archLayout := viper.Get("app.arch").(string)
+	archLayout, ok := viper.Get("app.arch").(string)
+	if !ok {
+		return fmt.Errorf("arch must be string")
+	}
 	templates.SetArchLayout(archLayout)
 
 	if has := utils.ContainsSpaceOrSpecialChar(projectName); has {

@@ -93,27 +93,29 @@ func OASDescriptionSwagger(doc *openapi3.T) (string, error) {
 	}
 
 	// Security schemes
-	if doc.Components.SecuritySchemes != nil {
-		for name, securitySchemeRef := range doc.Components.SecuritySchemes {
-			securityScheme := securitySchemeRef.Value
-			if securityScheme != nil {
-				switch securityScheme.Type {
-				case "apiKey":
-					annotation += fmt.Sprintf("// @securityDefinitions.apikey %s\n", name)
-					annotation += fmt.Sprintf("// @in %s\n", securityScheme.In)
-					annotation += fmt.Sprintf("// @name %s\n", securityScheme.Name)
-				case "http":
-					annotation += fmt.Sprintf("// @securityDefinitions.basic %s\n", name)
-				case "oauth2":
-					annotation += fmt.Sprintf("// @securityDefinitions.oauth2.application %s\n", name)
-					if securityScheme.Flows != nil {
-						if flow := securityScheme.Flows.ClientCredentials; flow != nil {
-							annotation += fmt.Sprintf("// @tokenUrl %s\n", flow.TokenURL)
+	if doc.Components != nil {
+		if doc.Components.SecuritySchemes != nil {
+			for name, securitySchemeRef := range doc.Components.SecuritySchemes {
+				securityScheme := securitySchemeRef.Value
+				if securityScheme != nil {
+					switch securityScheme.Type {
+					case "apiKey":
+						annotation += fmt.Sprintf("// @securityDefinitions.apikey %s\n", name)
+						annotation += fmt.Sprintf("// @in %s\n", securityScheme.In)
+						annotation += fmt.Sprintf("// @name %s\n", securityScheme.Name)
+					case "http":
+						annotation += fmt.Sprintf("// @securityDefinitions.basic %s\n", name)
+					case "oauth2":
+						annotation += fmt.Sprintf("// @securityDefinitions.oauth2.application %s\n", name)
+						if securityScheme.Flows != nil {
+							if flow := securityScheme.Flows.ClientCredentials; flow != nil {
+								annotation += fmt.Sprintf("// @tokenUrl %s\n", flow.TokenURL)
+							}
 						}
+					case "openIdConnect":
+						annotation += fmt.Sprintf("// @securityDefinitions.openId %s\n", name)
+						annotation += fmt.Sprintf("// @openIdConnectUrl %s\n", securityScheme.OpenIdConnectUrl)
 					}
-				case "openIdConnect":
-					annotation += fmt.Sprintf("// @securityDefinitions.openId %s\n", name)
-					annotation += fmt.Sprintf("// @openIdConnectUrl %s\n", securityScheme.OpenIdConnectUrl)
 				}
 			}
 		}
