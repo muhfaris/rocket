@@ -1118,7 +1118,7 @@ func (p *Project) GenerateMySQLAdapter() error {
 		return err
 	}
 
-	err = libos.CreateFile(p.PSQLAdapter.filepath, rawMySQLAdapter)
+	err = libos.CreateFile(p.MySQLAdapter.filepath, rawMySQLAdapter)
 	if err != nil {
 		return err
 	}

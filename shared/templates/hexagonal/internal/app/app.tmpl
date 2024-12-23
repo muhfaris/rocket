@@ -116,7 +116,7 @@ func (a *App) SQLiteRepository() repository.SQLiteRepository {
 {{end}}
 
 {{if .IsMySQL}}
-func (a *App) MySQLRepository() repository.MyQLRepository {
+func (a *App) MySQLRepository() repository.MySQLRepository {
 	return a.mysqlRepository
 }
 {{end}}
