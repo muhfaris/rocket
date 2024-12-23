@@ -121,9 +121,53 @@ func GetDetailPartner() func(c *fiber.Ctx) error {
 
 ### OperationId
 
-OperationId should have unique name and following format `HandlerAPI, You
-should use **title letter capital**. This will be used for generate code as Handler
+OperationId should have unique name and following format `<HandlerName>` or
+`<HandlerName>::<ServiceName>`, You should use **title letter capital**. This will be used for generate code as Handler
 name and will be called in route.
+
+If the service name not define will use default service name `appsvc`. Example openapi spec:
+
+```
+paths:
+  /books:
+    get:
+      tags:
+        - Books
+      summary: Get list of books
+      operationId: GetBooks
+      x-route-group: bookGroup::/api
+      responses:
+        "200":
+          description: A list of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+  /books/{bookId}:
+    get:
+      tags:
+        - Books
+      summary: Get a book by ID
+      operationId: GetBookById::BookService
+      x-route-group: bookGroup::/api
+      x-parameters-name: GetBookByIdParameters
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+
+```
 
 ### RequestBody
 
