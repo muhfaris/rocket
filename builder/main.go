@@ -175,20 +175,20 @@ func (m *Main) initializeModule() error {
 		return fmt.Errorf("failed to initialize go module: %v", err)
 	}
 
-	cmd = exec.Command("go", "mod", "tidy")
-	cmd.Env = append(os.Environ(), "GO111MODULE=on") // Add necessary env vars
-	cmd.Dir = _baseproject.ProjectName
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to tidy go module: %v\nOutput: %s", err, string(output))
-	}
-
-	cmd = exec.Command("go", "mod", "vendor")
-	cmd.Dir = _baseproject.ProjectName
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("failed to vendor go module: %v", err)
-	}
+	// tidyCmd := exec.CommandContext(context.Background(), "go", "mod", "tidy")
+	// tidyCmd.Env = append(os.Environ(), "GO111MODULE=on", "GOMODULE=local")
+	// tidyCmd.Dir = _baseproject.ProjectName
+	// output, err := tidyCmd.CombinedOutput()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to tidy go module: %v\nOutput: %s", err, string(output))
+	// }
+	//
+	// vendorCmd := exec.Command("go", "mod", "vendor")
+	// vendorCmd.Dir = _baseproject.ProjectName
+	// err = vendorCmd.Run()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to vendor go module: %v", err)
+	// }
 
 	return nil
 }

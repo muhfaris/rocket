@@ -1,12 +1,13 @@
 services:
 	docker compose down -v --remove-orphans
 	docker compose up -d
-init: services
+mod:
 	go mod tidy
 	go mod vendor -v
 run:
 	go run main.go rest
 build:
 	go build -o $(GOPATH)/bin/{{.AppName}} .
+init: services mod
 
 .PHONY: services

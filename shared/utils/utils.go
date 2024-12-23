@@ -29,7 +29,7 @@ func ConvertBracesToColon(input string) string {
 // SanitizeString removes all special characters and spaces from a string.
 func SanitizeString(input string) string {
 	// Define a regular expression to match special characters and spaces
-	regex := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	regex := regexp.MustCompile(`[^a-zA-Z0-9\-]+`)
 	// Replace matches with an empty string
 	sanitized := regex.ReplaceAllString(input, "")
 	return sanitized
