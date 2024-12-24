@@ -1140,7 +1140,7 @@ func (p *Project) GenerateMySQLRepository() error {
 		return nil
 	}
 
-	fmt.Printf(ui.LineOnProgress, p.MySQLRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MySQLRepository.dirpath)
 	_, err := os.Stat(p.MySQLRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MySQLRepository.dirpath, os.ModePerm)
@@ -1348,8 +1348,13 @@ func (p *Project) GenerateDockerCompose() error {
 }
 
 func (p *Project) GenerateMakefile() error {
-	data := map[string]string{
-		"AppName": p.based.Project.AppName,
+	data := map[string]any{
+		"AppName":  p.based.Project.AppName,
+		"IsRedis":  p.cacheType == constanta.CacheRedis,
+		"IsPSQL":   p.dbType == constanta.DBPostgres,
+		"IsMySQL":  p.dbType == constanta.DBMySQL,
+		"IsSQLite": p.dbType == constanta.DBSQLite,
+		"IsMongo":  p.dbType == constanta.DBMongo,
 	}
 	raw, err := libos.ExecuteTemplate(p.Makefile.template, data)
 	if err != nil {
