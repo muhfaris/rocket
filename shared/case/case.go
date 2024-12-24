@@ -96,3 +96,11 @@ func ToTitleCase(input string) string {
 	input = strings.ToLower(input)
 	return strings.ToUpper(string(input[0])) + strings.ToLower(input[1:])
 }
+
+// ToLowerFirst converts a string to title case (e.g., "Hello" becomes "hello").
+func ToLowerFirst(input string) string {
+	if len(input) == 0 {
+		return input
+	}
+	return strings.ToLower(string(input[0])) + input[1:]
+}
