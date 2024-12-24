@@ -40,6 +40,11 @@ Table of contents
 4. [RequestBody](#requestbody)
 5. [Tags](#tags)
 
+### Requirement Fields
+
+- [OperationId](#operationid)
+- [Tags](#tags)
+
 ### Grouping Route
 
 You can grouping some apis into one group with `x-route-group` tag. The default
@@ -127,7 +132,7 @@ name and will be called in route.
 
 If the service name not define will use default service name `appsvc`. Example openapi spec:
 
-```
+```yaml
 paths:
   /books:
     get:
@@ -166,7 +171,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
-
 ```
 
 ### RequestBody
