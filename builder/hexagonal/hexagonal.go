@@ -1140,7 +1140,7 @@ func (p *Project) GenerateMySQLRepository() error {
 		return nil
 	}
 
-	fmt.Printf(ui.LineOnProgress, p.MySQLRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MySQLRepository.dirpath)
 	_, err := os.Stat(p.MySQLRepository.dirpath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(p.MySQLRepository.dirpath, os.ModePerm)
