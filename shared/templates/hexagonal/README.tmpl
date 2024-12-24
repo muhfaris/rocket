@@ -51,8 +51,14 @@ This command will:
 
 - Run `go mod tidy` to clean up dependencies.
 - Run `go mod vendor` to vendor dependencies.
-- Start necessary services (e.g., Redis, databases) in container.
 
+### Quick Start
+
+Run the following command to start the services, gomod application and run the application:
+
+```bash
+make start
+```
 ---
 
 ## Usage
@@ -111,11 +117,11 @@ app:
 
 The project comes with a set of shortcuts commands to make development easier:
 
-- `make init` - Initialize the project.
+- `make start` - Run the services, gomod application and run the application.
 - `make services` - Start necessary services and remove old volume.
 - `make run` - Run the application.
 - `make build` - Build the application for deployment and store it in the `$(GOPATH)/bin` directory.
-- `make mod` - Run `go mod tidy` and `go mod vendor` commands.
+- `make init` - Run `go mod tidy` and `go mod vendor` commands.
 
 ## Contributing
 

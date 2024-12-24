@@ -123,3 +123,21 @@ func OASDescriptionSwagger(doc *openapi3.T) (string, error) {
 
 	return annotation, nil
 }
+
+// reference: https://swagger.io/docs/specification/v3_0/data-models/data-types/?sbsearch=Types
+func DataTypeToGo(dataType string) string {
+	switch dataType {
+	case "string":
+		return "string"
+	case "integer":
+		return "int"
+	case "number":
+		return "float64"
+	case "boolean":
+		return "bool"
+	case "null", "nullable":
+		return "any"
+	default:
+		return "any"
+	}
+}
