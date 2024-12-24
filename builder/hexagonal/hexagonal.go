@@ -1348,8 +1348,13 @@ func (p *Project) GenerateDockerCompose() error {
 }
 
 func (p *Project) GenerateMakefile() error {
-	data := map[string]string{
-		"AppName": p.based.Project.AppName,
+	data := map[string]any{
+		"AppName":  p.based.Project.AppName,
+		"IsRedis":  p.cacheType == constanta.CacheRedis,
+		"IsPSQL":   p.dbType == constanta.DBPostgres,
+		"IsMySQL":  p.dbType == constanta.DBMySQL,
+		"IsSQLite": p.dbType == constanta.DBSQLite,
+		"IsMongo":  p.dbType == constanta.DBMongo,
 	}
 	raw, err := libos.ExecuteTemplate(p.Makefile.template, data)
 	if err != nil {
