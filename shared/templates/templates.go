@@ -59,6 +59,15 @@ func GetRestTemplate() []byte {
 	}
 }
 
+func GetGroupRestTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.GroupRestTemplate
+	default:
+		return nil
+	}
+}
+
 func GetRestRouterTemplate() []byte {
 	switch archType {
 	case hexagonalType:

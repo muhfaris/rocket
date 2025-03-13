@@ -22,8 +22,8 @@ func NewProject(doc *openapi3.T, based Based, projectName, cacheParam, dbParam s
 		cacheType: cacheParam,
 		dbType:    dbParam,
 		App: App{
-			dirpath:  fmt.Sprintf("%s/internal/app", projectName),
-			filepath: fmt.Sprintf("%s/internal/app/app.go", projectName),
+			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", projectName),
+			filepath: fmt.Sprintf("%s/cmd/bootstrap/app.go", projectName),
 			template: templates.GetAppTemplate(),
 		},
 		Dirs: []string{
@@ -45,6 +45,11 @@ func NewProject(doc *openapi3.T, based Based, projectName, cacheParam, dbParam s
 			dirpathCmd:  fmt.Sprintf("%s/cmd", projectName),
 			filepathCmd: fmt.Sprintf("%s/cmd/rest.go", projectName),
 			entrypoint:  "rest",
+		},
+		GroupRest: GroupRest{
+			template: templates.GetGroupRestTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/group", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/group/v1.go", projectName),
 		},
 		RestRouter: RestRouter{
 			template: templates.GetRestRouterTemplate(),
@@ -221,6 +226,12 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
+	// Generate Group rest router
+	err = p.GenerateGroupRestRouter()
+	if err != nil {
+		return err
+	}
+
 	// Generate rest router
 	err = p.GenerateRestRouter()
 	if err != nil {
@@ -388,6 +399,35 @@ func (p *Project) GenerateRest() error {
 	}
 
 	err = libos.CreateFile(p.Rest.filepathCmd, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateGroupRestRouter() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.GroupRest.dirpath)
+	_, err := os.Stat(p.GroupRest.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.GroupRest.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	routerData := map[string]any{
+		"PackagePath": p.based.Project.PackagePath,
+		"AppName":     p.based.Project.AppName,
+		"Groups":      p.RoutesGroup,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.GroupRest.template, routerData)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.GroupRest.filepath, raw)
 	if err != nil {
 		return err
 	}

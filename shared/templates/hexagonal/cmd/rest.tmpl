@@ -3,7 +3,7 @@ package cmd
 import (
 "{{.PackagePath}}/config"
 "{{.PackagePath}}/internal/adapter/inbound/rest/routers"
-"{{.PackagePath}}/internal/app"
+"{{.PackagePath}}/cmd/bootstrap"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ var restCmd = &cobra.Command{
 }
 
 func restPreRunE(cmd *cobra.Command, args []string) error {
-	app.InitializeRepository()
+	bootstrap.InitializeRepository()
 	return nil
 }
 

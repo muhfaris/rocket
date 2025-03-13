@@ -10,6 +10,7 @@ type Project struct {
 	App                  App
 	Dirs                 []string
 	Rest                 Rest
+	GroupRest            GroupRest
 	RestRouter           RestRouter
 	RestPortAdapter      RestPortAdapter
 	RestMiddlewares      RestMiddlewares
@@ -132,6 +133,12 @@ type Rest struct {
 	dirpathCmd  string
 	filepathCmd string
 	entrypoint  string
+}
+
+type GroupRest struct {
+	template []byte
+	dirpath  string
+	filepath string
 }
 
 type RestRouter struct {

@@ -13,6 +13,7 @@ import (
 	"{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/middlewares"
 	portadapter "{{.PackagePath}}/internal/core/port/inbound/adapter"
 
+	"github.com/muhfaris/r1/internal/adapter/inbound/rest/routers/group"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
@@ -37,14 +38,7 @@ func Init(port int) portadapter.Rest {
 	// publicGroup.Get("/health", handlersv1.Health())
 
 	h := handlersv1.New()
-
-  {{- range .Groups}}
-  	{{$groupName:= .GroupName}}
-    {{$groupName}} := r.Group("{{.GroupPath}}")
-    {{- range .Routes}}
-      {{$groupName}}.{{.Method}}("{{.Path}}", h.{{.Handler}}()).Name("{{.Handler}}")
-    {{- end}}
-  {{- end}}
+	group.V1(r, h)
 
 	return &Router{
 		Client: r,

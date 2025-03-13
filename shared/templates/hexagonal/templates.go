@@ -23,6 +23,9 @@ var (
 	//go:embed cmd/rest.tmpl
 	RestTemplate []byte
 
+	//go:embed internal/adapter/inbound/rest/routers/group/v1.tmpl
+	GroupRestTemplate []byte
+
 	//go:embed internal/adapter/inbound/rest/routers/router.tmpl
 	RestRouterTemplate []byte
 
@@ -56,7 +59,7 @@ var (
 	//go:embed internal/core/domain/domain.tmpl
 	DomainModel []byte
 
-	//go:embed internal/app/app.tmpl
+	//go:embed cmd/bootstrap/app.tmpl
 	AppTemplate []byte
 
 	//go:embed internal/adapter/outbound/cache/redis/redis.tmpl

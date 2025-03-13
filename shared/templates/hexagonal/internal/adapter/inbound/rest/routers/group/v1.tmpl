@@ -1,0 +1,28 @@
+package group
+
+import (
+	"github.com/gofiber/fiber/v2"
+	handlersv1 "{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/handlers"
+)
+
+func V1(r *fiber.App, h *handlersv1.Handler) {
+	// public
+	// publicGroup := r.Group("/")
+	// publicGroup.Get("/health", handlersv1.Health())
+
+  {{- range .Groups}}
+  	{{$groupName:= .GroupName}}
+  	{{ $groupName}}(r,h) 
+  {{- end}}
+}
+
+{{- range .Groups}}
+	{{$groupName:= .GroupName}}
+func {{$groupName}}(r *fiber.App, h *handlersv1.Handler) {
+  {{$groupName}} := r.Group("{{.GroupPath}}")
+  {{- range .Routes}}
+    {{$groupName}}.{{.Method}}("{{.Path}}", h.{{.Handler}}()).Name("{{.Handler}}")
+  {{- end}}
+}
+
+{{- end}}
