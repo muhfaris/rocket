@@ -6,10 +6,11 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Package  string `mapstructure:"package"`
-	Project  string `mapstructure:"project"`
-	Arch     string `mapstructure:"arch"`
-	Docket   bool   `mapstructure:"docker"`
-	Database string `mapstructure:"database"`
-	Cache    string `mapstructure:"cache"`
+	Package            string `mapstructure:"package"`
+	Project            string `mapstructure:"project"`
+	Arch               string `mapstructure:"arch"`
+	Docket             bool   `mapstructure:"docker"`
+	Database           string `mapstructure:"database"`
+	Cache              string `mapstructure:"cache"`
+	IgnoreDataResponse string `mapstructure:"ignore_data_response"`
 }

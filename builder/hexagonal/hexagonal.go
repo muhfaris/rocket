@@ -15,22 +15,36 @@ import (
 	"github.com/muhfaris/rocket/shared/utils"
 )
 
-func NewProject(doc *openapi3.T, based Based, projectName, cacheParam, dbParam string) *Project {
+type Config struct {
+	Based              Based
+	ProjectName        string
+	CacheParam         string
+	DBParam            string
+	IgnoreDataResponse bool
+}
+
+var config *Config
+
+func NewProject(doc *openapi3.T, cfg *Config) *Project {
+	// re-assign config
+	config = cfg
+	projectName := cfg.ProjectName
+
 	return &Project{
-		based:     based,
+		based:     cfg.Based,
 		doc:       doc,
-		cacheType: cacheParam,
-		dbType:    dbParam,
+		cacheType: cfg.CacheParam,
+		dbType:    cfg.DBParam,
 		App: App{
-			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", projectName),
-			filepath: fmt.Sprintf("%s/cmd/bootstrap/app.go", projectName),
+			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", cfg.ProjectName),
+			filepath: fmt.Sprintf("%s/cmd/bootstrap/app.go", cfg.ProjectName),
 			template: templates.GetAppTemplate(),
 		},
 		Dirs: []string{
-			"internal/adapter/inbound/rest/routers",
-			"internal/adapter/inbound/rest/routers/v1/handlers",
-			"internal/adapter/inbound/rest/routers/v1/middlewares",
-			"internal/adapter/inbound/rest/routers/v1/response",
+			"internal/adapter/inbound/rest/router",
+			"internal/adapter/inbound/rest/router/v1/handler",
+			"internal/adapter/inbound/rest/router/v1/middleware",
+			"internal/adapter/inbound/rest/router/v1/response",
 			"internal/core/domain",
 			"internal/core/service",
 			"internal/core/port/inbound/adapter",
@@ -48,13 +62,13 @@ func NewProject(doc *openapi3.T, based Based, projectName, cacheParam, dbParam s
 		},
 		GroupRest: GroupRest{
 			template: templates.GetGroupRestTemplate(),
-			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/group", projectName),
-			filepath: fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/group/v1.go", projectName),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/router/group", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/inbound/rest/router/group/v1.go", projectName),
 		},
 		RestRouter: RestRouter{
 			template: templates.GetRestRouterTemplate(),
-			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/routers", projectName),
-			filepath: fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/router.go", projectName),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/router", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/inbound/rest/router/router.go", projectName),
 		},
 		RestPortAdapter: RestPortAdapter{
 			dirpath:  fmt.Sprintf("%s/internal/core/port/inbound/adapter", projectName),
@@ -62,16 +76,16 @@ func NewProject(doc *openapi3.T, based Based, projectName, cacheParam, dbParam s
 			template: templates.GetRestAdapterTemplate(),
 		},
 		RestMiddlewares: RestMiddlewares{
-			dirpath: fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/middlewares", projectName),
+			dirpath: fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/middleware", projectName),
 			data: []DataRestMiddleware{
 				{
-					filepaths: fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/middlewares/latency.go", projectName),
+					filepaths: fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/middleware/latency.go", projectName),
 					template:  templates.GetRestLatencyMiddlewareTemplate(),
 				},
 			},
 		},
 		RestResponse: RestResponse{
-			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/response", projectName),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/response", projectName),
 			template: templates.GetRestResponseTemplate(),
 			filepath: "response.go",
 		},
@@ -618,7 +632,8 @@ func (p *Project) GenerateRestResponse() error {
 func (p *Project) GenerateRestHandlers() error {
 	var (
 		childsRouter       []ChildRouterGroup
-		handlerDir         = fmt.Sprintf("%s/internal/adapter/inbound/rest/routers/v1/handlers", p.based.Project.ProjectName)
+		handlerDir         = fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/handler", p.based.Project.ProjectName)
+		presenterDir       = fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/presenter", p.based.Project.ProjectName)
 		routesGroupMap     = make(map[string]RouterGroup)
 		domainMap          = make(map[string]DataDomainModel)
 		serviceRegistryMap = make(map[string]bool)
@@ -696,6 +711,7 @@ func (p *Project) GenerateRestHandlers() error {
 				ParamsData:  ParamsData{},
 				QueryData:   QueryData{},
 				BodyData:    BodyData{},
+				DomainModel: Struct{},
 			}
 
 			err := handlerData.Generate(method, operation)
@@ -703,49 +719,71 @@ func (p *Project) GenerateRestHandlers() error {
 				return err
 			}
 
+			// create presenter file
+			err = p.createPresenterFile(presenterDir, handlerData)
+			if err != nil {
+				return err
+			}
+
 			// Prepare service handler
 			svcMethodFunc := strings.ReplaceAll(operationID, "Handler", "") // Handler name, remnove Handler for service name
+
 			handlerService := PortServiceMethods{
-				MethodName: svcMethodFunc,
-				ReturnTypes: []PortServiceReturnType{
-					{Type: "error"},
-				},
+				MethodName:  svcMethodFunc,
+				ReturnTypes: []PortServiceReturnType{{Type: "error"}},
 			}
 
-			if handlerData.HasQuery {
-				structType := fmt.Sprintf("domain.%s", handlerData.QueryData.QueryStructName)
-				if strings.Contains(handlerData.QueryData.QueryStructName, "map") {
-					structType = handlerData.QueryData.QueryStructName
+			// override service handler
+			if handlerData.HasStructsResponse {
+				handlerService = PortServiceMethods{
+					MethodName: svcMethodFunc,
+					ReturnTypes: []PortServiceReturnType{
+						{Type: fmt.Sprintf("domain.%s", handlerData.DomainModel.StructName)},
+						{Type: "error"},
+					},
 				}
-				handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
-					Name: handlerData.QueryData.QueryName,
-					Type: structType,
-				})
+				handlerData.ServiceHasReturn = true
 			}
 
-			if handlerData.HasParams {
-				structType := fmt.Sprintf("domain.%s", handlerData.ParamsData.ParamsStructName)
-				if strings.Contains(handlerData.ParamsData.ParamsStructName, "map") {
-					structType = handlerData.ParamsData.ParamsStructName
-				}
+			// if handlerData.HasQuery {
+			// 	structType := fmt.Sprintf("domain.%s", handlerData.DomainModel.StructName)
+			// 	if strings.Contains(handlerData.QueryStructName, "map") {
+			// 		structType = handlerData.QueryStructName
+			// 	}
+			// 	handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
+			// 		Name: handlerData.QueryName,
+			// 		Type: structType,
+			// 	})
+			// }
+			//
+			// if handlerData.HasParams {
+			// 	structType := fmt.Sprintf("domain.%s", handlerData.DomainModel.StructName)
+			// 	if strings.Contains(handlerData.ParamsStructName, "map") {
+			// 		structType = handlerData.ParamsStructName
+			// 	}
+			//
+			// 	handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
+			// 		Name: handlerData.ParamsName,
+			// 		Type: structType,
+			// 	})
+			// }
+			//
+			// if handlerData.HasBody {
+			// 	structType := fmt.Sprintf("domain.%s", handlerData.DomainModel.StructName)
+			// 	if strings.Contains(handlerData.BodyStructName, "map") {
+			// 		structType = handlerData.BodyStructName
+			// 	}
+			//
+			// 	handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
+			// 		Name: handlerData.BodyName,
+			// 		Type: structType,
+			// 	})
+			// }
 
-				handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
-					Name: handlerData.ParamsData.ParamsName,
-					Type: structType,
-				})
-			}
-
-			if handlerData.HasBody {
-				structType := fmt.Sprintf("domain.%s", handlerData.BodyData.BodyStructName)
-				if strings.Contains(handlerData.BodyData.BodyStructName, "map") {
-					structType = handlerData.BodyData.BodyStructName
-				}
-
-				handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
-					Name: handlerData.BodyData.BodyName,
-					Type: structType,
-				})
-			}
+			handlerService.Params = append(handlerService.Params, PortServiceMethodParams{
+				Name: "payload",
+				Type: fmt.Sprintf("domain.%s", handlerData.DomainModel.StructName),
+			})
 
 			// service handler
 			serviceHandler.Methods = append(serviceHandler.Methods, handlerService)
@@ -769,13 +807,13 @@ func (p *Project) GenerateRestHandlers() error {
 			handlerData.Service = handlerService
 			handlerData.ServiceName = serviceName
 
-			// assinging domain model
+			// assigning domain model
 			existDomain, exist := domainMap[domainModel.filename]
 			if exist {
-				existDomain.Structs = append(existDomain.Structs, handlerData.Structs...)
+				existDomain.Structs = append(existDomain.Structs, handlerData.DomainModel)
 				domainMap[domainModel.filename] = existDomain
 			} else {
-				domainModel.Structs = handlerData.Structs
+				domainModel.Structs = append(domainModel.Structs, handlerData.DomainModel)
 				domainMap[domainModel.filename] = domainModel
 			}
 
@@ -888,6 +926,58 @@ func (p *Project) createHandlerFile(handlerDir string, handlerData *HandlerData)
 		if err != nil {
 			return err
 		}
+	}
+
+	err = libos.CreateFile(filepath, raw)
+	if err != nil {
+		return fmt.Errorf("error creating file %s: %w", filepath, err)
+	}
+
+	return nil
+}
+
+func (p *Project) createPresenterFile(presenterDir string, handlerData *HandlerData) error {
+	var (
+		filename = fmt.Sprintf("%s.go", libcase.ToSnakeCase(handlerData.HandlerName))
+		filepath = fmt.Sprintf("%s/%s", presenterDir, filename)
+	)
+
+	// prepare struct response
+	if len(handlerData.StructsResponse) > 0 {
+		fieldsDomainMap := make(map[string]Field)
+		for _, fieldDomain := range handlerData.DomainModel.Fields {
+			fieldsDomainMap[fieldDomain.FieldName] = fieldDomain
+		}
+
+		fieldsStructResponseMap := make(map[string]string)
+		for _, structResponse := range handlerData.StructsResponse {
+			for _, fieldSR := range structResponse.Fields {
+				fieldDomain, ok := fieldsDomainMap[fieldSR.FieldName]
+				if ok {
+					fieldsStructResponseMap[fieldSR.FieldName] = fieldDomain.FieldName
+				}
+			}
+		}
+
+		if len(fieldsStructResponseMap) > 0 {
+			handlerData.HasStructsResponse = true
+			handlerData.MappingFieldsStructResponse = fieldsStructResponseMap
+		}
+	}
+
+	// end
+
+	_, err := os.Stat(presenterDir)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(presenterDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	raw, err := libos.ExecuteTemplate(templates.GetRestPresenterTemplate(), handlerData)
+	if err != nil {
+		return err
 	}
 
 	err = libos.CreateFile(filepath, raw)

@@ -237,3 +237,119 @@ func UpdatePartnerHandler() func(c *fiber.Ctx) error {
 
 Every route should have one or more tags. The tag will be used for filename of domain
 model.
+
+### Response Endpoint
+
+The response has 2 types:
+
+- Use components / schema
+- Use embed response properties
+
+#### Components / Schema
+
+This example response is using components / schema, you must define `x-struct-response` as struct name:
+
+```
+components:
+  securitySchemes:
+    noauthAuth:
+      type: http
+      scheme: noauth
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ResponseCreateReport:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 01HBE00X5165PB9M5687PB12GY
+  /reports:
+    post:
+      operationId: CreateReport::ReportSvc
+      tags:
+        - Reports
+      summary: Submit a new report
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseCreateReport"
+
+```
+
+The generated code will be:
+
+```go
+ type ResponseCreateReport struct {
+   Data struct {
+     Id string `json:"id"`
+   }
+ }
+```
+
+#### Embed Response Properties
+
+This example response is using embed response properties:
+
+```
+  /reports:
+    post:
+      operationId: CreateReport::ReportSvc
+      tags:
+        - Reports
+      summary: Submit a new report
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Broken streetlight on Main St."
+                description:
+                  type: string
+                  example: "The streetlight near the bus stop is not working."
+                location:
+                  type: string
+                  example: "Main St, Downtown"
+      responses:
+        "201":
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: ResponseCreateReport
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 01HBE00X5165PB9M5687PB12GY
+
+```
+
+The generated code will be:
+
+```go
+type ResponseCreateReport struct {
+  Data struct {
+    Id string `json:"id"`
+  }
+}
+
+```

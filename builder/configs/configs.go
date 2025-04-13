@@ -15,6 +15,8 @@ type ConfigBuilder struct {
 	CurrentPath string
 }
 
+var Builder *ConfigBuilder
+
 // NewConfigBuilder is initialize for config package
 func NewConfigBuilder(project string) *ConfigBuilder {
 	pwd, err := os.Getwd()
@@ -22,18 +24,19 @@ func NewConfigBuilder(project string) *ConfigBuilder {
 		return &ConfigBuilder{}
 	}
 
-	return &ConfigBuilder{
+	Builder = &ConfigBuilder{
 		Project:     project,
 		Pkg:         "configs",
 		CurrentPath: pwd,
 	}
+	return Builder
 }
 
 // Generate is generate config file
 func (c *ConfigBuilder) Generate() error {
 	folder := fmt.Sprintf("%s/%s", c.Project, c.Pkg)
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
-		os.Mkdir(folder, 0755)
+		os.Mkdir(folder, 0o755)
 	}
 
 	filePath := fmt.Sprintf("%s/%s/config.toml", c.CurrentPath, folder)
@@ -51,7 +54,7 @@ func (c *ConfigBuilder) Generate() error {
 		file = f
 	}
 
-	var config = make(map[string]interface{})
+	config := make(map[string]interface{})
 	config["app"] = templates.App{}
 
 	if err := toml.NewEncoder(file).Encode(&config); err != nil {

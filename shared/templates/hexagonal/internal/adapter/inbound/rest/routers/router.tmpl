@@ -1,4 +1,4 @@
-package routers
+package router
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"{{.PackagePath}}/config"
-	handlersv1 "{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/handlers"
-	"{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/middlewares"
+	handlerv1 "{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/handler"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/middleware"
 	portadapter "{{.PackagePath}}/internal/core/port/inbound/adapter"
 
-	"github.com/muhfaris/r1/internal/adapter/inbound/rest/routers/group"
+	"github.com/muhfaris/r1/internal/adapter/inbound/rest/router/group"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
@@ -31,13 +31,13 @@ func Init(port int) portadapter.Rest {
 	})
 
 	r.Use(requestid.New())
-	r.Use(middlewares.Latency())
+	r.Use(middleware.Latency())
 
 	// public
 	// publicGroup := r.Group("/")
-	// publicGroup.Get("/health", handlersv1.Health())
+	// publicGroup.Get("/health", handlerv1.Health())
 
-	h := handlersv1.New()
+	h := handlerv1.New()
 	group.V1(r, h)
 
 	return &Router{

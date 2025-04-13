@@ -122,6 +122,15 @@ func GetRestInitHandlerTemplate() []byte {
 	}
 }
 
+func GetRestPresenterTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.RestPresenterTemplate
+	default:
+		return nil
+	}
+}
+
 func GetRestResponseTemplate() []byte {
 	switch archType {
 	case hexagonalType:

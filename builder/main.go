@@ -16,16 +16,17 @@ import (
 var _baseproject BaseProject
 
 type Main struct {
-	arch              string
-	content           []byte
-	doc               *openapi3.T
-	template          []byte
-	tempalteGitignore []byte
-	filename          string
-	filepath          string
-	cacheType         string
-	dbType            string
-	Annotation        string
+	arch               string
+	content            []byte
+	doc                *openapi3.T
+	template           []byte
+	tempalteGitignore  []byte
+	filename           string
+	filepath           string
+	cacheType          string
+	dbType             string
+	Annotation         string
+	IgnoreDataResponse bool
 	BasePackage
 }
 
@@ -36,11 +37,20 @@ type MainData struct {
 	Annotation  string
 }
 
-func New(content []byte, doc *openapi3.T, packagePath, projectName, arch, cacheParam, dbParam string) *Main {
+type ConfigBuilder struct {
+	PackagePath        string
+	ProjectName        string
+	Arch               string
+	CacheParam         string
+	DBParam            string
+	IgnoreDataResponse bool
+}
+
+func New(content []byte, doc *openapi3.T, cfg ConfigBuilder) *Main {
 	_baseproject = BaseProject{
-		AppName:     projectName,
-		ProjectName: projectName,
-		PackagePath: packagePath,
+		AppName:     cfg.ProjectName,
+		ProjectName: cfg.ProjectName,
+		PackagePath: cfg.PackagePath,
 	}
 
 	annotation, err := liboas.OASDescriptionSwagger(doc)
@@ -49,19 +59,20 @@ func New(content []byte, doc *openapi3.T, packagePath, projectName, arch, cacheP
 	}
 
 	return &Main{
-		Annotation:        annotation,
-		arch:              arch,
-		content:           content,
-		doc:               doc,
-		template:          templates.GetMainTemplate(),
-		tempalteGitignore: templates.GetGitIgnore(),
-		filename:          "main.go",
-		filepath:          fmt.Sprintf("%s/main.go", projectName),
-		cacheType:         cacheParam,
-		dbType:            dbParam,
+		Annotation:         annotation,
+		arch:               cfg.Arch,
+		content:            content,
+		doc:                doc,
+		template:           templates.GetMainTemplate(),
+		tempalteGitignore:  templates.GetGitIgnore(),
+		filename:           "main.go",
+		filepath:           fmt.Sprintf("%s/main.go", cfg.ProjectName),
+		cacheType:          cfg.CacheParam,
+		dbType:             cfg.DBParam,
+		IgnoreDataResponse: cfg.IgnoreDataResponse,
 		BasePackage: BasePackage{
 			PackageName: "main",
-			PackagePath: packagePath,
+			PackagePath: cfg.PackagePath,
 		},
 	}
 }
@@ -153,8 +164,17 @@ func (m *Main) generate() error {
 			Package: hexagonal.BasePackage{},
 		}
 
-		project := hexagonal.NewProject(m.doc, based, _baseproject.ProjectName, m.cacheType, m.dbType)
-		project.GenerateDirectories()
+		project := hexagonal.NewProject(m.doc, &hexagonal.Config{
+			Based:              based,
+			ProjectName:        _baseproject.ProjectName,
+			CacheParam:         m.cacheType,
+			DBParam:            m.dbType,
+			IgnoreDataResponse: m.IgnoreDataResponse,
+		})
+		err = project.GenerateDirectories()
+		if err != nil {
+			return err
+		}
 	}
 
 	err = m.initializeModule()

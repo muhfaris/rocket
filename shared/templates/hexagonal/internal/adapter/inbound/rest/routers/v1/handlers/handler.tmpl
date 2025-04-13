@@ -1,63 +1,35 @@
-package handlersv1
+package handlerv1
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"{{.PackagePath}}/internal/adapter/inbound/rest/routers/v1/response"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/response"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/presenter"
 )
 
-{{if .HasStructs}}
-	{{- range .Structs}}
-		type {{.StructName}} struct {
-			{{- range .Fields}}
-				{{.FieldName}} {{.FieldType}} {{RawHTML .Tag}}
-			{{- end}}
-		}
-	{{- end}}
-{{end}}
+
 {{- if .Annotation}} {{.Annotation}} {{- end}}
 func(h *Handler) {{.HandlerName}}() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		{{if .HasService}}
-			/*
 				var (
 					ctx = c.UserContext()
 					svc = h.services.{{.ServiceName}}()
 					)
-			*/
 		{{end}}
 
-		{{if .HasParams}}
-			var {{.ParamsName}} {{.ParamsStructName}}
-			if err := c.ParamsParser(&{{.ParamsName}}); err != nil {
-				return err
-			}
-		{{end}}
-
-		{{if .HasQuery}}
-			var {{.QueryName}} {{.QueryStructName}}
-			if	err:= c.QueryParser(&{{.QueryName}}); err != nil {
-				return err
-			}
-		{{end}}
-
-
-		{{if .HasBody}}
-			var {{.BodyName}} {{.BodyStructName}}
-			if err := c.BodyParser(&{{.BodyName}}); err != nil {
-				return err
-			}
-		{{end}}
+		payload, err:= new(presenter.{{.HandlerName}}).In(c)
+		if err != nil {
+			return err
+		}
 
 		{{if .HasService}}
-			/*
 				// Transform request into domain model
-				result, err:=  svc.{{.Service.MethodName}}(ctx {{range .Service.Params}}, {{.Name}} {{end}}) 
+				{{if .ServiceHasReturn}} result, {{end}}err {{if .ServiceHasReturn}}:{{end}}=  svc.{{.Service.MethodName}}(ctx, payload) 
 				if err != nil {
 					return err
 				}
-			*/
 		{{end}}
 
-		return response.Success(c, "I'm Alive!")
+		return response.Success(c, {{if .ServiceHasReturn}} result {{else}} "Hello" {{end}})
 	}
 }

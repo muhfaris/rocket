@@ -44,6 +44,9 @@ var (
 	//go:embed internal/adapter/inbound/rest/routers/v1/handlers/init.tmpl
 	RestInitHandlerTemplate []byte
 
+	//go:embed internal/adapter/inbound/rest/routers/v1/presenter/presenter.tmpl
+	RestPresenterTemplate []byte
+
 	//go:embed internal/adapter/inbound/rest/routers/v1/response/response.tmpl
 	RestResponseTemplate []byte
 

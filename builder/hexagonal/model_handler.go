@@ -1,26 +1,34 @@
 package hexagonal
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	libcase "github.com/muhfaris/rocket/shared/case"
 	liboas "github.com/muhfaris/rocket/shared/oas"
+	"github.com/muhfaris/rocket/shared/utils"
 )
 
 type HandlerData struct {
-	PackagePath string
-	HandlerName string
-	Structs     []Struct
-	HasParams   bool
-	HasQuery    bool
-	HasBody     bool
-	HasStructs  bool
-	HasService  bool
-	Service     PortServiceMethods
-	ServiceName string
-	Annotation  string
+	PackagePath                 string
+	HandlerName                 string
+	Structs                     []Struct
+	StructsResponse             []Struct
+	DomainModel                 Struct
+	HasParams                   bool
+	HasQuery                    bool
+	HasBody                     bool
+	HasStructs                  bool
+	HasService                  bool
+	Service                     PortServiceMethods
+	ServiceName                 string
+	ServiceHasReturn            bool
+	Annotation                  string
+	HasStructsResponse          bool
+	MappingFieldsStructResponse map[string]string
 	ParamsData
 	QueryData
 	BodyData
@@ -37,8 +45,9 @@ type QueryData struct {
 }
 
 type BodyData struct {
-	BodyName       string
-	BodyStructName string
+	BodyName                string
+	BodyStructName          string
+	BodyPresenterStructName string
 }
 
 func (h *HandlerData) parametersToField(parameter *openapi3.ParameterRef) (Field, error) {
@@ -78,6 +87,17 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			xParameterName = operation.Extensions["x-parameters-name"]
 			hasStruct      bool
 		)
+
+		defer func() {
+			if len(h.Structs) > 0 {
+				domainModel := Struct{StructName: structName}
+				for _, s := range h.Structs {
+					domainModel.Fields = append(domainModel.Fields, s.Fields...)
+				}
+
+				h.DomainModel = domainModel
+			}
+		}()
 
 		for _, parameter := range operation.Parameters {
 			if parameter.Value.In == "path" {
@@ -120,8 +140,8 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 				}
 
 				h.HasQuery = true
-				h.QueryData.QueryName = parameter.Value.Name
-				h.QueryData.QueryStructName = s.StructName
+				h.QueryName = parameter.Value.Name
+				h.QueryStructName = s.StructName
 
 				field, err := h.parametersToField(parameter)
 				if err != nil {
@@ -138,6 +158,17 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			h.HasStructs = hasStruct
 		}
 
+		// get structs response
+		structsResponse, err := getStructsResponse(operation.Responses)
+		if err != nil {
+			return err
+		}
+
+		if len(structsResponse) > 0 {
+			h.HasStructsResponse = true
+			h.StructsResponse = structsResponse
+		}
+
 		return nil
 
 	case "POST", "PATCH", "PUT", "DELETE":
@@ -147,6 +178,19 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			defaultStruct      = Struct{StructName: structName}
 			tempXParameterName string
 		)
+
+		defer func() {
+			if len(h.Structs) > 0 {
+				domainModel := Struct{StructName: structName}
+
+				for _, s := range h.Structs {
+					s.Fields = s.Fields.AddID()
+					domainModel.Fields = append(domainModel.Fields, s.Fields...)
+				}
+
+				h.DomainModel = domainModel
+			}
+		}()
 
 		// Grouping all path parameters with same struct
 		sParams := Struct{StructName: fmt.Sprintf("%s%s", structName, "Params")}
@@ -178,8 +222,8 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			h.Structs = append(h.Structs, sParams)
 			h.HasStructs = true
 			h.HasParams = true
-			h.ParamsData.ParamsStructName = sParams.StructName
-			h.ParamsData.ParamsName = libcase.ToLowerFirst(sParams.StructName)
+			h.ParamsStructName = sParams.StructName
+			h.ParamsName = libcase.ToLowerFirst(sParams.StructName)
 			tempXParameterName = "" // reset
 		}
 
@@ -212,8 +256,8 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			h.Structs = append(h.Structs, sQuery)
 			h.HasStructs = true
 			h.HasQuery = true
-			h.QueryData.QueryName = libcase.ToLowerFirst(sQuery.StructName)
-			h.QueryData.QueryStructName = sQuery.StructName
+			h.QueryName = libcase.ToLowerFirst(sQuery.StructName)
+			h.QueryStructName = sQuery.StructName
 			tempXParameterName = ""
 		} else {
 		}
@@ -230,16 +274,17 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 
 		// override struct name body body
 		sBody := defaultStruct
+		sBody.StructName = fmt.Sprintf("%s%s", structName, "Request")
 		for contextType, content := range requestBody.Value.Content {
 			xPropertiesName := content.Schema.Value.Extensions["x-properties-name"]
 
-			// if properties is empty use map
+			// If properties is empty use map
 			if len(content.Schema.Value.Properties) == 0 {
 				if !h.HasBody {
 					h.HasBody = true
 				}
-				h.BodyData.BodyName = "bodyRequest"
-				h.BodyData.BodyStructName = "map[string]any"
+				h.BodyName = "bodyRequest"
+				h.BodyStructName = "map[string]any"
 				return nil
 			}
 
@@ -255,8 +300,9 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 				for key, property := range content.Schema.Value.Properties {
 					if !h.HasBody {
 						h.HasBody = true
-						h.BodyData.BodyName = "bodyRequest"
-						h.BodyData.BodyStructName = structName
+						h.BodyName = "bodyRequest"
+						h.BodyStructName = structName
+						h.BodyPresenterStructName = sBody.StructName
 					}
 
 					var (
@@ -277,11 +323,73 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 		}
 
 		h.HasStructs = len(h.Structs) > 0
+
+		// get structs response
+		structsResponse, err := getStructsResponse(operation.Responses)
+		if err != nil {
+			return err
+		}
+
+		if len(structsResponse) > 0 {
+			h.HasStructsResponse = true
+			h.StructsResponse = structsResponse
+		}
 		return nil
 
 	default:
 		return nil
 	}
+}
+
+func getStructsResponse(resOpenAPI *openapi3.Responses) ([]Struct, error) {
+	var responses []Struct
+	for responseCode, response := range resOpenAPI.Map() {
+		switch responseCode {
+		case "200", "201":
+			if utils.IsNil(response.Value) || utils.IsNil(response.Value.Content) {
+				continue
+			}
+
+			for contentType, contentResponse := range response.Value.Content {
+				if contentResponse.Schema.Value.IsEmpty() {
+					log.Default().Println("response doesn't have schema or component response")
+					continue
+				}
+
+				var (
+					parentStruct string
+					refString    = contentResponse.Schema.RefString()
+					refStrings   = strings.Split(refString, "/")
+				)
+
+				if len(refStrings) > 0 {
+					parentStruct = refStrings[len(refStrings)-1]
+				}
+
+				libStructs, err := liboas.ParseSchema(parentStruct, contentType, contentResponse.Schema.Value, config.IgnoreDataResponse)
+				if err != nil {
+					return nil, err
+				}
+
+				rawResponseStruct, err := json.Marshal(libStructs)
+				if err != nil {
+					return nil, err
+				}
+
+				fmt.Println(string(rawResponseStruct))
+
+				var structExpected Struct
+				err = json.Unmarshal(rawResponseStruct, &structExpected)
+				if err != nil {
+					return nil, err
+				}
+
+				responses = append(responses, structExpected)
+			}
+		}
+	}
+
+	return responses, nil
 }
 
 func getOperationIDInfo(operation *openapi3.Operation) (operationID, serviceName string) {

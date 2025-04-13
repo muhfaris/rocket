@@ -52,3 +52,7 @@ func ValidateImportPath(path string) error {
 
 	return nil
 }
+
+func IsNil(value interface{}) bool {
+	return value == nil
+}

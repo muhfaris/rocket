@@ -2,7 +2,7 @@ package cmd
 
 import (
 "{{.PackagePath}}/config"
-"{{.PackagePath}}/internal/adapter/inbound/rest/routers"
+"{{.PackagePath}}/internal/adapter/inbound/rest/router"
 "{{.PackagePath}}/cmd/bootstrap"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ func restPreRunE(cmd *cobra.Command, args []string) error {
 }
 
 func restRunE(cmd *cobra.Command, args []string) error {
-	api := routers.Init(config.App.Port)
+	api := router.Init(config.App.Port)
 	err := api.Run()
 	if err != nil {
 		return err

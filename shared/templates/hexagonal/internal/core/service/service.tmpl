@@ -12,8 +12,8 @@ func New{{.ServiceName}}() portservice.{{.ServiceName}} {
 }
 
 {{- range .Methods}}
-  func (s *{{$.ServiceName}}) {{.MethodName}}(ctx context.Context {{range .Params}}, {{.Name}} {{.Type}} {{end}}) ({{range .ReturnTypes}}{{.Type}} {{end}}){
-    return nil
+  func (s *{{$.ServiceName}}) {{.MethodName}}(ctx context.Context {{range .Params}}, {{.Name}} {{.Type}} {{end}}) ({{range $index, $element := .ReturnTypes}}{{if $index}}, {{end}}{{$element.Type}}{{end}}){
+  return {{range $index, $element := .ReturnTypes}}{{if $index}}, {{end}}{{if eq $element.Type "error"}} nil {{else}} {{$element.Type}}{}{{end}}{{end}}
   }
 
 {{- end}}

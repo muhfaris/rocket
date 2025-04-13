@@ -3,6 +3,7 @@ package cmdproject
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/muhfaris/rocket/builder"
@@ -140,6 +141,21 @@ func openapiRunE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	m := builder.New(content, doc, packageName, projectName, archLayout, cacheParam, dbParam)
+	ignoreDataResponseTxt := cfg.App.IgnoreDataResponse
+	if ignoreDataResponseTxt == "" {
+		ignoreDataResponseTxt = "true"
+	}
+
+	ignoreDataResponse, _ := strconv.ParseBool(ignoreDataResponseTxt)
+
+	m := builder.New(content, doc,
+		builder.ConfigBuilder{
+			ProjectName:        projectName,
+			PackagePath:        packageName,
+			Arch:               archLayout,
+			CacheParam:         cacheParam,
+			DBParam:            dbParam,
+			IgnoreDataResponse: ignoreDataResponse,
+		})
 	return m.Generate()
 }

@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Partner API
+  title: Laporkan API
   version: 1.0.0
 servers:
   - url: http://localhost
@@ -12,18 +12,104 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
+  schemas:
+    ResponseCreateReport:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 01HBE00X5165PB9M5687PB12GY
+    ResponseGetReports:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Report"
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 01HBE00X5165PB9M5687PB12GY
+        title:
+          type: string
+          example: "Broken streetlight on Main St."
+        description:
+          type: string
+          example: "The streetlight near the bus stop is not working."
+        location:
+          type: string
+          example: "Main St, Downtown"
+        status:
+          type: string
+          enum: [pending, in_progress, resolved]
+          example: "pending"
+        created_at:
+          type: string
+          example: "2023-09-28T20:35:32.001775913+07:00"
+        updated_at:
+          type: string
+          example: "2023-09-28T20:35:32.001775913+07:00"
 tags:
-  - name: Partner
+  - name: Reports
 paths:
-  /register/partners:
-    get:
-      operationId: GetPartners::PartnerSvc
+  /reports:
+    post:
+      operationId: CreateReport::ReportSvc
       tags:
-        - Partner
-      summary: Get all partner account
+        - Reports
+      summary: Submit a new report
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Broken streetlight on Main St."
+                description:
+                  type: string
+                  example: "The streetlight near the bus stop is not working."
+                location:
+                  type: string
+                  example: "Main St, Downtown"
+      responses:
+        "201":
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                # $ref: "#/components/schemas/ResponseCreateReport"
+                type: object
+                x-struct-response: ResponseCreateReport
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 01HBE00X5165PB9M5687PB12GY
+    get:
+      operationId: GetReports::ReportSvc
+      tags:
+        - Reports
+      summary: Get all reports
       security:
         - noauthAuth: []
       parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+          example: "pending"
         - name: limit
           in: query
           schema:
@@ -34,334 +120,42 @@ paths:
           schema:
             type: integer
           example: 0
-        - name: search
-          in: query
-          schema:
-            type: string
-          example: "ahmad jomkoleq"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  response:
-                    type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                              example: 01HBE00X5165PB9M5687PB12GY
-                            fullname:
-                              type: string
-                              example: ahmad jomkoleq
-                            email:
-                              type: string
-                              example: ahmad.jomkoleq@gmail.com
-                            status:
-                              type: string
-                              example: waiting_verification
-                            created_at:
-                              type: string
-                              example: "2023-09-28T20:35:32.001775913+07:00"
-                            updated_at:
-                              type: string
-                              example: "2023-09-28T20:35:32.001775913+07:00"
-                      message:
-                        type: string
-                        example: successfully get all partner account
-                      latency:
-                        type: string
-                        example: 145.235588ms
-              example:
-                response:
-                  data:
-                    - id: 01HBE00X5165PB9M5687PB12GY
-                      fullname: ahmad jomkoleq
-                      email: ahmad.jomkoleq@gmail.com
-                      status: waiting_verification
-                      created_at: "2023-09-28T20:35:32.001775913+07:00"
-                      updated_at: "2023-09-28T20:35:32.001775913+07:00"
-                    - id: 01HBE00X5165PB9M5687PB12GY
-                      fullname: ahmad jomkoleq
-                      email: ahmad.jomkoleq@gmail.com
-                      status: waiting_verification
-                      created_at: "2023-09-28T20:35:32.001775913+07:00"
-                      updated_at: "2023-09-28T20:35:32.001775913+07:00"
-    post:
-      operationId: CreatePartner::PartnerSvc
-      tags:
-        - Partner
-      summary: Register new account
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                fullname:
-                  type: string
-                  example: ahmad jomkoleq
-                password:
-                  type: string
-                  example: ahmadjomkoleq!1
-                confirm_password:
-                  type: string
-                  example: ahmadjomkoleq!1
-                email:
-                  type: string
-                  example: ahmad.jomkoleq+1004@gmail.com
-                accepted_tnc:
-                  type: boolean
-              example:
-                fullname: ahmad jomkoleq 100
-                password: ahmadjomkoleq!1
-                confirm_password: ahmadjomkoleq!1
-                email: ahmad.jomkoleq+1004@gmail.com
-                accepted_tnc: true
-              required:
-                - fullname
-                - password
-                - confirm_password
-                - email
-      security:
-        - noauthAuth: []
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                response:
-                  data:
-                    id: 01HBE00X5165PB9M5687PB12GY
-                    fullname: ahmad jomkoleq
-                    email: ahmad.jomkoleq@gmail.com
-                    status: waiting_verification
-                    created_at: "2023-09-28T20:35:32.001775913+07:00"
-                    updated_at: "2023-09-28T20:35:32.001775913+07:00"
-                message: successfully created new customer account
-                latency: 145.235588ms
-        "400":
-          description: Bad Request
-          headers:
-            Date:
-              schema:
-                type: string
-                example: Mon, 27 Mar 2023 16:04:41 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: "171"
-          content:
-            application/json:
-              schema:
-                type: object
-              examples:
-                example-0:
-                  summary: 400 - password and confirm password not match
-                  value:
-                    message: the Password must be equal with ConfirmPassword
-                    error: the Password must be equal with ConfirmPassword
-                    latency: ""
-                example-1:
-                  summary: 400 - invalid email
-                  value:
-                    message: the Email not valid
-                    error: the Email not valid
-                    latency: ""
-                example-2:
-                  summary: 400 - accepten n condition false
-                  value:
-                    message: AcceptedTnC is a required field
-                    error: AcceptedTnC is a required field
-                    latency: 174.41µs
-  /register/partners/{partner_id}:
-    get:
-      operationId: GetDetailPartner::PartnerSvc
-      x-route-group: partnerGroup::/api
-      tags:
-        - Partner
-      summary: Get detail partner account
-      x-parameters-name: DetailPartner
-      parameters:
-        - name: partner_id
-          in: path
-          schema:
-            type: string
-          required: true
-          example: "{{partner_id}}"
-      security:
-        - noauthAuth: []
-      responses:
-        "200":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                response:
-                  data:
-                    id: 01HBE00X5165PB9M5687PB12GY
-                    fullname: ahmad jomkoleq
-                    email: ahmad.jomkoleq@gmail.com
-                    status: waiting_verification
-                    created_at: "2023-09-28T20:35:32.001775913+07:00"
-                    updated_at: "2023-09-28T20:35:32.001775913+07:00"
-                message: successfully get detail partner
-                latency: 145.235588ms
-        "400":
-          description: Bad Request
-          headers:
-            Date:
-              schema:
-                type: string
-                example: Mon, 27 Mar 2023 16:04:41 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: "171"
-          content:
-            application/json:
-              schema:
-                type: object
-              examples:
-                example-0:
-                  summary: 400 - password and confirm password not match
-                  value:
-                    message: the Password must be equal with ConfirmPassword
-                    error: the Password must be equal with ConfirmPassword
-                    latency: ""
-                example-1:
-                  summary: 400 - invalid email
-                  value:
-                    message: the Email not valid
-                    error: the Email not valid
-                    latency: ""
-                example-2:
-                  summary: 400 - accepten n condition false
-                  value:
-                    message: AcceptedTnC is a required field
-                    error: AcceptedTnC is a required field
-                    latency: 174.41µs
-    patch:
-      operationId: UpdatePartner::PartnerSvc
-      x-route-group: partnerGroup::/api
-      tags:
-        - Partner
-      parameters:
-        - name: partner_id
-          in: path
-          schema:
-            type: string
-          required: true
-          example: "{{partner_id}}"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                fullname:
-                  type: string
-                email:
-                  type: string
-      responses:
-        200:
-          description: "Successfully update partner"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Successfully update partner
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        example: 01HBE00X5165PB9M5687PB12GY
-                      fullname:
-                        type: string
-                        example: ahmad jomkoleq
-                      email:
-                        type: string
-                        example: ahmad.jomkoleq@gmail.com
-                      status:
-                        type: string
-                        example: waiting_verification
-                      created_at:
-                        type: string
-                        example: "2023-09-28T20:35:32.001775913+07:00"
-                      updated_at:
-                        type: string
-                        example: "2023-09-28T20:35:32.001775913+07:00"
-                  latency:
-                    type: string
-                    example: 145.235588ms
-        400:
-          description: "Bad Request"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Bad Request
-                  code:
-                    type: string
-                    example: Bad Request
-  /register/partners/{partner_id}/change-password:
-    patch:
-      operationId: ChangePassword::PartnerSvc
-      x-route-group: partnerGroup::/api
-      tags:
-        - Partner
-      parameters:
-        - name: partner_id
-          in: path
-          schema:
-            type: string
-          required: true
-          example: "{{partner_id}}"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                password:
-                  type: string
-                confirm_password:
-                  type: string
-      responses:
-        200:
-          description: "Successfully change password"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Successfully change password
+                $ref: "#/components/schemas/ResponseGetReports"
+# /reports/{id}:
+#   patch:
+#     operationId: UpdateReportStatus::ReportSvc
+#     tags:
+#       - Reports
+#     summary: Update the status of a report
+#     security:
+#       - bearerAuth: []
+#     parameters:
+#       - name: id
+#         in: path
+#         required: true
+#         schema:
+#           type: string
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             properties:
+#               status:
+#                 type: string
+#                 enum: [pending, in_progress, resolved]
+#                 example: "in_progress"
+#     responses:
+#       "200":
+#         description: Report status updated successfully
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Report"

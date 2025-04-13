@@ -1,0 +1,119 @@
+package presenter
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"{{.PackagePath}}/internal/core/domain"
+)
+
+type {{.HandlerName}} struct{}
+
+{{if .HasStructs}}
+	{{- range .Structs}}
+		type {{.StructName}} struct {
+			{{- range .Fields}}
+				{{.FieldName}} {{.FieldType}} {{RawHTML .Tag}}
+			{{- end}}
+		}
+	{{- end}}
+{{end}}
+
+{{define "renderStruct"}}
+	{{- if eq .Type "array" }}
+		type {{.StructName}} []{{.Children.StructName}}
+	{{else}}
+		type {{.StructName}} struct {
+			{{- range .Fields}}
+				{{- if eq .FieldType "array" }}
+				{{.FieldName}} []{{.Children.StructName}} {{RawHTML .Tag}}
+				{{- else if eq .FieldType "object" }}
+				{{.FieldName}} struct {
+					{{- range .Fields }}
+					{{.FieldName}} {{.FieldType}} {{RawHTML .Tag}}
+					{{- end }}
+				} {{RawHTML .Tag}}
+				{{- else }}
+				{{.FieldName}} {{.FieldType}} {{RawHTML .Tag}}
+				{{- end }}
+			{{- end}}
+			}
+	{{end}}
+
+	{{- range .Fields}}
+		{{- if .Children}}
+			{{template "renderStruct" .Children}}
+		{{- end}}
+	{{- end}}
+
+	{{- if .Children}}
+		{{template "renderStruct" .Children}}
+	{{- end}}
+{{end}}
+
+{{if .HasStructsResponse}}
+	{{- range .StructsResponse}}
+		{{template "renderStruct" .}}
+	{{- end}}
+{{end}}
+
+func (req *{{.HandlerName}}) In(c *fiber.Ctx)(domain.{{.DomainModel.StructName}}, error){
+		{{if .HasParams}}
+			var {{.ParamsName}} {{.ParamsStructName}}
+			if err := c.ParamsParser(&{{.ParamsName}}); err != nil {
+				return domain.{{.DomainModel.StructName}}{}, err
+			}
+		{{end}}
+
+		{{if .HasQuery}}
+			var {{.QueryName}} {{.QueryStructName}}
+			if	err:= c.QueryParser(&{{.QueryName}}); err != nil {
+				return domain.{{.DomainModel.StructName}}{}, err
+			}
+		{{end}}
+
+
+		{{if .HasBody}}
+			var {{.BodyName}} {{.BodyPresenterStructName}}
+			if err := c.BodyParser(&{{.BodyName}}); err != nil {
+				return domain.{{.DomainModel.StructName}}{}, err
+			}
+		{{end}}
+
+		{{ $hasParams := .HasParams }}
+		{{ $hasQuery := .HasQuery }}
+		{{ $hasBody := .HasBody }}
+
+		{{ $paramsName := .ParamsName }}
+		{{ $queryName := .QueryName }}
+		{{ $bodyName := .BodyName }}
+
+		{{ $paramsStructName := .ParamsStructName }}
+		{{ $queryStructName := .QueryStructName }}
+		{{ $bodyStructName := .BodyPresenterStructName }}
+
+
+
+		return domain.{{.DomainModel.StructName}}{
+			{{- range .Structs }}
+					{{ $structName := .StructName }}
+					{{- range .Fields }}
+							{{- if and $hasParams (eq $structName $paramsStructName) }}
+									{{.FieldName}}: {{$paramsName}}.{{.FieldName}},
+							{{- else if and $hasQuery (eq $structName $queryStructName) }}
+									{{.FieldName}}: {{$queryName}}.{{.FieldName}},
+							{{- else if and $hasBody (eq $structName $bodyStructName) }}
+									{{.FieldName}}: {{$bodyName}}.{{.FieldName}},
+							{{- end }}
+					{{- end }}
+			{{- end }}
+		}, nil
+}
+
+{{if .HasStructsResponse}}
+func (req *{{.HandlerName}}) Out(c *fiber.Ctx, data domain.{{.DomainModel.StructName}})any{
+	return {{(index .StructsResponse 0).StructName}}{
+		{{- range $key, $value := .MappingFieldsStructResponse}}
+					{{$key}}: data.{{$value}},
+		{{- end }}
+	}
+}
+{{end}}
