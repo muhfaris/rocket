@@ -7,6 +7,7 @@ import (
 	{{- end}}
 	{{- if .IsPSQL}}
 	psqladapter "{{.PackagePath}}/internal/adapter/outbound/datastore/psql"
+	pgsqlrepository "{{.PackagePath}}/internal/adapter/outbound/datastore/psql/repository"
 	{{- end}}
 	{{- if .IsSQLite}}
 	sqliteadapter "{{.PackagePath}}/internal/adapter/outbound/datastore/sqlite"
@@ -107,6 +108,13 @@ func (a *App) CacheRepository() repository.CacheRepository {
 func (a *App) PSQLRepository() repository.PSQLRepository {
 	return a.psqlRepository
 }
+
+{{- range .Repositories}}
+	func (a *App) Get{{.}}() repository.{{.}}{
+		return pgsqlrepository.New{{.}}(a.psqlRepository)
+	}
+{{- end}}
+
 {{end}}
 
 {{if .IsSQLite}}

@@ -3,12 +3,15 @@ package service
 import (
   "{{.PackagePath}}/internal/core/domain"
   portservice "{{.PackagePath}}/internal/core/port/inbound/service"
+	portregistry "{{.PackagePath}}/internal/core/port/inbound/registry"
 )
 
-type {{.ServiceName}} struct { }
+type {{.ServiceName}} struct { 
+	reg portregistry.Repository
+}
 
-func New{{.ServiceName}}() portservice.{{.ServiceName}} {
-  return &{{.ServiceName}}{}
+func New{{.ServiceName}}(reg portregistry.Repository) portservice.{{.ServiceName}} {
+  return &{{.ServiceName}}{reg:reg}
 }
 
 {{- range .Methods}}

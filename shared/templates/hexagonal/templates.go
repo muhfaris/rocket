@@ -80,6 +80,12 @@ var (
 	//go:embed internal/adapter/outbound/datastore/psql/command.tmpl
 	PSQLCommandTemplate []byte
 
+	//go:embed internal/adapter/outbound/datastore/psql/repository/repository.tmpl
+	PSQLQueryRepositoryTemplate []byte
+
+	//go:embed internal/core/port/outbound/repository/service_repository.tmpl
+	MethodRepositoryTemplate []byte
+
 	//go:embed internal/core/port/outbound/repository/psql.tmpl
 	PSQLRepositoryTemplate []byte
 

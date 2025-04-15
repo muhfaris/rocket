@@ -29,7 +29,9 @@ func New(opt PSQLConfig) repository.PSQLRepository {
 	)
 
 	if psqlPool != nil {
-		return psqlPool
+		return &Client{
+			conn: psqlPool,
+		}
 	}
 
 	once.Do(func() {

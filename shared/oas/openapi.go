@@ -1,7 +1,6 @@
 package liboas
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -115,8 +114,6 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 
 				resFieldNameData := strings.ToLower(nestedStruct.Name)
 				if ignoreDataResponse && resFieldNameData == "data" {
-					raw, _ := json.Marshal(nestedStruct)
-					fmt.Println(string(raw))
 					return nestedStruct, nil
 				}
 

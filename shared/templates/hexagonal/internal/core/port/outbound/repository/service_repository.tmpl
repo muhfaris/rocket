@@ -1,0 +1,10 @@
+package repository
+
+import "context"
+
+type {{.RepositoryName}} interface {
+	Create(ctx context.Context) error
+	Update(ctx context.Context) error
+	FindByID(id string) error
+	Find() error
+}

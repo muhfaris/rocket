@@ -344,3 +344,21 @@ func GetMakefileTemplate() []byte {
 func GetReadmeTemplate() []byte {
 	return hexagonal.ReadmeTemplate
 }
+
+func GetPSQLQueryRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.PSQLQueryRepositoryTemplate
+	default:
+		return nil
+	}
+}
+
+func GetMethodRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MethodRepositoryTemplate
+	default:
+		return nil
+	}
+}

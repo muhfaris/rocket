@@ -1,0 +1,32 @@
+package pgsqlrepository
+
+import (
+	"context"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+type {{.RepositoryName}} struct {
+	conn *pgxpool.Pool
+}
+
+func New{{.RepositoryName}}(conn repository.PSQLRepository ) repository.{{.RepositoryName}}{
+	return &{{.RepositoryName}}{conn: conn.GetConnection()}
+}
+
+func (r *{{.RepositoryName}}) Create(ctx context.Context) error {
+	return nil
+}
+
+func (r *{{.RepositoryName}}) Update(ctx context.Context) error {
+	return nil
+}
+
+func (r *{{.RepositoryName}}) FindByID(id string) error {
+	return nil
+}
+
+func (r *{{.RepositoryName}}) Find() error {
+	return nil
+}

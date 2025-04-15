@@ -27,6 +27,7 @@ type Project struct {
 	PSQLAdapter          PSQLAdapter
 	PSQLCommandAdapter   PSQLCommandAdapter
 	PSQLRepository       PSQLRepository
+	PSQLQueryRepository  PSQLQueryRepository
 	MySQLAdapter         MySQLAdapter
 	MySQLCommandAdapter  MySQLCommandAdapter
 	MySQLRepository      MySQLRepository
@@ -40,6 +41,7 @@ type Project struct {
 	DockerCompose        DockerCompose
 	Makefile             Makefile
 	ReadmeFile           ReadmeFile
+	MethodRepository     MethodRepository
 }
 
 type Based struct {
@@ -210,6 +212,12 @@ type PSQLRepository struct {
 	filepath string
 }
 
+type PSQLQueryRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
 type MySQLAdapter struct {
 	template []byte
 	dirpath  string
@@ -282,4 +290,10 @@ type Makefile struct {
 type ReadmeFile struct {
 	filepath string
 	template []byte
+}
+
+type MethodRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
 }

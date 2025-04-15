@@ -376,8 +376,6 @@ func getStructsResponse(resOpenAPI *openapi3.Responses) ([]Struct, error) {
 					return nil, err
 				}
 
-				fmt.Println(string(rawResponseStruct))
-
 				var structExpected Struct
 				err = json.Unmarshal(rawResponseStruct, &structExpected)
 				if err != nil {

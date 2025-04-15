@@ -35,3 +35,7 @@ func (c *Client) WithTx(ctx context.Context, funcs ...func(tx pgx.Tx) (interface
 
 	return nil, nil
 }
+
+func (c *Client) GetConnection() *pgxpool.Pool {
+	return c.conn
+}

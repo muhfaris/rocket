@@ -148,6 +148,11 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/psql.go", projectName),
 		},
+		PSQLQueryRepository: PSQLQueryRepository{
+			template: templates.GetPSQLQueryRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/psql/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/psql/repository/%%s.go", projectName),
+		},
 		MySQLAdapter: MySQLAdapter{
 			template: templates.GetMySQLAdapterTemplate(),
 			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql", projectName),
@@ -208,6 +213,11 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 		ReadmeFile: ReadmeFile{
 			template: templates.GetReadmeTemplate(),
 			filepath: fmt.Sprintf("%s/README.md", projectName),
+		},
+		MethodRepository: MethodRepository{
+			template: templates.GetMethodRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/%%s.go", projectName),
 		},
 	}
 }
@@ -329,6 +339,11 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
+	err = p.GeneratePSQLQueryRepository()
+	if err != nil {
+		return err
+	}
+
 	// Generate mysql adapter
 	err = p.GenerateMySQLAdapter()
 	if err != nil {
@@ -361,6 +376,11 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate mongo repository
 	err = p.GenerateMongoRepository()
+	if err != nil {
+		return err
+	}
+
+	err = p.GenerateMethodRepository()
 	if err != nil {
 		return err
 	}
@@ -1061,13 +1081,28 @@ func (p *Project) GenerateApp() error {
 		}
 	}
 
+	var repositories []string
+	for _, service := range p.Service.Services {
+		repositoryName := service.ServiceName
+
+		for _, suffix := range []string{"svc", "Svc", "SVC"} {
+			if strings.Contains(repositoryName, suffix) {
+				repositoryName = strings.Replace(repositoryName, suffix, "", 1)
+				break
+			}
+		}
+
+		repositories = append(repositories, fmt.Sprintf("%sRepository", repositoryName))
+	}
+
 	data := map[string]any{
-		"PackagePath": p.based.Project.PackagePath,
-		"IsRedis":     p.cacheType == constanta.CacheRedis,
-		"IsPSQL":      p.dbType == constanta.DBPostgres,
-		"IsMySQL":     p.dbType == constanta.DBMySQL,
-		"IsSQLite":    p.dbType == constanta.DBSQLite,
-		"IsMongo":     p.dbType == constanta.DBMongo,
+		"PackagePath":  p.based.Project.PackagePath,
+		"IsRedis":      p.cacheType == constanta.CacheRedis,
+		"IsPSQL":       p.dbType == constanta.DBPostgres,
+		"IsMySQL":      p.dbType == constanta.DBMySQL,
+		"IsSQLite":     p.dbType == constanta.DBSQLite,
+		"IsMongo":      p.dbType == constanta.DBMongo,
+		"Repositories": repositories,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.App.template, data)
@@ -1220,6 +1255,50 @@ func (p *Project) GeneratePSQLRepository() error {
 	err = libos.CreateFile(p.PSQLRepository.filepath, raw)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GeneratePSQLQueryRepository() error {
+	if p.dbType != constanta.DBPostgres {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.PSQLQueryRepository.dirpath)
+	_, err := os.Stat(p.PSQLQueryRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.PSQLQueryRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, service := range p.Service.Services {
+		repositoryName := service.ServiceName
+
+		for _, suffix := range []string{"svc", "Svc", "SVC"} {
+			if strings.Contains(repositoryName, suffix) {
+				repositoryName = strings.Replace(repositoryName, suffix, "", 1)
+				break
+			}
+		}
+
+		data := map[string]any{
+			"PackagePath":    p.based.Project.PackagePath,
+			"RepositoryName": fmt.Sprintf("%sRepository", repositoryName),
+		}
+
+		raw, err := libos.ExecuteTemplate(p.PSQLQueryRepository.template, data)
+		if err != nil {
+			return err
+		}
+
+		filepath := fmt.Sprintf(p.PSQLQueryRepository.filepath, strings.ToLower(repositoryName))
+		err = libos.CreateFile(filepath, raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1515,6 +1594,46 @@ func (p *Project) GenerateReadmeFile() error {
 	err = libos.CreateFile(p.ReadmeFile.filepath, raw)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateMethodRepository() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MethodRepository.dirpath)
+	_, err := os.Stat(p.MethodRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.MethodRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, service := range p.Service.Services {
+		repositoryName := service.ServiceName
+
+		for _, suffix := range []string{"svc", "Svc", "SVC"} {
+			if strings.Contains(repositoryName, suffix) {
+				repositoryName = strings.Replace(repositoryName, suffix, "", 1)
+				break
+			}
+		}
+
+		data := map[string]any{
+			"PackagePath":    p.based.Project.PackagePath,
+			"RepositoryName": fmt.Sprintf("%sRepository", repositoryName),
+		}
+
+		raw, err := libos.ExecuteTemplate(p.MethodRepository.template, data)
+		if err != nil {
+			return err
+		}
+
+		filepath := fmt.Sprintf(p.MethodRepository.filepath, strings.ToLower(repositoryName))
+		err = libos.CreateFile(filepath, raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
