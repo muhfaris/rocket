@@ -4,5 +4,5 @@ app:
   project: "laporkan"
   arch: "hexagonal"
   docker: true
-  database: "postgresql"
+  database: "mysql"
   cache: "redis"

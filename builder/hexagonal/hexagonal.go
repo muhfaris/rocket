@@ -168,6 +168,11 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/mysql.go", projectName),
 		},
+		MySQLQueryRepository: MySQLQueryRepository{
+			template: templates.GetMySQLQueryRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/mysql/repository/%%s.go", projectName),
+		},
 		SQLiteAdapter: SQLiteAdapter{
 			template: templates.GetSQLiteAdapterTemplate(),
 			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite", projectName),
@@ -352,6 +357,11 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate mysql repository
 	err = p.GenerateMySQLRepository()
+	if err != nil {
+		return err
+	}
+
+	err = p.GenerateMySQLQueryRepository()
 	if err != nil {
 		return err
 	}
@@ -1018,11 +1028,26 @@ func (p *Project) GenerateRegistryService() error {
 		}
 	}
 
+	var repositories []string
+	for _, service := range p.Service.Services {
+		repositoryName := service.ServiceName
+
+		for _, suffix := range []string{"svc", "Svc", "SVC"} {
+			if strings.Contains(repositoryName, suffix) {
+				repositoryName = strings.Replace(repositoryName, suffix, "", 1)
+				break
+			}
+		}
+
+		repositories = append(repositories, fmt.Sprintf("%sRepository", repositoryName))
+	}
+
 	data := map[string]any{
-		"PackagePath": p.based.Project.PackagePath,
-		"Services":    p.RegistryService.Services,
-		"IsCache":     p.cacheType != "",
-		"IsRedis":     p.cacheType == "redis",
+		"PackagePath":  p.based.Project.PackagePath,
+		"Services":     p.RegistryService.Services,
+		"IsCache":      p.cacheType != "",
+		"IsRedis":      p.cacheType == "redis",
+		"Repositories": repositories,
 	}
 	raw, err := libos.ExecuteTemplate(p.RegistryService.template, data)
 	if err != nil {
@@ -1370,6 +1395,50 @@ func (p *Project) GenerateMySQLRepository() error {
 	err = libos.CreateFile(p.MySQLRepository.filepath, raw)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateMySQLQueryRepository() error {
+	if p.dbType != constanta.DBMySQL {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.MySQLQueryRepository.dirpath)
+	_, err := os.Stat(p.MySQLQueryRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.MySQLQueryRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, service := range p.Service.Services {
+		repositoryName := service.ServiceName
+
+		for _, suffix := range []string{"svc", "Svc", "SVC"} {
+			if strings.Contains(repositoryName, suffix) {
+				repositoryName = strings.Replace(repositoryName, suffix, "", 1)
+				break
+			}
+		}
+
+		data := map[string]any{
+			"PackagePath":    p.based.Project.PackagePath,
+			"RepositoryName": fmt.Sprintf("%sRepository", repositoryName),
+		}
+
+		raw, err := libos.ExecuteTemplate(p.MySQLQueryRepository.template, data)
+		if err != nil {
+			return err
+		}
+
+		filepath := fmt.Sprintf(p.MySQLQueryRepository.filepath, strings.ToLower(repositoryName))
+		err = libos.CreateFile(filepath, raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

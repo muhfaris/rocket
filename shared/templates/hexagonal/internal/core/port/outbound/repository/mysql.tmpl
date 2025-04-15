@@ -1,3 +1,9 @@
 package repository
 
-type MySQLRepository interface{}
+import (
+	"database/sql"
+)
+
+type MySQLRepository interface{
+  GetConnection() *sql.DB
+}

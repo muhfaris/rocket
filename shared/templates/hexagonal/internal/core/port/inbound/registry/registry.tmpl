@@ -27,4 +27,7 @@ type Repository interface {
 {{- if .MongoDB}}
   MongoRepository() repository.MongoRepository
 {{- end}}
+{{- range .Repositories}}
+  Get{{.}}() repository.{{.}}
+{{- end}}
 }

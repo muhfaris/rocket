@@ -31,6 +31,7 @@ type Project struct {
 	MySQLAdapter         MySQLAdapter
 	MySQLCommandAdapter  MySQLCommandAdapter
 	MySQLRepository      MySQLRepository
+	MySQLQueryRepository MySQLQueryRepository
 	SQLiteAdapter        SQLiteAdapter
 	SQLiteCommandAdapter SQLiteCommandAdapter
 	SQLiteRepository     SQLiteRepository
@@ -231,6 +232,12 @@ type MySQLCommandAdapter struct {
 }
 
 type MySQLRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type MySQLQueryRepository struct {
 	template []byte
 	dirpath  string
 	filepath string

@@ -98,6 +98,9 @@ var (
 	//go:embed internal/core/port/outbound/repository/mysql.tmpl
 	MySQLRepositoryTemplate []byte
 
+	//go:embed internal/adapter/outbound/datastore/mysql/repository/repository.tmpl
+	MySQLQueryRepositoryTemplate []byte
+
 	//go:embed internal/adapter/outbound/datastore/sqlite/sqlite.tmpl
 	SQLiteAdapterTemplate []byte
 

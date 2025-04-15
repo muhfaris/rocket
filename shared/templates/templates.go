@@ -362,3 +362,12 @@ func GetMethodRepositoryTemplate() []byte {
 		return nil
 	}
 }
+
+func GetMySQLQueryRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.MySQLQueryRepositoryTemplate
+	default:
+		return nil
+	}
+}

@@ -1,0 +1,32 @@
+package mysqlrepository
+
+import (
+	"context"
+	"database/sql"
+
+	"{{.PackagePath}}/internal/core/port/outbound/repository"
+)
+
+type {{.RepositoryName}} struct {
+	conn *sql.DB
+}
+
+func New{{.RepositoryName}}(conn repository.MySQLRepository ) repository.{{.RepositoryName}}{
+	return &{{.RepositoryName}}{conn: conn.GetConnection()}
+}
+
+func (r *{{.RepositoryName}}) Create(ctx context.Context) error {
+	return nil
+}
+
+func (r *{{.RepositoryName}}) Update(ctx context.Context) error {
+	return nil
+}
+
+func (r *{{.RepositoryName}}) FindByID(id string) error {
+	return nil
+}
+
+func (r *{{.RepositoryName}}) Find() error {
+	return nil
+}

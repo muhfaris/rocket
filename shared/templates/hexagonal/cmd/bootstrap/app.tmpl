@@ -14,6 +14,7 @@ import (
 	{{- end}}
 	{{- if .IsMySQL}}
 	mysqladapter "{{.PackagePath}}/internal/adapter/outbound/datastore/mysql"
+	mysqlrepository "{{.PackagePath}}/internal/adapter/outbound/datastore/mysql/repository"
 	{{- end}}
 	{{- if .IsMongoDB}}
 	mongoadapter "{{.PackagePath}}/internal/adapter/outbound/datastore/mongo"
@@ -127,6 +128,13 @@ func (a *App) SQLiteRepository() repository.SQLiteRepository {
 func (a *App) MySQLRepository() repository.MySQLRepository {
 	return a.mysqlRepository
 }
+
+{{- range .Repositories}}
+	func (a *App) Get{{.}}() repository.{{.}}{
+		return mysqlrepository.New{{.}}(a.mysqlRepository)
+	}
+{{- end}}
+
 {{end}}
 
 {{if .IsMongoDB}}
