@@ -110,6 +110,9 @@ var (
 	//go:embed internal/core/port/outbound/repository/sqlite.tmpl
 	SQLiteRepositoryTemplate []byte
 
+	//go:embed internal/adapter/outbound/datastore/sqlite/repository/repository.tmpl
+	SQLiteQueryRepositoryTemplate []byte
+
 	//go:embed internal/adapter/outbound/datastore/mongodb/mongodb.tmpl
 	MongoDBAdapterTemplate []byte
 

@@ -1,3 +1,9 @@
 package repository
 
-type SQLiteRepository interface{}
+import (
+	"database/sql"
+)
+
+type SQLiteRepository interface{
+  GetConnection() *sql.DB
+}

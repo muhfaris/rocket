@@ -28,3 +28,7 @@ func (c *Client) WithTx(ctx context.Context, funcs ...func(tx *sql.Tx) (interfac
 
 	return nil, nil
 }
+
+func (c *Client) GetConnection() *sql.DB{
+	return c.conn
+}

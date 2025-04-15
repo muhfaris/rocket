@@ -3,46 +3,47 @@ package hexagonal
 import "github.com/getkin/kin-openapi/openapi3"
 
 type Project struct {
-	based                Based
-	doc                  *openapi3.T
-	cacheType            string
-	dbType               string
-	App                  App
-	Dirs                 []string
-	Rest                 Rest
-	GroupRest            GroupRest
-	RestRouter           RestRouter
-	RestPortAdapter      RestPortAdapter
-	RestMiddlewares      RestMiddlewares
-	SharedLibrary        SharedLibrary
-	RestResponse         RestResponse
-	RoutesGroup          []RouterGroup
-	RestPortService      RestPortService
-	Domains              DomainModel
-	RegistryService      RegistryService
-	Service              Service
-	RedisAdapter         RedisAdapter
-	RedisCommandAdapter  RedisCommandAdapter
-	CacheRepository      CacheRepository
-	PSQLAdapter          PSQLAdapter
-	PSQLCommandAdapter   PSQLCommandAdapter
-	PSQLRepository       PSQLRepository
-	PSQLQueryRepository  PSQLQueryRepository
-	MySQLAdapter         MySQLAdapter
-	MySQLCommandAdapter  MySQLCommandAdapter
-	MySQLRepository      MySQLRepository
-	MySQLQueryRepository MySQLQueryRepository
-	SQLiteAdapter        SQLiteAdapter
-	SQLiteCommandAdapter SQLiteCommandAdapter
-	SQLiteRepository     SQLiteRepository
-	MongoAdapter         MongoAdapter
-	MongoCommandAdapter  MongoCommandAdapter
-	MongoRepository      MongoRepository
-	Dockerfile           Dockerfile
-	DockerCompose        DockerCompose
-	Makefile             Makefile
-	ReadmeFile           ReadmeFile
-	MethodRepository     MethodRepository
+	based                 Based
+	doc                   *openapi3.T
+	cacheType             string
+	dbType                string
+	App                   App
+	Dirs                  []string
+	Rest                  Rest
+	GroupRest             GroupRest
+	RestRouter            RestRouter
+	RestPortAdapter       RestPortAdapter
+	RestMiddlewares       RestMiddlewares
+	SharedLibrary         SharedLibrary
+	RestResponse          RestResponse
+	RoutesGroup           []RouterGroup
+	RestPortService       RestPortService
+	Domains               DomainModel
+	RegistryService       RegistryService
+	Service               Service
+	RedisAdapter          RedisAdapter
+	RedisCommandAdapter   RedisCommandAdapter
+	CacheRepository       CacheRepository
+	PSQLAdapter           PSQLAdapter
+	PSQLCommandAdapter    PSQLCommandAdapter
+	PSQLRepository        PSQLRepository
+	PSQLQueryRepository   PSQLQueryRepository
+	MySQLAdapter          MySQLAdapter
+	MySQLCommandAdapter   MySQLCommandAdapter
+	MySQLRepository       MySQLRepository
+	MySQLQueryRepository  MySQLQueryRepository
+	SQLiteAdapter         SQLiteAdapter
+	SQLiteCommandAdapter  SQLiteCommandAdapter
+	SQLiteRepository      SQLiteRepository
+	SQLiteQueryRepository SQLiteQueryRepository
+	MongoAdapter          MongoAdapter
+	MongoCommandAdapter   MongoCommandAdapter
+	MongoRepository       MongoRepository
+	Dockerfile            Dockerfile
+	DockerCompose         DockerCompose
+	Makefile              Makefile
+	ReadmeFile            ReadmeFile
+	MethodRepository      MethodRepository
 }
 
 type Based struct {
@@ -256,6 +257,12 @@ type SQLiteCommandAdapter struct {
 }
 
 type SQLiteRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type SQLiteQueryRepository struct {
 	template []byte
 	dirpath  string
 	filepath string

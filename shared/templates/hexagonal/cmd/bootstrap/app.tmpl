@@ -11,6 +11,7 @@ import (
 	{{- end}}
 	{{- if .IsSQLite}}
 	sqliteadapter "{{.PackagePath}}/internal/adapter/outbound/datastore/sqlite"
+	sqliterepository "{{.PackagePath}}/internal/adapter/outbound/datastore/sqlite/repository"
 	{{- end}}
 	{{- if .IsMySQL}}
 	mysqladapter "{{.PackagePath}}/internal/adapter/outbound/datastore/mysql"
@@ -122,6 +123,12 @@ func (a *App) PSQLRepository() repository.PSQLRepository {
 func (a *App) SQLiteRepository() repository.SQLiteRepository {
 	return a.sqliteRepository
 }
+
+{{- range .Repositories}}
+	func (a *App) Get{{.}}() repository.{{.}}{
+		return sqliterepository.New{{.}}(a.sqliteRepository)
+	}
+{{- end}}
 {{end}}
 
 {{if .IsMySQL}}

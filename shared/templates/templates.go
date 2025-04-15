@@ -371,3 +371,12 @@ func GetMySQLQueryRepositoryTemplate() []byte {
 		return nil
 	}
 }
+
+func GetSQLiteQueryRepositoryTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.SQLiteQueryRepositoryTemplate
+	default:
+		return nil
+	}
+}

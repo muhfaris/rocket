@@ -188,6 +188,11 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/sqlite.go", projectName),
 		},
+		SQLiteQueryRepository: SQLiteQueryRepository{
+			template: templates.GetSQLiteQueryRepositoryTemplate(),
+			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite/repository", projectName),
+			filepath: fmt.Sprintf("%s/internal/adapter/outbound/datastore/sqlite/repository/%%s.go", projectName),
+		},
 		MongoAdapter: MongoAdapter{
 			template: templates.GetMongoDBAdapterTemplate(),
 			dirpath:  fmt.Sprintf("%s/internal/adapter/outbound/datastore/mongo", projectName),
@@ -374,6 +379,11 @@ func (p *Project) GenerateDirectories() error {
 
 	// Generate sqlite repository
 	err = p.GenerateSQLiteRepository()
+	if err != nil {
+		return err
+	}
+
+	err = p.GenerateSQLiteQueryRepository()
 	if err != nil {
 		return err
 	}
@@ -1467,7 +1477,7 @@ func (p *Project) GenerateSQLiteAdapter() error {
 		return err
 	}
 
-	err = libos.CreateFile(p.PSQLAdapter.filepath, rawSQLiteAdapter)
+	err = libos.CreateFile(p.SQLiteAdapter.filepath, rawSQLiteAdapter)
 	if err != nil {
 		return err
 	}
@@ -1510,6 +1520,50 @@ func (p *Project) GenerateSQLiteRepository() error {
 	err = libos.CreateFile(p.SQLiteRepository.filepath, raw)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateSQLiteQueryRepository() error {
+	if p.dbType != constanta.DBSQLite {
+		return nil
+	}
+
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.SQLiteQueryRepository.dirpath)
+	_, err := os.Stat(p.SQLiteQueryRepository.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.SQLiteQueryRepository.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, service := range p.Service.Services {
+		repositoryName := service.ServiceName
+
+		for _, suffix := range []string{"svc", "Svc", "SVC"} {
+			if strings.Contains(repositoryName, suffix) {
+				repositoryName = strings.Replace(repositoryName, suffix, "", 1)
+				break
+			}
+		}
+
+		data := map[string]any{
+			"PackagePath":    p.based.Project.PackagePath,
+			"RepositoryName": fmt.Sprintf("%sRepository", repositoryName),
+		}
+
+		raw, err := libos.ExecuteTemplate(p.SQLiteQueryRepository.template, data)
+		if err != nil {
+			return err
+		}
+
+		filepath := fmt.Sprintf(p.SQLiteQueryRepository.filepath, strings.ToLower(repositoryName))
+		err = libos.CreateFile(filepath, raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
