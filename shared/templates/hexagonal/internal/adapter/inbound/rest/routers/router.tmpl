@@ -13,6 +13,7 @@ import (
 	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/middleware"
 	portadapter "{{.PackagePath}}/internal/core/port/inbound/adapter"
 
+	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/response"
 	"{{.PackagePath}}/internal/adapter/inbound/rest/router/group"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 
@@ -29,6 +30,7 @@ func Init(port int, svcs portregistry.Service) portadapter.Rest {
 		AppName:                  "{{.AppName}}",
 		EnableSplittingOnParsers: config.App.Fiber.EnableSplittingOnParsers,
 		EnablePrintRoutes:        config.App.Fiber.EnablePrintRoutes,
+		ErrorHandler:             response.Fail,
 		<!-- ErrorHandler:             middlewares.Error(), -->
 	})
 
