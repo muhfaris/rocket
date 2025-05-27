@@ -7,7 +7,8 @@ type Project struct {
 	doc                   *openapi3.T
 	cacheType             string
 	dbType                string
-	App                   App
+	AppRepository         AppRepository
+	AppService            AppService
 	Dirs                  []string
 	Rest                  Rest
 	GroupRest             GroupRest
@@ -62,7 +63,13 @@ type BaseProject struct {
 	PackagePath string
 }
 
-type App struct {
+type AppRepository struct {
+	dirpath  string
+	filepath string
+	template []byte
+}
+
+type AppService struct {
 	dirpath  string
 	filepath string
 	template []byte

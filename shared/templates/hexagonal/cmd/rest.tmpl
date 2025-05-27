@@ -5,22 +5,28 @@ import (
 "{{.PackagePath}}/internal/adapter/inbound/rest/router"
 "{{.PackagePath}}/cmd/bootstrap"
 	"github.com/spf13/cobra"
+	portregistry "{{.PackagePath}}/internal/core/port/inbound/registry"
 )
 
-var restCmd = &cobra.Command{
-  Use:     "{{.Entrypoint}}",
-	Short:   "Run rest server",
-	PreRunE: restPreRunE,
-	RunE:    restRunE,
-}
+var (
+	restCmd = &cobra.Command{
+		Use:     "{{.Entrypoint}}",
+		Short:   "Run rest server",
+		PreRunE: restPreRunE,
+		RunE:    restRunE,
+	}
+
+	repo portregistry.Repository
+)
 
 func restPreRunE(cmd *cobra.Command, args []string) error {
-	bootstrap.InitializeRepository()
+	repo = bootstrap.InitializeRepository()
 	return nil
 }
 
 func restRunE(cmd *cobra.Command, args []string) error {
-	api := router.Init(config.App.Port)
+	services := bootstrap.InitializeService(repo)
+	api := router.Init(config.App.Port, services)
 	err := api.Run()
 	if err != nil {
 		return err

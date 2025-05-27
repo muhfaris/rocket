@@ -13,7 +13,7 @@ func(h *Handler) {{.HandlerName}}() func(c *fiber.Ctx) error {
 		{{if .HasService}}
 				var (
 					ctx = c.UserContext()
-					svc = h.services.{{.ServiceName}}()
+					svc = h.services.Get{{.ServiceName}}()
 					)
 		{{end}}
 

@@ -185,10 +185,19 @@ func GetServiceTemplate() []byte {
 	}
 }
 
-func GetAppTemplate() []byte {
+func GetAppRepositoryTemplate() []byte {
 	switch archType {
 	case hexagonalType:
-		return hexagonal.AppTemplate
+		return hexagonal.AppRepositoryTemplate
+	default:
+		return nil
+	}
+}
+
+func GetAppServiceTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.AppServiceTemplate
 	default:
 		return nil
 	}

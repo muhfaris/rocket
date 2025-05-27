@@ -7,7 +7,7 @@ import (
 
 type Service interface {
   {{- range .Services}}
-    {{.}}() portservice.{{.}}
+    Get{{.}}() portservice.{{.}}
   {{- end}}
 }
 

@@ -62,8 +62,11 @@ var (
 	//go:embed internal/core/domain/domain.tmpl
 	DomainModel []byte
 
-	//go:embed cmd/bootstrap/app.tmpl
-	AppTemplate []byte
+	//go:embed cmd/bootstrap/app_repository.tmpl
+	AppRepositoryTemplate []byte
+
+	//go:embed cmd/bootstrap/app_service.tmpl
+	AppServiceTemplate []byte
 
 	//go:embed internal/adapter/outbound/cache/redis/redis.tmpl
 	RedisAdapterTemplate []byte

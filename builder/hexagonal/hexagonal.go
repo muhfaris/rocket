@@ -35,10 +35,15 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 		doc:       doc,
 		cacheType: cfg.CacheParam,
 		dbType:    cfg.DBParam,
-		App: App{
+		AppRepository: AppRepository{
 			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", cfg.ProjectName),
-			filepath: fmt.Sprintf("%s/cmd/bootstrap/app.go", cfg.ProjectName),
-			template: templates.GetAppTemplate(),
+			filepath: fmt.Sprintf("%s/cmd/bootstrap/app_repository.go", cfg.ProjectName),
+			template: templates.GetAppRepositoryTemplate(),
+		},
+		AppService: AppService{
+			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", cfg.ProjectName),
+			filepath: fmt.Sprintf("%s/cmd/bootstrap/app_service.go", cfg.ProjectName),
+			template: templates.GetAppServiceTemplate(),
 		},
 		Dirs: []string{
 			"internal/adapter/inbound/rest/router",
@@ -319,8 +324,14 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
-	// Generate App
-	err = p.GenerateApp()
+	// Generate App Repository
+	err = p.GenerateAppRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate App Service
+	err = p.GenerateAppService()
 	if err != nil {
 		return err
 	}
@@ -1106,11 +1117,12 @@ func (p *Project) GenerateRestService() error {
 	return nil
 }
 
-func (p *Project) GenerateApp() error {
-	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.App.dirpath)
-	_, err := os.Stat(p.App.dirpath)
+func (p *Project) GenerateAppRepository() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppRepository.filepath)
+	_, err := os.Stat(p.AppRepository.dirpath)
 	if os.IsNotExist(err) {
-		err = os.MkdirAll(p.App.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.AppRepository.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -1140,12 +1152,46 @@ func (p *Project) GenerateApp() error {
 		"Repositories": repositories,
 	}
 
-	raw, err := libos.ExecuteTemplate(p.App.template, data)
+	raw, err := libos.ExecuteTemplate(p.AppRepository.template, data)
 	if err != nil {
 		return err
 	}
 
-	err = libos.CreateFile(p.App.filepath, raw)
+	err = libos.CreateFile(p.AppRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateAppService() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppService.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppService.filepath)
+	_, err := os.Stat(p.AppService.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.AppService.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	var services []string
+	for _, service := range p.Service.Services {
+		services = append(services, service.ServiceName)
+	}
+
+	data := map[string]any{
+		"PackagePath": p.based.Project.PackagePath,
+		"Services":    services,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.AppService.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.AppService.filepath, raw)
 	if err != nil {
 		return err
 	}
