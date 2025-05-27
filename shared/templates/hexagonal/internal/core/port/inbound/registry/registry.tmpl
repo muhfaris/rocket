@@ -5,6 +5,7 @@ import (
   "{{.PackagePath}}/internal/core/port/outbound/repository"
 )
 
+//go:generate mockgen -destination=../../../../../shared/mock/registry/registry.go -package=mockregistry -source=registry.go
 type Service interface {
   {{- range .Services}}
     Get{{.}}() portservice.{{.}}
