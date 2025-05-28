@@ -1,7 +1,11 @@
 package response
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	libcontext "{{.PackagePath}}/shared/context"
 )
 
 type R struct {
@@ -32,10 +36,22 @@ type Pagination struct {
 
 func Success(c *fiber.Ctx, data any) error {
 	var (
-		defaultCode = fiber.StatusOK
-		requestID   = c.Locals(fiber.HeaderXRequestID)
-		latency     = c.Locals(fiber.HeaderServerTiming)
+		defaultCode  = fiber.StatusOK
+		requestID    = c.Locals(fiber.HeaderXRequestID)
+		startLatency = c.UserContext().Value(libcontext.ContextLatency)
+		latency      string
 	)
+
+	start, ok := startLatency.(time.Time)
+	if ok {
+		latencyMs := float64(time.Since(start).Nanoseconds() / 1e6)
+		if latencyMs >= 1 {
+			latency = fmt.Sprintf("%.2fms", latencyMs)
+		} else {
+			latencyUs := float64(time.Since(start).Nanoseconds()) / 1e3
+			latency = fmt.Sprintf("%.2fus", latencyUs)
+		}
+	}
 
 	result := R{
 		Data: data,
@@ -50,10 +66,22 @@ func Success(c *fiber.Ctx, data any) error {
 
 func Fail(c *fiber.Ctx, err error) error {
 	var (
-		defaultCode = fiber.StatusBadRequest
-		requestID   = c.Locals(fiber.HeaderXRequestID)
-		latency     = c.Locals(fiber.HeaderServerTiming)
+		defaultCode  = fiber.StatusBadRequest
+		requestID    = c.Locals(fiber.HeaderXRequestID)
+		startLatency = c.UserContext().Value(libcontext.ContextLatency)
+		latency      string
 	)
+
+	start, ok := startLatency.(time.Time)
+	if ok {
+		latencyMs := float64(time.Since(start).Nanoseconds() / 1e6)
+		if latencyMs >= 1 {
+			latency = fmt.Sprintf("%.2fms", latencyMs)
+		} else {
+			latencyUs := float64(time.Since(start).Nanoseconds()) / 1e3
+			latency = fmt.Sprintf("%.2fus", latencyUs)
+		}
+	}
 
 	result := R{
 		Errors: []Error{
