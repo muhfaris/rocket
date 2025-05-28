@@ -34,7 +34,9 @@ func Init(port int, svcs portregistry.Service) portadapter.Rest {
 		<!-- ErrorHandler:             middlewares.Error(), -->
 	})
 
-	r.Use(requestid.New())
+	r.Use(requestid.New(requestid.Config{
+		ContextKey: fiber.HeaderXRequestID,
+	}))
 	r.Use(middleware.Latency())
 
 	// public
