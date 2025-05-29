@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"{{.PackagePath}}/shared/apierror"
 	libcontext "{{.PackagePath}}/shared/context"
 )
 
@@ -83,10 +84,15 @@ func Fail(c *fiber.Ctx, err error) error {
 		}
 	}
 
+	apie := err.(*apierror.APIError)
+	if apie != nil {
+		defaultCode = apie.StatusCode
+	}
+
 	result := R{
 		Errors: []Error{
 			{
-				Message: err.Error(),
+				Message: apie.Message,
 			},
 		},
 		Metadata: Metadata{

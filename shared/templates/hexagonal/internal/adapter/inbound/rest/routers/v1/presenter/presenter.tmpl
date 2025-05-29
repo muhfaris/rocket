@@ -3,6 +3,7 @@ package presenter
 import (
 	"github.com/gofiber/fiber/v2"
 	"{{.PackagePath}}/internal/core/domain"
+	"{{.PackagePath}}/shared/apierror"
 )
 
 type {{.HandlerName}} struct{}
@@ -59,14 +60,14 @@ func (req *{{.HandlerName}}) In(c *fiber.Ctx)(domain.{{.DomainModel.StructName}}
 		{{if .HasParams}}
 			var {{.ParamsName}} {{.ParamsStructName}}
 			if err := c.ParamsParser(&{{.ParamsName}}); err != nil {
-				return domain.{{.DomainModel.StructName}}{}, err
+				return domain.{{.DomainModel.StructName}}{}, apierror.NewBadRequest("invalid request params", err) 
 			}
 		{{end}}
 
 		{{if .HasQuery}}
 			var {{.QueryName}} {{.QueryStructName}}
 			if	err:= c.QueryParser(&{{.QueryName}}); err != nil {
-				return domain.{{.DomainModel.StructName}}{}, err
+				return domain.{{.DomainModel.StructName}}{}, apierror.NewBadRequest("invalid request query", err) 
 			}
 		{{end}}
 
@@ -74,7 +75,7 @@ func (req *{{.HandlerName}}) In(c *fiber.Ctx)(domain.{{.DomainModel.StructName}}
 		{{if .HasBody}}
 			var {{.BodyName}} {{.BodyPresenterStructName}}
 			if err := c.BodyParser(&{{.BodyName}}); err != nil {
-				return domain.{{.DomainModel.StructName}}{}, err
+				return domain.{{.DomainModel.StructName}}{}, apierror.NewBadRequest("invalid request body", err)
 			}
 		{{end}}
 

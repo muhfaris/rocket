@@ -45,6 +45,7 @@ type Project struct {
 	Makefile              Makefile
 	ReadmeFile            ReadmeFile
 	MethodRepository      MethodRepository
+	APIError              APIError
 }
 
 type Based struct {
@@ -314,6 +315,12 @@ type ReadmeFile struct {
 }
 
 type MethodRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type APIError struct {
 	template []byte
 	dirpath  string
 	filepath string

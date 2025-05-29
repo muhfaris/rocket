@@ -234,6 +234,11 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/%%s.go", projectName),
 		},
+		APIError: APIError{
+			template: templates.GetAPIErrorTemplate(),
+			dirpath:  fmt.Sprintf("%s/shared/apierror", projectName),
+			filepath: fmt.Sprintf("%s/shared/apierror/apierror.go", projectName),
+		},
 	}
 }
 
@@ -412,6 +417,12 @@ func (p *Project) GenerateDirectories() error {
 	}
 
 	err = p.GenerateMethodRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generated api error
+	err = p.GenerateAPIError()
 	if err != nil {
 		return err
 	}
@@ -1803,6 +1814,29 @@ func (p *Project) GenerateMethodRepository() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateAPIError() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.APIError.dirpath)
+	_, err := os.Stat(p.APIError.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.APIError.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	raw, err := libos.ExecuteTemplate(p.APIError.template, nil)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.APIError.filepath, raw)
+	if err != nil {
+		return err
 	}
 
 	return nil

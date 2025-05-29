@@ -136,4 +136,7 @@ var (
 
 	//go:embed README.tmpl
 	ReadmeTemplate []byte
+
+	//go:embed shared/apierror/apierror.tmpl
+	APIErrorTemplate []byte
 )

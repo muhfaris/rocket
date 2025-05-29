@@ -389,3 +389,12 @@ func GetSQLiteQueryRepositoryTemplate() []byte {
 		return nil
 	}
 }
+
+func GetAPIErrorTemplate() []byte {
+	switch archType {
+	case hexagonalType:
+		return hexagonal.APIErrorTemplate
+	default:
+		return nil
+	}
+}
