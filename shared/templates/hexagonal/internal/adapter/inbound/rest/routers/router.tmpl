@@ -13,8 +13,11 @@ import (
 	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/middleware"
 	portadapter "{{.PackagePath}}/internal/core/port/inbound/adapter"
 
-	"github.com/muhfaris/r1/internal/adapter/inbound/rest/router/group"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/router/v1/response"
+	"{{.PackagePath}}/internal/adapter/inbound/rest/router/group"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+
+	portregistry "{{.PackagePath}}/internal/core/port/inbound/registry"
 )
 
 type Router struct {
@@ -22,22 +25,25 @@ type Router struct {
 	Port   int
 }
 
-func Init(port int) portadapter.Rest {
+func Init(port int, svcs portregistry.Service) portadapter.Rest {
 	r := fiber.New(fiber.Config{
 		AppName:                  "{{.AppName}}",
 		EnableSplittingOnParsers: config.App.Fiber.EnableSplittingOnParsers,
 		EnablePrintRoutes:        config.App.Fiber.EnablePrintRoutes,
+		ErrorHandler:             response.Fail,
 		<!-- ErrorHandler:             middlewares.Error(), -->
 	})
 
-	r.Use(requestid.New())
+	r.Use(requestid.New(requestid.Config{
+		ContextKey: fiber.HeaderXRequestID,
+	}))
 	r.Use(middleware.Latency())
 
 	// public
 	// publicGroup := r.Group("/")
 	// publicGroup.Get("/health", handlerv1.Health())
 
-	h := handlerv1.New()
+	h := handlerv1.New(svcs)
 	group.V1(r, h)
 
 	return &Router{

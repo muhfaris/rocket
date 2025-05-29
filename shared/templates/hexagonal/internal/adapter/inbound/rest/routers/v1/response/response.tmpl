@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"{{.PackagePath}}/shared/apierror"
 	libcontext "{{.PackagePath}}/shared/context"
 )
 
@@ -22,8 +23,8 @@ type Error struct {
 
 type Metadata struct {
 	Pagination *Pagination `json:"pagination,omitempty"`
-	Latency    string      `json:"latency"`
-	RequestID  string      `json:"request_id"`
+	Latency    any         `json:"latency"`
+	RequestID  any         `json:"request_id"`
 }
 
 type Pagination struct {
@@ -36,19 +37,21 @@ type Pagination struct {
 
 func Success(c *fiber.Ctx, data any) error {
 	var (
-		ctx          = c.UserContext()
-		startLatency = ctx.Value(libcontext.ContextLatency)
 		defaultCode  = fiber.StatusOK
-		requestID    = c.Get(fiber.HeaderXRequestID)
+		requestID    = c.Locals(fiber.HeaderXRequestID)
+		startLatency = c.UserContext().Value(libcontext.ContextLatency)
 		latency      string
 	)
-
-	c.SendStatus(defaultCode)
 
 	start, ok := startLatency.(time.Time)
 	if ok {
 		latencyMs := float64(time.Since(start).Nanoseconds() / 1e6)
-		latency = fmt.Sprintf("%.2fms", latencyMs)
+		if latencyMs >= 1 {
+			latency = fmt.Sprintf("%.2fms", latencyMs)
+		} else {
+			latencyUs := float64(time.Since(start).Nanoseconds()) / 1e3
+			latency = fmt.Sprintf("%.2fus", latencyUs)
+		}
 	}
 
 	result := R{
@@ -59,30 +62,37 @@ func Success(c *fiber.Ctx, data any) error {
 		},
 	}
 
-	return c.JSON(result)
+	return c.Status(defaultCode).JSON(result)
 }
 
 func Fail(c *fiber.Ctx, err error) error {
 	var (
-		ctx          = c.UserContext()
-		startLatency = ctx.Value(libcontext.ContextLatency)
-		defaultCode  = fiber.StatusOK
-		requestID    = c.Get(fiber.HeaderXRequestID)
+		defaultCode  = fiber.StatusBadRequest
+		requestID    = c.Locals(fiber.HeaderXRequestID)
+		startLatency = c.UserContext().Value(libcontext.ContextLatency)
 		latency      string
 	)
-
-	c.SendStatus(defaultCode)
 
 	start, ok := startLatency.(time.Time)
 	if ok {
 		latencyMs := float64(time.Since(start).Nanoseconds() / 1e6)
-		latency = fmt.Sprintf("%.2fms", latencyMs)
+		if latencyMs >= 1 {
+			latency = fmt.Sprintf("%.2fms", latencyMs)
+		} else {
+			latencyUs := float64(time.Since(start).Nanoseconds()) / 1e3
+			latency = fmt.Sprintf("%.2fus", latencyUs)
+		}
+	}
+
+	apie := err.(*apierror.APIError)
+	if apie != nil {
+		defaultCode = apie.StatusCode
 	}
 
 	result := R{
 		Errors: []Error{
 			{
-				Message: err.Error(),
+				Message: apie.Message,
 			},
 		},
 		Metadata: Metadata{
@@ -91,5 +101,5 @@ func Fail(c *fiber.Ctx, err error) error {
 		},
 	}
 
-	return c.JSON(result)
+	return c.Status(defaultCode).JSON(result)
 }

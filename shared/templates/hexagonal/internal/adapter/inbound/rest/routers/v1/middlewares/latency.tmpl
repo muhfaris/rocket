@@ -19,15 +19,15 @@ func Latency() func(c *fiber.Ctx) error {
 		ctx = context.WithValue(ctx, libcontext.ContextLatency, start)
 		c.SetUserContext(ctx)
 		err := c.Next()
-		if err != nil {
-			return err
-		}
 
 		// Calculate latency in milliseconds
 		latencyMs := float64(time.Since(start).Nanoseconds()) / 1e6
 
 		// Add latency to response header
-		c.Set(fiber.HeaderServerTiming, fmt.Sprintf("%.2fms", latencyMs))
-		return nil
+		latency := fmt.Sprintf("%.2fms", latencyMs)
+		c.Set(fiber.HeaderServerTiming, latency)
+		c.Locals(fiber.HeaderServerTiming, latency)
+
+		return err
 	}
 }

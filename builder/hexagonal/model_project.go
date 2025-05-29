@@ -7,7 +7,8 @@ type Project struct {
 	doc                   *openapi3.T
 	cacheType             string
 	dbType                string
-	App                   App
+	AppRepository         AppRepository
+	AppService            AppService
 	Dirs                  []string
 	Rest                  Rest
 	GroupRest             GroupRest
@@ -44,6 +45,7 @@ type Project struct {
 	Makefile              Makefile
 	ReadmeFile            ReadmeFile
 	MethodRepository      MethodRepository
+	APIError              APIError
 }
 
 type Based struct {
@@ -62,7 +64,13 @@ type BaseProject struct {
 	PackagePath string
 }
 
-type App struct {
+type AppRepository struct {
+	dirpath  string
+	filepath string
+	template []byte
+}
+
+type AppService struct {
 	dirpath  string
 	filepath string
 	template []byte
@@ -307,6 +315,12 @@ type ReadmeFile struct {
 }
 
 type MethodRepository struct {
+	template []byte
+	dirpath  string
+	filepath string
+}
+
+type APIError struct {
 	template []byte
 	dirpath  string
 	filepath string

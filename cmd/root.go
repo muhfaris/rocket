@@ -18,41 +18,42 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cmdproject.OpenapiCMD.Flags().StringP("package", "", "", "package project e.g github.com/muhfaris/myproject")
-	viper.BindPFlag("package", cmdproject.OpenapiCMD.Flags().Lookup("package"))
+	cmdproject.NewCMD.Flags().StringP("package", "", "", "package project e.g github.com/muhfaris/myproject")
+	viper.BindPFlag("package", cmdproject.NewCMD.Flags().Lookup("package"))
 
-	cmdproject.OpenapiCMD.Flags().StringP("project", "", "", "project name e.g myproject")
-	viper.BindPFlag("project", cmdproject.OpenapiCMD.Flags().Lookup("project"))
+	cmdproject.NewCMD.Flags().StringP("project", "", "", "project name e.g myproject")
+	viper.BindPFlag("project", cmdproject.NewCMD.Flags().Lookup("project"))
 
 	// add openapi flag project name
-	cmdproject.OpenapiCMD.Flags().StringP("openapi", "", "", "path openapi file")
-	viper.BindPFlag("openapi", cmdproject.OpenapiCMD.Flags().Lookup("openapi"))
+	cmdproject.NewCMD.Flags().StringP("openapi", "", "", "path openapi file")
+	viper.BindPFlag("openapi", cmdproject.NewCMD.Flags().Lookup("openapi"))
 
 	// architecture e.g hexagonal
-	cmdproject.OpenapiCMD.Flags().StringP("arch", "", "hexagonal", "architecture layout e.g hexagonal, cleancode")
-	viper.BindPFlag("arch", cmdproject.OpenapiCMD.Flags().Lookup("arch"))
+	cmdproject.NewCMD.Flags().StringP("arch", "", "hexagonal", "architecture layout e.g hexagonal, cleancode")
+	viper.BindPFlag("arch", cmdproject.NewCMD.Flags().Lookup("arch"))
 
 	// redis
-	cmdproject.OpenapiCMD.Flags().StringP("cache", "", "", "cache connection string e.g redis, memory")
-	viper.BindPFlag("cache", cmdproject.OpenapiCMD.Flags().Lookup("cache"))
+	cmdproject.NewCMD.Flags().StringP("cache", "", "", "cache connection string e.g redis, memory")
+	viper.BindPFlag("cache", cmdproject.NewCMD.Flags().Lookup("cache"))
 
 	// db
-	cmdproject.OpenapiCMD.Flags().StringP("database", "", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
-	viper.BindPFlag("database", cmdproject.OpenapiCMD.Flags().Lookup("database"))
+	cmdproject.NewCMD.Flags().StringP("database", "", "", "db connection string e.g sqlite, mysql, postgres, mongodb")
+	viper.BindPFlag("database", cmdproject.NewCMD.Flags().Lookup("database"))
 
 	// docker
-	cmdproject.OpenapiCMD.Flags().BoolP("docker", "", false, "generate dockerfile")
-	viper.BindPFlag("docker", cmdproject.OpenapiCMD.Flags().Lookup("docker"))
+	cmdproject.NewCMD.Flags().BoolP("docker", "", false, "generate dockerfile")
+	viper.BindPFlag("docker", cmdproject.NewCMD.Flags().Lookup("docker"))
 
 	// config rocket.yaml
-	cmdproject.OpenapiCMD.Flags().StringP("config", "c", "", "config file(default is $HOME/config.yaml)")
-	viper.BindPFlag("config", cmdproject.OpenapiCMD.Flags().Lookup("config"))
+	cmdproject.NewCMD.Flags().StringP("config", "c", "", "config file(default is $HOME/config.yaml)")
+	viper.BindPFlag("config", cmdproject.NewCMD.Flags().Lookup("config"))
 }
 
 // Execute is root function
 func Execute() {
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(cmdproject.OpenapiCMD)
+	rootCmd.AddCommand(cmdproject.NewCMD)
+	rootCmd.AddCommand(cmdproject.AddCMD)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

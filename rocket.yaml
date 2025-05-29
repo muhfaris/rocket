@@ -1,7 +1,7 @@
 openapi: "spec/openapi.yaml"
 app:
   package: "github.com/muhfaris/r1"
-  project: "laporkan"
+  project: "r1"
   arch: "hexagonal"
   docker: true
   database: "sqlite"

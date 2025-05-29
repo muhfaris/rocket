@@ -35,10 +35,15 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 		doc:       doc,
 		cacheType: cfg.CacheParam,
 		dbType:    cfg.DBParam,
-		App: App{
+		AppRepository: AppRepository{
 			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", cfg.ProjectName),
-			filepath: fmt.Sprintf("%s/cmd/bootstrap/app.go", cfg.ProjectName),
-			template: templates.GetAppTemplate(),
+			filepath: fmt.Sprintf("%s/cmd/bootstrap/app_repository.go", cfg.ProjectName),
+			template: templates.GetAppRepositoryTemplate(),
+		},
+		AppService: AppService{
+			dirpath:  fmt.Sprintf("%s/cmd/bootstrap", cfg.ProjectName),
+			filepath: fmt.Sprintf("%s/cmd/bootstrap/app_service.go", cfg.ProjectName),
+			template: templates.GetAppServiceTemplate(),
 		},
 		Dirs: []string{
 			"internal/adapter/inbound/rest/router",
@@ -229,6 +234,11 @@ func NewProject(doc *openapi3.T, cfg *Config) *Project {
 			dirpath:  fmt.Sprintf("%s/internal/core/port/outbound/repository", projectName),
 			filepath: fmt.Sprintf("%s/internal/core/port/outbound/repository/%%s.go", projectName),
 		},
+		APIError: APIError{
+			template: templates.GetAPIErrorTemplate(),
+			dirpath:  fmt.Sprintf("%s/shared/apierror", projectName),
+			filepath: fmt.Sprintf("%s/shared/apierror/apierror.go", projectName),
+		},
 	}
 }
 
@@ -319,8 +329,14 @@ func (p *Project) GenerateDirectories() error {
 		return err
 	}
 
-	// Generate App
-	err = p.GenerateApp()
+	// Generate App Repository
+	err = p.GenerateAppRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generate App Service
+	err = p.GenerateAppService()
 	if err != nil {
 		return err
 	}
@@ -401,6 +417,12 @@ func (p *Project) GenerateDirectories() error {
 	}
 
 	err = p.GenerateMethodRepository()
+	if err != nil {
+		return err
+	}
+
+	// Generated api error
+	err = p.GenerateAPIError()
 	if err != nil {
 		return err
 	}
@@ -1106,11 +1128,12 @@ func (p *Project) GenerateRestService() error {
 	return nil
 }
 
-func (p *Project) GenerateApp() error {
-	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.App.dirpath)
-	_, err := os.Stat(p.App.dirpath)
+func (p *Project) GenerateAppRepository() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppRepository.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppRepository.filepath)
+	_, err := os.Stat(p.AppRepository.dirpath)
 	if os.IsNotExist(err) {
-		err = os.MkdirAll(p.App.dirpath, os.ModePerm)
+		err = os.MkdirAll(p.AppRepository.dirpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -1140,12 +1163,46 @@ func (p *Project) GenerateApp() error {
 		"Repositories": repositories,
 	}
 
-	raw, err := libos.ExecuteTemplate(p.App.template, data)
+	raw, err := libos.ExecuteTemplate(p.AppRepository.template, data)
 	if err != nil {
 		return err
 	}
 
-	err = libos.CreateFile(p.App.filepath, raw)
+	err = libos.CreateFile(p.AppRepository.filepath, raw)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateAppService() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppService.dirpath)
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.AppService.filepath)
+	_, err := os.Stat(p.AppService.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.AppService.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	var services []string
+	for _, service := range p.Service.Services {
+		services = append(services, service.ServiceName)
+	}
+
+	data := map[string]any{
+		"PackagePath": p.based.Project.PackagePath,
+		"Services":    services,
+	}
+
+	raw, err := libos.ExecuteTemplate(p.AppService.template, data)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.AppService.filepath, raw)
 	if err != nil {
 		return err
 	}
@@ -1757,6 +1814,29 @@ func (p *Project) GenerateMethodRepository() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (p *Project) GenerateAPIError() error {
+	fmt.Printf(" %s%s\n", ui.LineOnProgress, p.APIError.dirpath)
+	_, err := os.Stat(p.APIError.dirpath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(p.APIError.dirpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	raw, err := libos.ExecuteTemplate(p.APIError.template, nil)
+	if err != nil {
+		return err
+	}
+
+	err = libos.CreateFile(p.APIError.filepath, raw)
+	if err != nil {
+		return err
 	}
 
 	return nil

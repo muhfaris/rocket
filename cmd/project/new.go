@@ -18,7 +18,7 @@ import (
 
 var cfg config.Config
 
-var OpenapiCMD = &cobra.Command{
+var NewCMD = &cobra.Command{
 	Use:     "new",
 	Short:   "Create new project",
 	Example: "new --package github.com/muhfaris/myproject --project myproject --openapi myopenapi.yaml",

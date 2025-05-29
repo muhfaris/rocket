@@ -6,6 +6,6 @@ type Handler struct {
 	services portregistry.Service
 }
 
-func New() *Handler {
-	return &Handler{}
+func New(svcs portregistry.Service) *Handler {
+	return &Handler{services: svcs}
 }

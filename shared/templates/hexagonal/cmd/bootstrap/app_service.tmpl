@@ -1,0 +1,21 @@
+package bootstrap
+
+import (
+	portregistry "{{.PackagePath}}/internal/core/port/inbound/registry"
+	portservice "{{.PackagePath}}/internal/core/port/inbound/service"
+	"{{.PackagePath}}/internal/core/service"
+)
+
+type AppService struct {
+	reg portregistry.Repository
+}
+
+func InitializeService(reg portregistry.Repository) portregistry.Service {
+	return &AppService{reg: reg}
+}
+
+{{- range .Services}}
+func (a *AppService) Get{{.}}() portservice.{{.}} {
+	return service.New{{.}}(a.reg)
+}
+{{- end}}
