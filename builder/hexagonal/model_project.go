@@ -111,7 +111,7 @@ type RestPortService struct {
 	dirpath  string
 	filepath string
 	template []byte
-	Data     DataRestPortService
+	Data     []DataRestPortService
 }
 
 type DataRestPortService struct {

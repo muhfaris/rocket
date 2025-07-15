@@ -91,7 +91,7 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 
 			field := PropertyStruct{
 				Name:   name,
-				Type:   prop.Value.Type.Slice()[0],
+				Type:   DataTypeToGo(prop.Value.Type.Slice()[0]),
 				Enum:   enumFunc(),
 				Format: prop.Value.Format,
 				Tag:    GetTag(contentType, nameLower),
@@ -112,10 +112,10 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 					return ResponseStruct{}, err
 				}
 
-				resFieldNameData := strings.ToLower(nestedStruct.Name)
-				if ignoreDataResponse && resFieldNameData == "data" {
-					return nestedStruct, nil
-				}
+				// resFieldNameData := strings.ToLower(nestedStruct.Name)
+				// if ignoreDataResponse && strings.ToLower(resFieldNameData) == "data" {
+				// 	return nestedStruct, nil
+				// }
 
 				return ResponseStruct{
 					Name: res.Name,
@@ -150,18 +150,18 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 					return ResponseStruct{}, err
 				}
 
-				resFieldNameData := strings.ToLower(name)
-				if ignoreDataResponse && resFieldNameData == "data" {
-					return ResponseStruct{
-						Name: res.Name,
-						Type: propType,
-						Children: &ResponseStruct{
-							Name:   arrayStruct.Name,
-							Type:   arrayStruct.Type,
-							Fields: arrayStruct.Fields,
-						},
-					}, nil
-				}
+				// resFieldNameData := strings.ToLower(name)
+				// if ignoreDataResponse && resFieldNameData == "data" {
+				// 	return ResponseStruct{
+				// 		Name: res.Name,
+				// 		Type: propType,
+				// 		Children: &ResponseStruct{
+				// 			Name:   arrayStruct.Name,
+				// 			Type:   arrayStruct.Type,
+				// 			Fields: arrayStruct.Fields,
+				// 		},
+				// 	}, nil
+				// }
 
 				return ResponseStruct{
 					Name: res.Name,
@@ -169,7 +169,7 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 					Fields: []PropertyStruct{
 						{
 							Name: name,
-							Type: propType,
+							Type: DataTypeToGo(propType),
 							Tag:  GetTag(contentType, nameLower),
 							Children: &ResponseStruct{
 								Name:   arrayStruct.Name,
