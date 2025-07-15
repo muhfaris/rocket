@@ -2,6 +2,7 @@ package liboas
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -36,8 +37,11 @@ func CreateSwaggerAnnotation(path string, method string, operation *openapi3.Ope
 	if operation.RequestBody != nil {
 		for contentType, mediaType := range operation.RequestBody.Value.Content {
 			annotation += fmt.Sprintf("// @Accept %s\n", contentType)
-			annotation += fmt.Sprintf("// @Param body body %s true \"Request body\"\n",
-				mediaType.Schema.Value.Type)
+			fragment := mediaType.Schema.RefPath().Fragment
+			if fragment != "" && strings.Contains(fragment, "/components/schemas/") {
+				refName := strings.ReplaceAll(fragment, "/components/schemas/", "")
+				annotation += fmt.Sprintf("// @Param body body presenter.%s true %q\n", refName, "Request body")
+			}
 		}
 	}
 
@@ -52,9 +56,14 @@ func CreateSwaggerAnnotation(path string, method string, operation *openapi3.Ope
 					}
 				}
 
+				responseModel := mediaType.Schema.Ref
+				if responseModel != "" && strings.Contains(responseModel, "#/components/schemas/") {
+					responseModel = strings.ReplaceAll(responseModel, "#/components/schemas/", "")
+				}
+
 				annotation += fmt.Sprintf("// @Success %s {object} %s \"%s\"\n",
 					statusCode,
-					mediaType.Schema.Ref, // Reference to the schema
+					responseModel, // Reference to the schema
 					description)
 			}
 		}
@@ -88,7 +97,7 @@ func OASDescriptionSwagger(doc *openapi3.T) (string, error) {
 		}
 	}
 
-	if doc.Servers != nil && len(doc.Servers) > 0 {
+	if len(doc.Servers) > 0 {
 		annotation += fmt.Sprintf("// @host %s\n", doc.Servers[0].URL)
 	}
 
@@ -135,7 +144,7 @@ func DataTypeToGo(dataType string) string {
 		return "float64"
 	case "boolean":
 		return "bool"
-	case "null", "nullable":
+	case "null", "nullable", "array":
 		return "any"
 	default:
 		return "any"

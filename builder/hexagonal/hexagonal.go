@@ -575,8 +575,7 @@ func (p *Project) GenerateRestPortService() error {
 
 	data := map[string]any{
 		"PackagePath": p.based.Project.PackagePath,
-		"ServiceName": p.RestPortService.Data.ServiceName,
-		"Methods":     p.RestPortService.Data.Methods,
+		"Services":    p.RestPortService.Data,
 	}
 	raw, err := libos.ExecuteTemplate(p.RestPortService.template, data)
 	if err != nil {
@@ -693,14 +692,14 @@ func (p *Project) GenerateRestResponse() error {
 
 func (p *Project) GenerateRestHandlers() error {
 	var (
-		childsRouter       []ChildRouterGroup
-		handlerDir         = fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/handler", p.based.Project.ProjectName)
-		presenterDir       = fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/presenter", p.based.Project.ProjectName)
-		routesGroupMap     = make(map[string]RouterGroup)
-		domainMap          = make(map[string]DataDomainModel)
-		serviceRegistryMap = make(map[string]bool)
-		serviceHandler     DataRestPortService
-		servicesMap        = make(map[string]ServiceParams)
+		childsRouter          []ChildRouterGroup
+		handlerDir            = fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/handler", p.based.Project.ProjectName)
+		presenterDir          = fmt.Sprintf("%s/internal/adapter/inbound/rest/router/v1/presenter", p.based.Project.ProjectName)
+		routesGroupMap        = make(map[string]RouterGroup)
+		domainMap             = make(map[string]DataDomainModel)
+		serviceRegistryMap    = make(map[string]bool)
+		servicePortHandlerMap = make(map[string]DataRestPortService)
+		servicesMap           = make(map[string]ServiceParams)
 	)
 
 	fmt.Printf(" %s%s\n", ui.LineOnProgress, handlerDir)
@@ -848,15 +847,23 @@ func (p *Project) GenerateRestHandlers() error {
 			})
 
 			// service handler
-			serviceHandler.Methods = append(serviceHandler.Methods, handlerService)
-			serviceHandler.ServiceName = serviceName
+			if _, exist = servicePortHandlerMap[serviceName]; !exist {
+				servicePortHandlerMap[serviceName] = DataRestPortService{
+					ServiceName: serviceName,
+					Methods:     []PortServiceMethods{handlerService},
+				}
+			} else {
+				service := servicePortHandlerMap[serviceName]
+				service.Methods = append(service.Methods, handlerService)
+				servicePortHandlerMap[serviceName] = service
+			}
 
 			// service service
 			if _, exist = servicesMap[serviceName]; !exist {
 				servicesMap[serviceName] = ServiceParams{
 					PackagePath: p.based.Project.PackagePath,
 					ServiceName: serviceName,
-					Methods:     serviceHandler.Methods,
+					Methods:     []PortServiceMethods{handlerService},
 				}
 			} else {
 				service := servicesMap[serviceName]
@@ -903,7 +910,12 @@ func (p *Project) GenerateRestHandlers() error {
 	}
 
 	p.RoutesGroup = routesGroup
-	p.RestPortService.Data = serviceHandler
+
+	var portServices []DataRestPortService
+	for _, portService := range servicePortHandlerMap {
+		portServices = append(portServices, portService)
+	}
+	p.RestPortService.Data = portServices
 
 	var domainsModel []DataDomainModel
 	for _, dm := range domainMap {
@@ -1105,11 +1117,16 @@ func (p *Project) GenerateRestService() error {
 		}
 	}
 
+	var serviceMethods []PortServiceMethods
+	for _, drps := range p.RestPortService.Data {
+		serviceMethods = append(serviceMethods, drps.Methods...)
+	}
+
 	for _, service := range p.Service.Services {
 		data := map[string]any{
 			"PackagePath": p.based.Project.PackagePath,
 			"ServiceName": service.ServiceName,
-			"Methods":     p.RestPortService.Data.Methods,
+			"Methods":     serviceMethods,
 		}
 
 		raw, err := libos.ExecuteTemplate(p.Service.template, data)
