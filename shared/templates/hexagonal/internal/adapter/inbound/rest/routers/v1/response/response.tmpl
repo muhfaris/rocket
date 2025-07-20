@@ -84,15 +84,17 @@ func Fail(c *fiber.Ctx, err error) error {
 		}
 	}
 
-	apie := err.(*apierror.APIError)
-	if apie != nil {
+	message:= err.Error()
+	apie, ok := err.(*apierror.APIError)
+	if ok && apie != nil {
 		defaultCode = apie.StatusCode
+    message = apie.Message
 	}
 
 	result := R{
 		Errors: []Error{
 			{
-				Message: apie.Message,
+				Message: message,
 			},
 		},
 		Metadata: Metadata{
