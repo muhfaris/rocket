@@ -35,13 +35,21 @@ type Pagination struct {
 	Page  *int    `json:"page,omitempty"`
 }
 
-func Success(c *fiber.Ctx, data any) error {
+func Success(c *fiber.Ctx, data any, args ...any) error {
 	var (
 		defaultCode  = fiber.StatusOK
 		requestID    = c.Locals(fiber.HeaderXRequestID)
 		startLatency = c.UserContext().Value(libcontext.ContextLatency)
 		latency      string
 	)
+
+	httpCode, ok := args[0].(int)
+	if len(args) > 0 && ok {
+		txtHTTPCode := http.StatusText(defaultCode)
+		if txtHTTPCode != "" {
+			defaultCode = httpCode
+		}
+	}
 
 	start, ok := startLatency.(time.Time)
 	if ok {
