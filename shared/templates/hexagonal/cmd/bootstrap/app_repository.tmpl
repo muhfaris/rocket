@@ -30,49 +30,49 @@ func InitializeRepository() portregistry.Repository {
 		{{if .IsRedis}}
 		cacheRepository: redisadapter.New(
 			redisadapter.RedisOptions{
-				Addr:     config.AppRepository.Cache.Redis.Addr,
-				Username: config.AppRepository.Cache.Redis.Username,
-				Password: config.AppRepository.Cache.Redis.Password,
-				DB:       config.AppRepository.Cache.Redis.DB,
+				Addr:     config.App.Cache.Redis.Addr,
+				Username: config.App.Cache.Redis.Username,
+				Password: config.App.Cache.Redis.Password,
+				DB:       config.App.Cache.Redis.DB,
 			},
 		),
 		{{end}}
 
 		{{if .IsPSQL}}
 		psqlRepository: psqladapter.New(psqladapter.PSQLConfig{
-			Host:     config.AppRepository.Datastore.PSQL.Host,
-			Port:     config.AppRepository.Datastore.PSQL.Port,
-			Username: config.AppRepository.Datastore.PSQL.Username,
-			Password: config.AppRepository.Datastore.PSQL.Password,
-			DB:       config.AppRepository.Datastore.PSQL.DB,
+			Host:     config.App.Datastore.PSQL.Host,
+			Port:     config.App.Datastore.PSQL.Port,
+			Username: config.App.Datastore.PSQL.Username,
+			Password: config.App.Datastore.PSQL.Password,
+			DB:       config.App.Datastore.PSQL.DB,
 		}),
 		{{end}}
 
 		{{if .IsSQLite}}
 		sqliteRepository: sqliteadapter.New(sqliteadapter.SQLiteConfig{
-			Path: config.AppRepository.Datastore.SQLite.Path,
-			Mode: config.AppRepository.Datastore.SQLite.Mode, // Optional
+			Path: config.App.Datastore.SQLite.Path,
+			Mode: config.App.Datastore.SQLite.Mode, // Optional
 		}),
 		{{end}}
 
 		{{if .IsMySQL}}
 		mysqlRepository: mysqladapter.New(mysqladapter.MySQLConfig{
-			Host:     config.AppRepository.Datastore.MySQL.Host,
-			Port:     config.AppRepository.Datastore.MySQL.Port,
-			Username: config.AppRepository.Datastore.MySQL.Username,
-			Password: config.AppRepository.Datastore.MySQL.Password,
-			DB:       config.AppRepository.Datastore.MySQL.DB,
+			Host:     config.App.Datastore.MySQL.Host,
+			Port:     config.App.Datastore.MySQL.Port,
+			Username: config.App.Datastore.MySQL.Username,
+			Password: config.App.Datastore.MySQL.Password,
+			DB:       config.App.Datastore.MySQL.DB,
 		}),
 		{{end}}
 
 		{{if .IsMongoDB}}
 		mongoRepository: mongoadapter.New(mongoadapter.MongoConfig{
-			Host:     config.AppRepository.Datastore.MongoDB.Host,
-			Port:     config.AppRepository.Datastore.MongoDB.Port,
-			Username: config.AppRepository.Datastore.MongoDB.Username,
-			Password: config.AppRepository.Datastore.MongoDB.Password,
-			DB:       config.AppRepository.Datastore.MongoDB.DB,
-			AuthDB:   config.AppRepository.Datastore.MongoDB.AuthDB, // Optional
+			Host:     config.App.Datastore.MongoDB.Host,
+			Port:     config.App.Datastore.MongoDB.Port,
+			Username: config.App.Datastore.MongoDB.Username,
+			Password: config.App.Datastore.MongoDB.Password,
+			DB:       config.App.Datastore.MongoDB.DB,
+			AuthDB:   config.App.Datastore.MongoDB.AuthDB, // Optional
 		}),
 		{{end}}
 	}
@@ -150,10 +150,3 @@ func (a *AppRepository) MongoRepository() repository.MongoRepository {
 	return a.mongoRepository
 }
 {{end}}
-
-{{- range .Repositories}}
-func (a *AppRepository) Get{{.}}() repository.{{.}}{
-	return nil
-}
-{{- end}}
-
