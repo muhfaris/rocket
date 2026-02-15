@@ -5,8 +5,11 @@ import (
 )
 
 //go:generate mockgen -destination=../../../../../shared/mock/service/service.go -package=mockservices -source=service.go
-type {{.ServiceName}} interface {
-  {{- range .Methods}}
-    {{.MethodName}}(ctx context.Context {{range .Params}}, {{.Name}} {{.Type}} {{end}}) ({{range $index, $element := .ReturnTypes}}{{if $index}}, {{end}}{{$element.Type}}{{end}})
-  {{- end}}
-}
+{{- range .Services}}
+  type {{.ServiceName}} interface {
+    {{- range .Methods}}
+      {{.MethodName}}(ctx context.Context {{range .Params}}, {{.Name}} {{.Type}} {{end}}) ({{range $index, $element := .ReturnTypes}}{{if $index}}, {{end}}{{$element.Type}}{{end}})
+    {{- end}}
+  }
+{{- end}}
+

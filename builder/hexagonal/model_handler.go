@@ -297,6 +297,12 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 					}
 				}
 
+				// use struct name if ref not empty
+				if content.Schema.Ref != "" {
+					sn := strings.ReplaceAll(content.Schema.Ref, "#/components/schemas/", "")
+					sBody.StructName = sn
+				}
+
 				for key, property := range content.Schema.Value.Properties {
 					if !h.HasBody {
 						h.HasBody = true
