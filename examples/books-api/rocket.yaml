@@ -1,0 +1,9 @@
+openapi: spec/books-api.yaml
+app:
+    package: github.com/muhfaris/rocket/examples/books-api
+    project: books-api
+    arch: hexagonal
+    docket: false
+    database: ""
+    cache: ""
+    ignoredataresponse: ""

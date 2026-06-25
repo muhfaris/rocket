@@ -150,3 +150,11 @@ func (a *AppRepository) MongoRepository() repository.MongoRepository {
 	return a.mongoRepository
 }
 {{end}}
+
+{{if not .IsRedis}}{{if not .IsPSQL}}{{if not .IsSQLite}}{{if not .IsMySQL}}{{if not .IsMongoDB}}
+{{- range .Repositories}}
+func (a *AppRepository) Get{{.}}() repository.{{.}}{
+	return nil
+}
+{{- end}}
+{{end}}{{end}}{{end}}{{end}}{{end}}

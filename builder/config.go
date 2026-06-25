@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/muhfaris/rocket/helper/ui"
 	"github.com/muhfaris/rocket/shared/constanta"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
@@ -47,7 +48,7 @@ func NewConfig(configName, configType, projectName, cacheType, dbType string) *C
 }
 
 func (c *Config) Generate() error {
-	fmt.Printf("%s%s\n", LineOnProgress, "config")
+	fmt.Printf("%s%s\n", ui.LineOnProgress, "config")
 	_, err := os.Stat(c.dirpath)
 	if os.IsExist(err) {
 		return fmt.Errorf("directory config %s already exists", c.dirpath)

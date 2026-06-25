@@ -1,185 +1,284 @@
 # rocket
 
-is generator golang project based ddd.
+**Rocket** generates production-ready Go projects from OpenAPI 3.0 specs — handlers, routes, domain models, services, repositories, and adapters, all wired in hexagonal architecture.
 
-## overview
+You provide an OpenAPI YAML file. Rocket produces a compilable Go project with:
 
+- HTTP handlers (Fiber) mapped from your endpoints
+- Service interfaces + implementations per domain
+- Repository interfaces + DB adapter code (PostgreSQL, MySQL, SQLite, MongoDB)
+- Cache adapter (Redis, in-memory)
+- Route grouping, middleware, response envelopes
+- Docker / Docker Compose files
+- A `Makefile` with common targets
+
+## Prerequisites
+
+- **Go 1.22.5+** (see `go.mod`)
+- OpenAPI 3.0 YAML spec (not Swagger 2.0)
+- Optional: `goimports` (for import sorting — generator falls back to `gofmt`)
+
+## Installation
+
+```bash
+go install github.com/muhfaris/rocket@latest
 ```
-muhfaris@ichiro ~/D/p/s/s/g/m/rocket (master)> go run main.go  new --help
-Create new project
 
-Usage:
-  rocket new [flags]
+Or clone and build:
 
-Examples:
-new --package github.com/muhfaris/myproject --project myproject --openapi myopenapi.yaml
-
-Flags:
-  -a, --arch string      architecture layout e.g hexagonal, cleancode (default "hexagonal")
-  -c, --cache string     cache connection string e.g redis, memory
-  -h, --help             help for new
-  -o, --openapi string   path openapi file
-  -p, --package string   package project e.g github.com/muhfaris/myproject
-  -n, --project string   project name e.g myproject
+```bash
+git clone https://github.com/muhfaris/rocket
+cd rocket
+go build -o rocket main.go
 ```
 
-Example to generate new project with specific :
+## Quickstart
 
-- name: rocket1
-- package: github.com/muhfaris/rocket1
+Generate a complete project in one command using the included example:
 
-and then run `go run main.go new -o <path>/<openapi>.yaml -n rocket1 -p github.com/muhfaris/rocket1`
+```bash
+go run main.go new -c rocket-books-api.yaml
+cd books-api
+go run main.go rest
+```
 
-## Openapi
+This generates a Books API with:
 
-Table of contents
+- 6 endpoints across 2 route groups (`/api/v1` and `/api/v1` borrow group)
+- Query parameters, path parameters, and request body handling
+- Inline and structured response types
+- A single service (`BookSvc`) with full handler/service/repository wiring
 
-1. [Grouping Route](#grouping-route)
-2. [Parameters](#parameters)
-3. [OperationId](#operationid)
-4. [RequestBody](#requestbody)
-5. [Tags](#tags)
+Open `http://localhost:7000/api/v1/books` to see it running.
 
-### Requirement Fields
+The example spec is at [`spec/books-api.yaml`](spec/books-api.yaml) — use it as a reference for writing your own.
 
-- [OperationId](#operationid)
-- [Tags](#tags)
+## Commands
 
-### Grouping Route
+```bash
+rocket new [flags]
+rocket add handler [flags]
+rocket version
+```
 
-You can grouping some apis into one group with `x-route-group` tag. The default
-group name is `routeGroup` and the default route is `/`.
+### `rocket new` — Create a new project
+
+Generates a complete Go project from an OpenAPI spec.
+
+```bash
+rocket new \
+  --package github.com/muhfaris/myproject \
+  --project myproject \
+  --openapi ./spec.yaml
+```
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--package` | string | — | Go module path (e.g. `github.com/muhfaris/myproject`) |
+| `--project` | string | — | Project directory name |
+| `--openapi` | string | — | Path to OpenAPI YAML file |
+| `--arch` | string | `hexagonal` | Architecture layout (only `hexagonal` is implemented) |
+| `--cache` | string | — | Cache backend: `redis`, `inmemory` |
+| `--database` | string | — | Database backend: `postgresql`, `mysql`, `sqlite`, `mongodb` |
+| `--docker` | bool | `false` | Generate Dockerfile |
+| `--config` | string | `./rocket.yaml` | Config file path |
+
+### `rocket add handler` — Add handlers (WIP)
+
+Intended to add a new handler + service/repository wiring to an existing generated project.
+
+**Status: Work in progress.** The command accepts `--openapi` and `--operationid` flags but generation logic is not yet implemented. Tracked for a future release.
+
+## Configuration: `rocket.yaml`
+
+Instead of CLI flags, you can write a `rocket.yaml` file:
 
 ```yaml
+openapi: ./spec.yaml
+app:
+  package: github.com/muhfaris/myproject
+  project: myproject
+  arch: hexagonal
+  cache: redis
+  database: postgresql
+  docker: true
+  ignore_data_response: true
+```
+
+Rocket searches for `rocket.yaml` in these locations (in order):
+
+1. Path specified by `--config` / `-c`
+2. Current directory (`./rocket.yaml`)
+3. `./config/rocket.yaml`
+4. `$HOME/.config/rocket.yaml`
+
+CLI flags override values in the config file when both are provided.
+
+### Config fields
+
+| YAML key | Maps to flag | Description |
+|---|---|---|
+| `openapi` | `--openapi` | Path to OpenAPI spec |
+| `app.package` | `--package` | Go module path |
+| `app.project` | `--project` | Project directory name |
+| `app.arch` | `--arch` | Architecture layout |
+| `app.cache` | `--cache` | Cache backend |
+| `app.database` | `--database` | Database backend |
+| `app.docker` | `--docker` | Generate Dockerfile |
+| `app.ignore_data_response` | — | When `true`, unwraps nested `data` objects in response schemas |
+
+
+## OpenAPI Spec Requirements
+
+Your OpenAPI spec must follow these conventions for the generator to produce correct code.
+
+### Minimal spec
+
+```yaml
+openapi: 3.0.0
+info:
+  title: My API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    noauthAuth:
+      type: http
+      scheme: noauth
+tags:
+  - name: Books
 paths:
-  /register/partners/{partner_id}:
+  /books:
     get:
-      operationId: GetDetailPartner
-      x-route-group: partnerGroup::/api
+      operationId: ListBooks::BookSvc     # handler = ListBooks, service = BookSvc
       tags:
-        - Register Partner
-      summary: Get detail partner account
-      ...
-      ...
-    patch:
-      operationId: UpdatePartnerHandler
-      x-route-group: partnerGroup::/api
-      tags:
-        - Register Partner
-      summary: Update partner account
-      ...
-      ...
+        - Books
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: ListBooksResponse
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                  total:
+                    type: integer
 ```
 
-Generated code from openapi spec are:
+### Required per operation
 
-```go
-	routeGroup := r.Group("/")
-	routeGroup.Post("/register/partners", handlersv1.GetPartners())
+| Field | Requirement | Example |
+|---|---|---|
+| `operationId` | Unique name. Format: `HandlerName` or `HandlerName::ServiceName` | `ListBooks` or `ListBooks::BookSvc` |
+| `tags` | At least one tag. Used as the domain filename (snake_case) | `- Books` -> `books.go` |
 
-	partnerGroup := r.Group("/api")
-	partnerGroup.Get("/register/partners/:partner_id", handlersv1.GetDetailPartner())
-	partnerGroup.Patch("/register/partners/:partner_id", handlersv1.UpdatePartnerHandler())
+### The `::` convention
 
 ```
+operationId: HandlerName::ServiceName
+```
 
-### Parameters
-
-For each parameters of route need to define `x-parameters-name` tag. This tag
-will be used for generate code as struct name, you can't ignore this tag.
-
-Example openapi spec:
+- **`HandlerName`** — becomes the Go function name (e.g. `ListBooks`, `CreateBook`).
+- **`ServiceName`** — which service interface owns this handler. All endpoints with the same `ServiceName` share one interface.
+- **Omitting `::ServiceName`** — defaults to `AppSvc`.
 
 ```yaml
-/register/partners/{partner_id}:
-  get:
-    operationId: GetDetailPartner
-    x-parameters-name: DetailPartner
-    parameters:
-      - name: partner_id
-        in: path
-        schema:
-          type: string
-        required: true
-        example: "{{partner_id}}"
+# Produces: handler HealthCheck, service AppSvc
+operationId: HealthCheck
+
+# Produces: handler ListBooks, service BookSvc
+operationId: ListBooks::BookSvc
 ```
 
-The generated code will be:
+## Custom OpenAPI Extensions Reference
 
-```go
-type DetailPartner struct {
-	PartnerID string `params:"partner_id"`
-}
+Rocket defines several OpenAPI vendor extensions (`x-*`) that control code generation. These are placed inside your OpenAPI spec at the operation or schema level.
 
-func GetDetailPartner() func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+### Extension summary
 
-		var partner_id DetailPartner
-		if err := c.ParamsParser(&partner_id); err != nil {
-			return err
-		}
+| Extension | Scope | Purpose |
+|---|---|---|
+| `x-route-group` | Operation | Groups endpoints under a named Fiber route group with a path prefix |
+| `x-parameters-name` | Operation | Names the Go struct for path/query parameters |
+| `x-properties-name` | Schema (request body) | Names the Go struct for a JSON request body |
+| `x-struct-response` | Schema (response) | Names the Go struct for a response schema |
 
-		return response.Success(c, "I'm Alive!")
-	}
-}
-```
+---
 
-### OperationId
+### `x-route-group` — Route grouping
 
-OperationId should have unique name and following format `<HandlerName>` or
-`<HandlerName>::<ServiceName>`, You should use **title letter capital**. This will be used for generate code as Handler
-name and will be called in route.
+Groups endpoints into a named Fiber route group with a path prefix.
 
-If the service name not define will use default service name `appsvc`. Example openapi spec:
+**Format:** `<groupName>::<pathPrefix>`
+
+**Default:** `routeGroup` at `/`
 
 ```yaml
 paths:
   /books:
     get:
-      tags:
-        - Books
-      summary: Get list of books
-      operationId: GetBooks
-      x-route-group: bookGroup::/api
-      responses:
-        "200":
-          description: A list of books
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Book"
-  /books/{bookId}:
-    get:
-      tags:
-        - Books
-      summary: Get a book by ID
-      operationId: GetBookById::BookService
-      x-route-group: bookGroup::/api
-      x-parameters-name: GetBookByIdParameters
-      parameters:
-        - name: bookId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: A book
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Book"
+      operationId: ListBooks
+      x-route-group: bookGroup::/api/v1
 ```
 
-### RequestBody
+Generated code:
 
-You can define field-field in request body into the properties tag. So, you
-should add `x-properties-name` tag for naming the properties and this will be
-used as struct name and use format **title letter capital**.
+```go
+bookGroup := r.Group("/api/v1")
+bookGroup.Get("/books", handlers_v1.ListBooks())
+```
 
-Example openapi spec:
+The route path `/books` is appended to the group prefix `/api/v1`, producing the full path `/api/v1/books`.
+
+---
+
+### `x-parameters-name` — Path/query parameter struct
+
+Names the Go struct that holds path or query parameters for an operation.
+
+```yaml
+/books/{bookId}:
+  get:
+    operationId: GetBook
+    x-parameters-name: GetBookParams
+    parameters:
+      - name: bookId
+        in: path
+        schema:
+          type: string
+```
+
+Generated code:
+
+```go
+type GetBookParams struct {
+    BookID string `params:"bookId"`
+}
+```
+
+Without `x-parameters-name`, the struct is auto-named `<HandlerName>Params` (for path) or `<HandlerName>Query` (for query).
+
+**Note:** When an operation has both path and query parameters, only one struct is generated. Use `x-parameters-name` to control its name.
+
+---
+
+### `x-properties-name` — Request body struct
+
+Names the struct generated from a JSON request body schema.
 
 ```yaml
 requestBody:
@@ -187,169 +286,449 @@ requestBody:
     application/json:
       schema:
         type: object
-        x-properties-name: UpdatePartner
+        x-properties-name: CreateBookRequest
         properties:
-          fullname:
+          title:
             type: string
-          email:
+          author:
             type: string
 ```
 
-The generated code will be:
+Generated code:
 
 ```go
-type UpdatePartner struct {
-	Email    string `json:"email"`
-	Fullname string `json:"fullname"`
-}
-
-func UpdatePartnerHandler() func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
-
-		var bodyRequest UpdatePartner
-		if err := c.BodyParser(&bodyRequest); err != nil {
-			return err
-		}
-
-		return response.Success(c, "I'm Alive!")
-	}
+type CreateBookRequest struct {
+    Title  string `json:"title"`
+    Author string `json:"author"`
 }
 ```
 
-If request body doesn't have properties, it will generated as `map[string]any`
-without struct declaration.
+If the request body has no properties (empty schema), the generator produces `map[string]any` instead.
 
-```go
-func UpdatePartnerHandler() func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+---
 
-		var bodyRequest map[string]any
-		if err := c.BodyParser(&bodyRequest); err != nil {
-			return err
-		}
+### `x-struct-response` — Response struct
 
-		return response.Success(c, "I'm Alive!")
-	}
-}
-```
+Names the struct generated from a response schema. Required when using inline response schemas (not `$ref`).
 
-### Tags
-
-Every route should have one or more tags. The tag will be used for filename of domain
-model.
-
-### Response Endpoint
-
-The response has 2 types:
-
-- Use components / schema
-- Use embed response properties
-
-#### Components / Schema
-
-This example response is using components / schema, you must define `x-struct-response` as struct name:
-
-```
-components:
-  securitySchemes:
-    noauthAuth:
-      type: http
-      scheme: noauth
-    bearerAuth:
-      type: http
-      scheme: bearer
-  schemas:
-    ResponseCreateReport:
-      type: object
-      properties:
-        data:
+```yaml
+responses:
+  "200":
+    content:
+      application/json:
+        schema:
           type: object
+          x-struct-response: CreateBookResponse
           properties:
             id:
               type: string
-              example: 01HBE00X5165PB9M5687PB12GY
-  /reports:
-    post:
-      operationId: CreateReport::ReportSvc
-      tags:
-        - Reports
-      summary: Submit a new report
-      security:
-        - bearerAuth: []
-      responses:
-        "201":
-          description: Report created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResponseCreateReport"
-
 ```
 
-The generated code will be:
+Generated code:
 
 ```go
- type ResponseCreateReport struct {
-   Data struct {
-     Id string `json:"id"`
-   }
- }
+type CreateBookResponse struct {
+    ID string `json:"id"`
+}
 ```
 
-#### Embed Response Properties
-
-This example response is using embed response properties:
+**Required** for inline response schemas. Without it, the generator returns an error:
 
 ```
-  /reports:
-    post:
-      operationId: CreateReport::ReportSvc
-      tags:
-        - Reports
-      summary: Submit a new report
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Broken streetlight on Main St."
-                description:
-                  type: string
-                  example: "The streetlight near the bus stop is not working."
-                location:
-                  type: string
-                  example: "Main St, Downtown"
-      responses:
-        "201":
-          description: Report created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                x-struct-response: ResponseCreateReport
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        example: 01HBE00X5165PB9M5687PB12GY
-
+response should has x-struct-response as struct name
 ```
 
-The generated code will be:
+For `$ref` responses, the struct name is taken from the schema name in `components/schemas/`.
+
+**Nested responses:** When an array item has its own `x-struct-response`, a separate struct is generated:
+
+```yaml
+responses:
+  "200":
+    schema:
+      type: object
+      x-struct-response: ListBooksResponse
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            x-struct-response: ListBookItem
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+```
+
+This generates two structs: `ListBooksResponse` (with `Items []ListBookItem`) and `ListBookItem`.
+
+
+### Response types: inline vs. `$ref`
+
+**Inline** — define properties directly in the response. Requires `x-struct-response`.
+
+```yaml
+schema:
+  type: object
+  x-struct-response: GetBookResponse
+  properties:
+    id:
+      type: string
+    title:
+      type: string
+```
+
+**Components reference** — reference a schema defined in `components/schemas/`. The struct name uses the schema name.
+
+```yaml
+schema:
+  $ref: "#/components/schemas/Book"
+```
+
+With a `components/schemas/Book` definition:
+
+```yaml
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+```
+
+Generated in `internal/core/domain/books.go`:
 
 ```go
-type ResponseCreateReport struct {
-  Data struct {
-    Id string `json:"id"`
+type Book struct {
+    ID    string `json:"id"`
+    Title string `json:"title"`
+}
+```
+
+### Method behavior
+
+| HTTP method | Generates |
+|---|---|
+| `GET` | Query/param parser, **no request body** |
+| `POST` | Body parser + path param parser |
+| `PATCH` | Same as POST (body parser + path param parser) |
+| `PUT` | Same as POST |
+| `DELETE` | Same as POST |
+
+### Security schemes
+
+Define schemes in `components/securitySchemes`, then reference them per-endpoint:
+
+```yaml
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /books:
+    post:
+      security:
+        - bearerAuth: []
+```
+
+Schemes are passed through to generated Swaggo annotations but do not generate auth middleware. Two schemes are pre-configured in examples: `bearerAuth` and `noauthAuth`.
+
+### Data type mapping
+
+| OpenAPI type | Go type |
+|---|---|
+| `string` | `string` |
+| `integer` | `int` |
+| `number` | `float64` |
+| `boolean` | `bool` |
+| `null` / `nullable` | `any` |
+
+### Full example
+
+See [`spec/books-api.yaml`](spec/books-api.yaml) for a complete working spec demonstrating all features: route groups, path/query parameters, request bodies, inline responses, nested array responses, and multiple HTTP methods.
+
+## Generated Project Structure
+
+```
+<project>/
+├── main.go                        # Entry point, calls cmd.Execute()
+├── cmd/
+│   ├── root.go                    # CLI entry point (cobra)
+│   └── rest.go                    # HTTP server bootstrap
+├── config/
+│   ├── config.go                  # Config loader
+│   └── config.yaml                # Default config values
+├── internal/
+│   ├── adapter/
+│   │   ├── inbound/
+│   │   │   └── rest/
+│   │   │       └── router/
+│   │   │           ├── router.go          # Route registration
+│   │   │           ├── group/
+│   │   │           │   └── v1.go          # Route groups
+│   │   │           └── v1/
+│   │   │               ├── handler/
+│   │   │               │   ├── handler.go          # Handler init
+│   │   │               │   └── <handler_name>.go   # Per-endpoint handlers
+│   │   │               ├── presenter/              # Response mapping (TODO stubs)
+│   │   │               ├── middleware/
+│   │   │               │   └── latency.go
+│   │   │               └── response/
+│   │   │                   └── response.go          # Response helpers
+│   │   └── outbound/
+│   │       ├── cache/redis/          # Redis adapter (if --cache redis)
+│   │       ├── datastore/psql/       # PostgreSQL adapter (if --database postgresql)
+│   │       ├── datastore/mysql/      # MySQL adapter (if --database mysql)
+│   │       ├── datastore/sqlite/     # SQLite adapter (if --database sqlite)
+│   │       └── datastore/mongo/      # MongoDB adapter (if --database mongodb)
+│   └── core/
+│       ├── domain/                   # Domain models (from OpenAPI schemas)
+│       ├── port/
+│       │   ├── inbound/
+│       │   │   ├── adapter/          # Inbound port interfaces
+│       │   │   ├── registry/         # Service registry (wiring)
+│       │   │   └── service/          # Service interfaces
+│       │   └── outbound/
+│       │       ├── datastore/        # Repository interfaces
+│       │       └── repository/       # Cache, DB-specific repos
+│       └── service/                  # Service implementations (stubs)
+├── shared/
+│   ├── apierror/                    # API error types
+│   └── context/                     # Shared context helpers
+├── spec/
+│   └── openapi.yaml                 # Copy of input spec
+├── Dockerfile                       # If --docker
+├── docker-compose.yml               # If --database or --cache
+├── Makefile
+├── rocket.yaml                      # Saved generator config
+├── README.md
+├── go.mod
+└── go.sum
+```
+
+### Key files explained
+
+| File | Purpose |
+|---|---|
+| `cmd/root.go` | Cobra root command, registers the `rest` subcommand |
+| `cmd/rest.go` | Starts the Fiber HTTP server on the configured port |
+| `internal/adapter/inbound/rest/router/router.go` | Registers all route groups with the Fiber app |
+| `internal/adapter/inbound/rest/router/group/v1.go` | Defines route groups (e.g. `/api/v1`) |
+| `internal/adapter/inbound/rest/router/v1/handler/<name>.go` | HTTP handler per endpoint — parses request, calls service |
+| `internal/adapter/inbound/rest/router/v1/presenter/<name>.go` | Maps domain models to response DTOs (auto-generated TODO stubs) |
+| `internal/core/port/inbound/service/<name>.go` | Service interface that handlers depend on |
+| `internal/core/service/<name>.go` | Service implementation (auto-generated stubs, you fill in logic) |
+| `internal/core/port/inbound/registry/registry.go` | Wires services and repositories together |
+| `internal/core/domain/<tag>.go` | Domain models grouped by OpenAPI tag |
+| `cmd/bootstrap/app_repository.go` | Dependency injection — repository construction |
+| `cmd/bootstrap/app_service.go` | Dependency injection — service construction |
+
+## Architecture
+
+The generated project follows **hexagonal architecture** (ports & adapters):
+
+- **Domain layer** (`internal/core/domain/`) — business entities, no external dependencies
+- **Service layer** (`internal/core/service/`) — business logic (auto-generated stubs)
+- **Port interfaces** (`internal/core/port/`) — contracts for inbound (driving) and outbound (driven) adapters
+- **Inbound adapters** (`internal/adapter/inbound/`) — HTTP handlers, route registration
+- **Outbound adapters** (`internal/adapter/outbound/`) — database, cache implementations
+
+### Request flow
+
+```
+HTTP Request -> Router -> Handler -> Port Service -> Service Impl -> Port Repository -> DB Adapter
+                                        ^
+                                  Presenter (response mapping)
+```
+
+## Backend Support
+
+### Cache
+
+| Flag value | Backend | Package |
+|---|---|---|
+| `redis` | Redis | `github.com/redis/go-redis` |
+| `inmemory` | In-memory (no-op adapter) | stdlib |
+
+### Database
+
+| Flag value | Backend | Driver |
+|---|---|---|
+| `postgresql` | PostgreSQL | `github.com/jackc/pgx` |
+| `mysql` | MySQL | `github.com/go-sql-driver/mysql` |
+| `sqlite` | SQLite | `modernc.org/sqlite` (no CGo) |
+| `mongodb` | MongoDB | `go.mongodb.org/mongo-driver` |
+
+Each backend generates:
+
+- An adapter (connection + command wrappers)
+- A repository interface in `internal/core/port/outbound/repository/`
+- A query repository implementation in the adapter's `repository/` subdirectory
+
+**Note on values:** Use `postgresql` (not `postgres`) and `inmemory` (not `memory`) — these map to the internal constant values that match adapter generation.
+
+## Presenter `Out()` method
+
+Each handler has a corresponding presenter file with an `In()` and `Out()` method:
+
+- **`In(c *fiber.Ctx)`** — parses the HTTP request (params, query, body) into a domain model. Auto-generated.
+- **`Out(c *fiber.Ctx, data domain.X)`** — transforms the domain model into the API response DTO. Generated as a **TODO stub**:
+
+```go
+func (req *ListBooks) Out(c *fiber.Ctx, data domain.ListBooks) any {
+    // TODO: map domain.ListBooks to ListBooksResponse
+    return data
+}
+```
+
+The fallback `return data` lets the API respond immediately. Replace it with your actual mapping when you add business logic.
+
+## Response format
+
+All responses go through `response.Success()` which wraps them in a standard envelope:
+
+```json
+{
+  "data": <payload>,
+  "metadata": {
+    "latency": "2.34ms",
+    "request_id": "abc-123"
   }
 }
-
 ```
+
+Errors use `response.Fail()`:
+
+```json
+{
+  "errors": [{"message": "not found", "code": 404}],
+  "metadata": {
+    "latency": "1.02ms",
+    "request_id": "abc-123"
+  }
+}
+```
+
+## Post-Generation Workflow
+
+After `rocket new` completes, here is what you typically do next:
+
+### 1. Inspect the generated project
+
+```bash
+cd <project>
+tree -L 4
+```
+
+The generator runs `go mod tidy`, `goimports`, and `gofmt` automatically. If `go mod tidy` fails (e.g. offline), run it manually:
+
+```bash
+go mod tidy
+```
+
+### 2. Start the server
+
+```bash
+go run main.go rest
+```
+
+The server starts on the port configured in `config/config.yaml` (default `:7000`).
+
+### 3. Implement business logic
+
+The generated service stubs are in `internal/core/service/`. Each method returns an error by default — replace with your logic:
+
+```go
+func (s *BookSvc) ListBooks(ctx context.Context, payload domain.ListBooks) (domain.ListBooks, error) {
+    // Your business logic here
+    return payload, nil
+}
+```
+
+### 4. Implement repository queries
+
+For database-backed projects, repository implementations are in `internal/adapter/outbound/datastore/<db>/repository/`. Each method is a TODO stub. Add your SQL/query logic:
+
+```go
+func (r *BookRepository) FindAll(ctx context.Context) ([]domain.Book, error) {
+    // Your query logic here
+    rows, err := r.db.Query(ctx, "SELECT * FROM books")
+    // ...
+}
+```
+
+### 5. Update presenter mappings
+
+Presenter files in `internal/adapter/inbound/rest/router/v1/presenter/` have TODO stubs for the `Out()` method. Map domain models to response DTOs:
+
+```go
+func (req *ListBooks) Out(c *fiber.Ctx, data domain.ListBooks) any {
+    var items []ListBookItem
+    for _, item := range data.Items {
+        items = append(items, ListBookItem{
+            ID:     item.ID,
+            Title:  item.Title,
+            Author: item.Author,
+        })
+    }
+    return ListBooksResponse{Items: items, Total: data.Total}
+}
+```
+
+### 6. Regenerate after spec changes
+
+To regenerate after modifying your OpenAPI spec, re-run `rocket new` with the same project name. The generator detects existing directories and skips them — but note that it **overwrites** handler, presenter, domain, and service files.
+
+**Best practice:** Commit your generated code before modifying specs, so you can diff changes.
+
+## Generated Artifacts
+
+### Docker (`--docker`)
+
+Generates a multi-stage `Dockerfile` for building a small production image with distroless or scratch base.
+
+### Docker Compose
+
+When `--database` or `--cache` is set, a `docker-compose.yml` is generated with the required services (PostgreSQL, MySQL, Redis, etc.).
+
+### Makefile
+
+| Target | Description |
+|---|---|
+| `run` | Start the service |
+| `build` | Build the binary |
+| `test` | Run tests |
+| `lint` | Run linter |
+
+### README
+
+A project-specific README is generated with the project name, setup instructions, and API documentation placeholders.
+
+## Troubleshooting
+
+| Error | Likely cause | Fix |
+|---|---|---|
+| `response should has x-struct-response as struct name` | Inline response schema without `x-struct-response` | Add `x-struct-response: StructName` to the response schema, or use `$ref` to a component |
+| `X redeclared in this block` | Two endpoints reference the same `$ref` schema | Use inline `x-struct-response` instead of shared `$ref`, or use one service per schema |
+| `undefined: portservice.AppSvc` | Registry references a service interface that wasn't generated | Ensure all `operationId` values use consistent `::ServiceName` |
+| `no required module provides package` | Freshly generated project missing external deps | Run `go mod tidy` manually |
+| `operation must have tags at path` | Endpoint is missing the `tags` field | Add at least one tag to each operation |
+| PostgreSQL adapter not generated | Used `--database postgres` instead of `postgresql` | Use `--database postgresql` (matches internal constant) |
+| Cache adapter not generated | Used `--cache memory` instead of `inmemory` | Use `--cache inmemory` or `--cache redis` |
+| `project X already exists` | Project directory already exists | Delete or rename the directory, or use a different project name |
+| `import path must include a domain` | `--package` doesn't include a domain | Use format like `github.com/user/project` |
+| `go mod tidy failed` | Offline or network issue | Run `go mod tidy` manually in the project directory |
+
+## Known limitations
+
+- **Shared `$ref` schemas across endpoints**: referencing the same component schema from multiple endpoints causes duplicate type declarations. Use inline `x-struct-response` as a workaround.
+- **Multiple `::ServiceName` values**: each unique service name generates a separate interface file. The registry and service implementations reference them correctly.
+- **`add handler` is a stub**: the `rocket add handler` command accepts flags (`--openapi`, `--operationid`) but generation logic is not yet implemented. The initial `rocket new` command generates all endpoints from the spec; incremental additions are planned for a future release.
+- **Only `hexagonal` architecture is implemented**: the `--arch` flag accepts `hexagonal` (and mentions `cleancode` in help text), but only hexagonal templates exist.
+- **The generated `go.mod` uses `go mod tidy`** to resolve dependencies. If you're offline, run `go mod download` or vendor the dependencies first.
+- **Regeneration overwrites files**: running `rocket new` on an existing project directory overwrites handlers, presenters, domain models, and services. Custom changes to generated files will be lost. Commit before regenerating.

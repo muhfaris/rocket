@@ -91,7 +91,7 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 
 			field := PropertyStruct{
 				Name:   name,
-				Type:   prop.Value.Type.Slice()[0],
+				Type:   DataTypeToGo(prop.Value.Type.Slice()[0]),
 				Enum:   enumFunc(),
 				Format: prop.Value.Format,
 				Tag:    GetTag(contentType, nameLower),
@@ -117,18 +117,13 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 					return nestedStruct, nil
 				}
 
-				return ResponseStruct{
-					Name: res.Name,
-					Type: res.Type,
-					Fields: []PropertyStruct{
-						{
-							Name:   nestedStruct.Name,
-							Type:   nestedStruct.Type,
-							Fields: nestedStruct.Fields,
-							Tag:    GetTag(contentType, nameLower),
-						},
-					},
-				}, nil
+res.Fields = append(res.Fields, PropertyStruct{
+						Name:   nestedStruct.Name,
+						Type:   nestedStruct.Type,
+						Fields: nestedStruct.Fields,
+						Tag:    GetTag(contentType, nameLower),
+					})
+				continue
 			}
 
 			/**
@@ -140,10 +135,27 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 						id :
 							type: string
 			*/
-			if propType == "array" && prop.Value.Items != nil {
-				structsName := strings.Split(prop.Value.Items.RefString(), "/")
-				structName := structsName[len(structsName)-1]
-				structName = strings.ToTitle(structName[:1]) + structName[1:]
+		if propType == "array" && prop.Value.Items != nil {
+				refString := prop.Value.Items.RefString()
+				var structName string
+
+				if refString != "" {
+					structsName := strings.Split(refString, "/")
+					structName = structsName[len(structsName)-1]
+					structName = strings.ToTitle(structName[:1]) + structName[1:]
+				} else {
+					// inline array items — use x-struct-response or parent field name
+					sn, ok := prop.Value.Items.Value.Extensions["x-struct-response"]
+					if ok {
+						snString, ok := sn.(string)
+						if ok && snString != "" {
+							structName = strings.ToTitle(snString[:1]) + snString[1:]
+						}
+					}
+					if structName == "" {
+					structName = libcase.ToTitleCase(name)
+					}
+				}
 
 				arrayStruct, err := ParseSchema(structName, contentType, prop.Value.Items.Value, ignoreDataResponse)
 				if err != nil {
@@ -163,22 +175,18 @@ func ParseSchema(parentStruct, contentType string, schema *openapi3.Schema, igno
 					}, nil
 				}
 
-				return ResponseStruct{
-					Name: res.Name,
-					Type: res.Type,
-					Fields: []PropertyStruct{
-						{
-							Name: name,
-							Type: propType,
-							Tag:  GetTag(contentType, nameLower),
-							Children: &ResponseStruct{
-								Name:   arrayStruct.Name,
-								Type:   arrayStruct.Type,
-								Fields: arrayStruct.Fields,
-							},
-						},
+				res.Fields = append(res.Fields, PropertyStruct{
+					Name: name,
+					Type: propType,
+					Tag:  GetTag(contentType, nameLower),
+					Children: &ResponseStruct{
+						Name:   arrayStruct.Name,
+						Type:   arrayStruct.Type,
+						Fields: arrayStruct.Fields,
 					},
-				}, nil
+				})
+
+				continue
 			}
 
 			res.Fields = append(res.Fields, field)

@@ -1,0 +1,250 @@
+openapi: 3.0.0
+info:
+  title: Books API
+  description: "Demonstrates rocket generator features: route groups, path/query params, request body, response structs, and schema references."
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    noauthAuth:
+      type: http
+      scheme: noauth
+
+tags:
+  - name: Books
+
+paths:
+  # ──────────────────────────────────────────────
+  # Default group — operationId without ::ServiceName → uses "AppSvc"
+  # ──────────────────────────────────────────────
+  /health:
+    get:
+      operationId: HealthCheck::BookSvc
+      tags:
+        - Books
+      summary: Health check endpoint
+      security:
+        - noauthAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: HealthCheckResponse
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  # ──────────────────────────────────────────────
+  # Book group — all via one service (BookSvc)
+  # Demonstrates: route group, query params, request body,
+  # path params, inline response struct
+  # ──────────────────────────────────────────────
+  /books:
+    post:
+      operationId: CreateBook::BookSvc
+      x-route-group: bookGroup::/api/v1
+      tags:
+        - Books
+      summary: Create a new book
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              x-properties-name: CreateBookRequest
+              properties:
+                title:
+                  type: string
+                  example: "The Go Programming Language"
+                author:
+                  type: string
+                  example: "Alan A. A. Donovan"
+                isbn:
+                  type: string
+                  example: "978-0134190440"
+      responses:
+        "201":
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: CreateBookResponse
+                properties:
+                  id:
+                    type: string
+                    example: "b_01HBE00X5165PB9M5687PB12GY"
+
+    get:
+      operationId: ListBooks::BookSvc
+      x-route-group: bookGroup::/api/v1
+      tags:
+        - Books
+      summary: List all books
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+          example: "available"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          example: 0
+      responses:
+        "200":
+          description: A list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: ListBooksResponse
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      x-struct-response: ListBookItem
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        author:
+                          type: string
+                  total:
+                    type: integer
+                    example: 42
+
+  # ──────────────────────────────────────────────
+  # Single book — path param + inline response
+  # ──────────────────────────────────────────────
+  /books/{bookId}:
+    get:
+      operationId: GetBook::BookSvc
+      x-route-group: bookGroup::/api/v1
+      tags:
+        - Books
+      summary: Get a book by ID
+      security:
+        - noauthAuth: []
+      x-parameters-name: GetBookParams
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A book
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: GetBookResponse
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  author:
+                    type: string
+                  isbn:
+                    type: string
+                  status:
+                    type: string
+
+  # ──────────────────────────────────────────────
+  # Borrow + Return — path param + request body, separate route group
+  # ──────────────────────────────────────────────
+  /books/{bookId}/borrow:
+    post:
+      operationId: BorrowBook::BookSvc
+      x-route-group: borrowGroup::/api/v1
+      tags:
+        - Books
+      summary: Borrow a book
+      security:
+        - bearerAuth: []
+      x-parameters-name: BorrowBookParams
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              x-properties-name: BorrowBookRequest
+              properties:
+                member_id:
+                  type: string
+                  example: "m_01HBE00X5165PB9M5687PB12GY"
+      responses:
+        "201":
+          description: Book borrowed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: BorrowBookResponse
+                properties:
+                  id:
+                    type: string
+                  due_date:
+                    type: string
+                    format: date
+
+  /books/{bookId}/return:
+    patch:
+      operationId: ReturnBook::BookSvc
+      x-route-group: borrowGroup::/api/v1
+      tags:
+        - Books
+      summary: Return a borrowed book
+      security:
+        - bearerAuth: []
+      x-parameters-name: ReturnBookParams
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Book returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                x-struct-response: ReturnBookResponse
+                properties:
+                  message:
+                    type: string
+                    example: "Book returned successfully"

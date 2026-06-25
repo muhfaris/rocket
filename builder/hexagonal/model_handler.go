@@ -88,18 +88,16 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 			hasStruct      bool
 		)
 
-		defer func() {
-			if len(h.Structs) > 0 {
-				domainModel := Struct{StructName: structName}
-				for _, s := range h.Structs {
-					domainModel.Fields = append(domainModel.Fields, s.Fields...)
-				}
+	defer func() {
+		domainModel := Struct{StructName: structName}
+		for _, s := range h.Structs {
+			domainModel.Fields = append(domainModel.Fields, s.Fields...)
+		}
 
-				h.DomainModel = domainModel
-			}
-		}()
+		h.DomainModel = domainModel
+	}()
 
-		for _, parameter := range operation.Parameters {
+	for _, parameter := range operation.Parameters {
 			if parameter.Value.In == "path" {
 				// addSuffix struct name
 				s.StructName = fmt.Sprintf("%s%s", s.StructName, "Params")
@@ -184,10 +182,10 @@ func (h *HandlerData) Generate(method string, operation *openapi3.Operation) err
 				domainModel := Struct{StructName: structName}
 
 				for _, s := range h.Structs {
-					s.Fields = s.Fields.AddID()
 					domainModel.Fields = append(domainModel.Fields, s.Fields...)
 				}
 
+				domainModel.Fields = domainModel.Fields.AddID()
 				h.DomainModel = domainModel
 			}
 		}()
@@ -392,7 +390,7 @@ func getStructsResponse(resOpenAPI *openapi3.Responses) ([]Struct, error) {
 
 func getOperationIDInfo(operation *openapi3.Operation) (operationID, serviceName string) {
 	tempOperationID := strings.Split(operation.OperationID, "::")
-	if len(tempOperationID) == 0 {
+	if len(tempOperationID) == 1 {
 		return tempOperationID[0], ""
 	}
 	return tempOperationID[0], tempOperationID[1]

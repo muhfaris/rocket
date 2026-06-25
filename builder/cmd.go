@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/muhfaris/rocket/helper/ui"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
 )
@@ -30,7 +31,7 @@ func newCMD(appName, projectName string) *CMD {
 }
 
 func (c *CMD) Generate() error {
-	fmt.Printf("%s%s\n", LineOnProgress, "cmd")
+	fmt.Printf("%s%s\n", ui.LineOnProgress, "cmd")
 
 	data := CMDData{
 		AppName:     c.AppName,

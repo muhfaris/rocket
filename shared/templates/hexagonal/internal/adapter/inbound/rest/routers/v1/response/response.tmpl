@@ -43,11 +43,13 @@ func Success(c *fiber.Ctx, data any, args ...any) error {
 		latency      string
 	)
 
-	httpCode, ok := args[0].(int)
-	if len(args) > 0 && ok {
-		txtHTTPCode := http.StatusText(defaultCode)
-		if txtHTTPCode != "" {
-			defaultCode = httpCode
+	if len(args) > 0 {
+		httpCode, ok := args[0].(int)
+		if ok {
+			txtHTTPCode := http.StatusText(defaultCode)
+			if txtHTTPCode != "" {
+				defaultCode = httpCode
+			}
 		}
 	}
 

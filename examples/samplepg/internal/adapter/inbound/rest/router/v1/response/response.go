@@ -1,0 +1,118 @@
+package response
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/muhfaris/rocket/examples/samplepg/shared/apierror"
+	libcontext "github.com/muhfaris/rocket/examples/samplepg/shared/context"
+)
+
+type R struct {
+	Data     any      `json:"data,omitempty"`
+	Message  string   `json:"message,omitempty"`
+	Errors   []Error  `json:"errors,omitempty"`
+	Metadata Metadata `json:"metadata"`
+}
+
+type Error struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
+type Metadata struct {
+	Pagination *Pagination `json:"pagination,omitempty"`
+	Latency    any         `json:"latency"`
+	RequestID  any         `json:"request_id"`
+}
+
+type Pagination struct {
+	Next  *string `json:"next,omitempty"`
+	Prev  *string `json:"prev,omitempty"`
+	Limit *int    `json:"limit,omitempty"`
+	Total *int    `json:"total,omitempty"`
+	Page  *int    `json:"page,omitempty"`
+}
+
+func Success(c *fiber.Ctx, data any, args ...any) error {
+	var (
+		defaultCode  = fiber.StatusOK
+		requestID    = c.Locals(fiber.HeaderXRequestID)
+		startLatency = c.UserContext().Value(libcontext.ContextLatency)
+		latency      string
+	)
+
+	if len(args) > 0 {
+		httpCode, ok := args[0].(int)
+		if ok {
+			txtHTTPCode := http.StatusText(defaultCode)
+			if txtHTTPCode != "" {
+				defaultCode = httpCode
+			}
+		}
+	}
+
+	start, ok := startLatency.(time.Time)
+	if ok {
+		latencyMs := float64(time.Since(start).Nanoseconds() / 1e6)
+		if latencyMs >= 1 {
+			latency = fmt.Sprintf("%.2fms", latencyMs)
+		} else {
+			latencyUs := float64(time.Since(start).Nanoseconds()) / 1e3
+			latency = fmt.Sprintf("%.2fus", latencyUs)
+		}
+	}
+
+	result := R{
+		Data: data,
+		Metadata: Metadata{
+			RequestID: requestID,
+			Latency:   latency,
+		},
+	}
+
+	return c.Status(defaultCode).JSON(result)
+}
+
+func Fail(c *fiber.Ctx, err error) error {
+	var (
+		defaultCode  = fiber.StatusBadRequest
+		requestID    = c.Locals(fiber.HeaderXRequestID)
+		startLatency = c.UserContext().Value(libcontext.ContextLatency)
+		latency      string
+	)
+
+	start, ok := startLatency.(time.Time)
+	if ok {
+		latencyMs := float64(time.Since(start).Nanoseconds() / 1e6)
+		if latencyMs >= 1 {
+			latency = fmt.Sprintf("%.2fms", latencyMs)
+		} else {
+			latencyUs := float64(time.Since(start).Nanoseconds()) / 1e3
+			latency = fmt.Sprintf("%.2fus", latencyUs)
+		}
+	}
+
+	message := err.Error()
+	apie, ok := err.(*apierror.APIError)
+	if ok && apie != nil {
+		defaultCode = apie.StatusCode
+		message = apie.Message
+	}
+
+	result := R{
+		Errors: []Error{
+			{
+				Message: message,
+			},
+		},
+		Metadata: Metadata{
+			RequestID: requestID,
+			Latency:   latency,
+		},
+	}
+
+	return c.Status(defaultCode).JSON(result)
+}

@@ -2,6 +2,7 @@ package liboas
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -12,10 +13,14 @@ func CreateSwaggerAnnotation(path string, method string, operation *openapi3.Ope
 
 	annotation += fmt.Sprintf("// %s %s handler\n", method, path)
 	if operation.Summary != "" {
-		annotation += fmt.Sprintf("// @Summary %s\n", operation.Summary)
+		for _, line := range strings.Split(operation.Summary, "\n") {
+			annotation += fmt.Sprintf("// @Summary %s\n", line)
+		}
 	}
 	if operation.Description != "" {
-		annotation += fmt.Sprintf("// @Description %s\n", operation.Description)
+		for _, line := range strings.Split(operation.Description, "\n") {
+			annotation += fmt.Sprintf("// @Description %s\n", line)
+		}
 	}
 	if len(operation.Tags) > 0 {
 		annotation += fmt.Sprintf("// @Tags %s\n", operation.Tags)
@@ -74,7 +79,9 @@ func OASDescriptionSwagger(doc *openapi3.T) (string, error) {
 		annotation += fmt.Sprintf("// @title %s\n", doc.Info.Title)
 	}
 	if doc.Info.Description != "" {
-		annotation += fmt.Sprintf("// @description %s\n", doc.Info.Description)
+		for _, line := range strings.Split(doc.Info.Description, "\n") {
+			annotation += fmt.Sprintf("// @description %s\n", line)
+		}
 	}
 	if doc.Info.Version != "" {
 		annotation += fmt.Sprintf("// @version %s\n", doc.Info.Version)
