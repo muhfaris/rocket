@@ -3,7 +3,9 @@ package addcmd
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/muhfaris/rocket/builder"
 	"github.com/muhfaris/rocket/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,30 +30,33 @@ var (
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			openapifile, valid := viper.Get("openapi").(string)
-			if !valid {
+			if !valid || openapifile == "" {
 				return fmt.Errorf("path openapi (--openapi) file is required")
 			}
 
-			if openapifile == "" {
-				return fmt.Errorf("path openapi (--openapi) file is required")
+			operationID, valid := viper.Get("operationid").(string)
+			if !valid || operationID == "" {
+				return fmt.Errorf("--operationid is required")
 			}
 
-			// content, doc, err := libos.LoadOpenapi(openapifile)
-			// if err != nil {
-			// 	return err
-			// }
-			//
-			// operationid := viper.Get("operationid")
-			// if operationid == "" {
-			// 	return fmt.Errorf("--operationid is required")
-			// }
-			//
-			// ignoreDataResponse, _ := viper.Get("ignore-data-response").(bool)
-			//
-			// fmt.Println(openapifile)
-			// fmt.Println(operationid)
+			ignoreDataResponse := ""
+			if v := viper.Get("ignore-data-response"); v != nil {
+				if b, ok := v.(bool); ok && b {
+					ignoreDataResponse = "true"
+				}
+			}
 
-			return nil
+			// Use current working directory as project directory
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("get working directory: %w", err)
+			}
+
+			fmt.Println("Adding handler to project in", wd)
+			fmt.Printf("  OpenAPI spec: %s\n", openapifile)
+			fmt.Printf("  OperationId:  %s\n", operationID)
+
+			return builder.AddHandler(wd, openapifile, operationID, ignoreDataResponse)
 		},
 	}
 )
