@@ -29,24 +29,21 @@ var (
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			openapifile, valid := viper.Get("openapi").(string)
-			if !valid || openapifile == "" {
-				return fmt.Errorf("path openapi (--openapi) file is required")
+			openapifile, err := cmd.Flags().GetString("openapi")
+			if err != nil || openapifile == "" {
+				return fmt.Errorf("--openapi flag is required")
 			}
 
-			operationID, valid := viper.Get("operationid").(string)
-			if !valid || operationID == "" {
-				return fmt.Errorf("--operationid is required")
+			operationID, err := cmd.Flags().GetString("operationid")
+			if err != nil || operationID == "" {
+				return fmt.Errorf("--operationid flag is required")
 			}
 
 			ignoreDataResponse := ""
-			if v := viper.Get("ignore-data-response"); v != nil {
-				if b, ok := v.(bool); ok && b {
-					ignoreDataResponse = "true"
-				}
+			if v, _ := cmd.Flags().GetBool("ignore-data-response"); v {
+				ignoreDataResponse = "true"
 			}
 
-			// Use current working directory as project directory
 			wd, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("get working directory: %w", err)

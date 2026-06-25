@@ -41,11 +41,12 @@ func AddHandler(projectDir, openapiFilePath, operationID, ignoreDataResponse str
 	}
 	templates.SetArchLayout(archLayout)
 
-	// Build the hexagonal project context
+	// Build the hexagonal project context.
+	// Use projectDir as the project root so all generated paths are absolute.
 	based := hexagonal.Based{
 		Project: hexagonal.BaseProject{
 			AppName:     projectName,
-			ProjectName: projectName,
+			ProjectName: projectDir,
 			PackagePath: packagePath,
 		},
 		Package: hexagonal.BasePackage{},
@@ -58,15 +59,14 @@ func AddHandler(projectDir, openapiFilePath, operationID, ignoreDataResponse str
 
 	project := hexagonal.NewProject(doc, &hexagonal.Config{
 		Based:              based,
-		ProjectName:        projectName,
+		ProjectName:        projectDir,
 		CacheParam:         cfg.App.Cache,
 		DBParam:            cfg.App.Database,
 		IgnoreDataResponse: ignoreDataResponseBool,
 	})
 
-	// Copy the OpenAPI spec into the project's spec/ directory if different
-	// (only needed if user is pointing to an updated spec)
-	specDir := fmt.Sprintf("%s/spec", projectName)
+	// Copy the OpenAPI spec into the project's spec/ directory
+	specDir := fmt.Sprintf("%s/spec", projectDir)
 	if err := os.MkdirAll(specDir, os.ModePerm); err != nil {
 		return fmt.Errorf("ensure spec dir: %w", err)
 	}
