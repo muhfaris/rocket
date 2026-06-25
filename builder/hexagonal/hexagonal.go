@@ -1765,10 +1765,17 @@ func (p *Project) GenerateMakefile() error {
 
 // Readme
 func (p *Project) GenerateReadmeFile() error {
-	data := map[string]string{
-		"ProjectName": p.based.Project.ProjectName,
-		"PackagePath": p.based.Project.PackagePath,
-		"AppName":     p.based.Project.AppName,
+	data := map[string]any{
+		"ProjectName":  p.based.Project.ProjectName,
+		"PackagePath":  p.based.Project.PackagePath,
+		"AppName":      p.based.Project.AppName,
+		"HasEndpoints": len(p.RoutesGroup) > 0,
+		"RouteGroups":  p.RoutesGroup,
+		"Services":     p.Service.Services,
+		"HasCache":     p.cacheType != "",
+		"CacheType":    p.cacheType,
+		"HasDatabase":  p.dbType != "",
+		"DatabaseType": p.dbType,
 	}
 
 	raw, err := libos.ExecuteTemplate(p.ReadmeFile.template, data)

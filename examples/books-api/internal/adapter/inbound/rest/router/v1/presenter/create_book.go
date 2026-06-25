@@ -9,9 +9,9 @@ import (
 type CreateBook struct{}
 
 type CreateBookRequest struct {
+	Author string `json:"author"`
 	Isbn   string `json:"isbn"`
 	Title  string `json:"title"`
-	Author string `json:"author"`
 }
 
 type CreateBookResponse struct {
@@ -27,9 +27,9 @@ func (req *CreateBook) In(c *fiber.Ctx) (domain.CreateBook, error) {
 
 	return domain.CreateBook{
 
+		Author: bodyRequest.Author,
 		Isbn:   bodyRequest.Isbn,
 		Title:  bodyRequest.Title,
-		Author: bodyRequest.Author,
 	}, nil
 }
 

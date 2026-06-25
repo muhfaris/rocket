@@ -13,11 +13,11 @@ type GetBookParams struct {
 }
 
 type GetBookResponse struct {
-	Isbn   string `json:"isbn"`
-	Status string `json:"status"`
 	Title  string `json:"title"`
 	Author string `json:"author"`
 	ID     string `json:"id"`
+	Isbn   string `json:"isbn"`
+	Status string `json:"status"`
 }
 
 func (req *GetBook) In(c *fiber.Ctx) (domain.GetBook, error) {

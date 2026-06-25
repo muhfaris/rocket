@@ -16,8 +16,8 @@ type BorrowBookRequest struct {
 }
 
 type BorrowBookResponse struct {
-	DueDate string `json:"due_date"`
 	ID      string `json:"id"`
+	DueDate string `json:"due_date"`
 }
 
 func (req *BorrowBook) In(c *fiber.Ctx) (domain.BorrowBook, error) {

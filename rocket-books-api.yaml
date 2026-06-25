@@ -3,4 +3,6 @@ app:
   package: "github.com/muhfaris/rocket/examples/books-api"
   project: "books-api"
   arch: "hexagonal"
-  docker: false
+  docker: true
+  database: "postgresql"
+  cache: "redis"

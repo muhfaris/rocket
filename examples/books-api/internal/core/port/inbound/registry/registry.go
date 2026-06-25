@@ -11,5 +11,6 @@ type Service interface {
 }
 
 type Repository interface {
+	CacheRepository() repository.CacheRepository
 	GetBookRepository() repository.BookRepository
 }

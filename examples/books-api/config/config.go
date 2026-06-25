@@ -18,6 +18,10 @@ type Config struct {
 	Port  int         `mapstructure:"port"`
 	Fiber FiberConfig `mapstructure:"fiber"`
 	Debug Debugging   `mapstructure:"debug"`
+
+	Cache Cache `mapstructure:"cache"`
+
+	Datastore Datastore `mapstructure:"datastore"`
 }
 
 type Debugging struct {
@@ -27,6 +31,29 @@ type Debugging struct {
 type FiberConfig struct {
 	EnablePrintRoutes        bool `mapstructure:"enable_print_routes"`
 	EnableSplittingOnParsers bool `mapstructure:"enable_splitting_on_parsers"`
+}
+
+type Cache struct {
+	Redis RedisConfig `mapstructure:"redis"`
+}
+
+type RedisConfig struct {
+	Addr     string `mapstructure:"addr"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+}
+
+type Datastore struct {
+	PSQL PSQLConfig `mapstructure:"psql"`
+}
+
+type PSQLConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       string `mapstructure:"db"`
 }
 
 func LoadConfig() error {

@@ -1,0 +1,9 @@
+package repository
+
+import (
+	"github.com/jackc/pgx/v4/pgxpool"
+)
+
+type PSQLRepository interface {
+	GetConnection() *pgxpool.Pool
+}
