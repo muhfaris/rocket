@@ -28,6 +28,12 @@ start: services init check-db run
 
 # Target: Check if the database is up and running
 check-db:
+	@echo "Checking if PostgreSQL is up..."
+	@until docker exec -it postgres_dev psql -U myapp -d myapp -c "\q" > /dev/null 2>&1; do \
+		echo "Waiting for PostgreSQL..."; \
+		sleep 2; \
+	done
+	@echo "PostgreSQL is up and ready."
 
 # Declare these targets as phony (not associated with real files)
 .PHONY: services init run build start check-db

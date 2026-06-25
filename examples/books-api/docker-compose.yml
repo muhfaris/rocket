@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  redis:
+    image: redis:7-alpine3.20
+    container_name: redis_dev
+    ports:
+      - "6379:6379"
+    command: ["redis-server"]
+    networks:
+      - dev-network
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_dev
+    environment:
+      POSTGRES_USER: myapp
+      POSTGRES_PASSWORD: myapp
+      POSTGRES_DB: myapp 
+    ports:
+      - "5432:5432"
+    networks:
+      - dev-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
+networks:
+  dev-network:
