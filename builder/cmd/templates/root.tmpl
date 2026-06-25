@@ -1,91 +1,35 @@
-package  {{ .pkg  }}
+package {{ .pkg }}
 
-{{if or .isPostgresSQL .isRedis}}
-var (
-{{if .isPostgresSQL }}
-	dbPool    *sql.DB
-{{end}}
-{{if .isRedis }}
-	cachePool *redis.Pool
-{{end}}
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/spf13/cobra"
+	{{ if .isPostgresSQL }}"{{ .name }}/configs"{{ end }}
+	{{ if .isRedis }}"{{ .name }}/configs"{{ end }}
 )
-{{end}}
 
 var rootCmd = &cobra.Command{
-	Use:   "{{ .name }}",
-	Short: "Generate sample from rocket",
+	Use:   "serve",
+	Short: "{{ .name }} is an HTTP API service",
 }
 
 func init() {
-    {{if and .isPostgresSQL .isRedis}}
-	cobra.OnInitialize(
-        initconfig,
-        initDatabase,
-        initCache,
-    )
-    {{end}}
-    {{if .isPostgresSQL }}
-	cobra.OnInitialize(
-        initconfig,
-        initDatabase,
-    )
-    {{end}}
-     {{if .isRedis}}
-	cobra.OnInitialize(
-        initconfig,
-        initCache,
-    )
-    {{end}}
+	cobra.OnInitialize(initConfig)
 }
 
-var cfgFile string
-func initconfig() {
-	viper.SetConfigType("{{ .formatType }}")
-
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath("./configs")
-		viper.SetConfigName("config")
-	}
-
-	//read env
-	viper.AutomaticEnv()
-
-	// if a config file is found, read it in.
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalln("Config application:", err)
-	}
-
-	log.Println("using config file:", viper.ConfigFileUsed())
+func initConfig() {
+	{{ if .isPostgresSQL }}
+	configs.InitDB()
+	{{ end }}
+	{{ if .isRedis }}
+	configs.InitRedisCache()
+	{{ end }}
 }
-
-{{if .isPostgresSQL }}
-func initDatabase() {
-	dbOptions := psql.DBOptions{
-		Host:     viper.GetString("persistence.database.host"),
-		Port:     viper.GetInt("persistence.database.port"),
-		Username: viper.GetString("persistence.database.username"),
-		Password: viper.GetString("persistence.database.password"),
-		DBName:   viper.GetString("persistence.database.name"),
-		SSLMode:  viper.GetString("persistence.database.ssl_mode"),
-	}
-
-	conn, err := psql.Connect(&dbOptions)
-	if err != nil {
-		log.Fatalln("Database:", err)
-	}
-
-	log.Println("Database connected ...")
-	dbPool = conn
-}
-{{ end }}
 
 // Execute is root function
 func Execute() {
-	rootCmd.AddCommand(serveCmd)
-
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

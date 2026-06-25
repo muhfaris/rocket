@@ -573,19 +573,24 @@ func (p *Project) GenerateRestPortService() error {
 		}
 	}
 
-	data := map[string]any{
-		"PackagePath": p.based.Project.PackagePath,
-		"ServiceName": p.RestPortService.Data.ServiceName,
-		"Methods":     p.RestPortService.Data.Methods,
-	}
-	raw, err := libos.ExecuteTemplate(p.RestPortService.template, data)
-	if err != nil {
-		return err
-	}
+	for _, svc := range p.Service.Services {
+		data := map[string]any{
+			"PackagePath": p.based.Project.PackagePath,
+			"ServiceName": svc.ServiceName,
+			"Methods":     svc.Methods,
+		}
 
-	err = libos.CreateFile(p.RestPortService.filepath, raw)
-	if err != nil {
-		return err
+		raw, err := libos.ExecuteTemplate(p.RestPortService.template, data)
+		if err != nil {
+			return err
+		}
+
+		svcLower := strings.ToLower(svc.ServiceName)
+		filepath := fmt.Sprintf("%s/%s.go", p.RestPortService.dirpath, svcLower)
+		err = libos.CreateFile(filepath, raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

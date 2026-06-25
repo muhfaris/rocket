@@ -30,6 +30,6 @@ func(h *Handler) {{.HandlerName}}() func(c *fiber.Ctx) error {
 				}
 		{{end}}
 
-		return response.Success(c, {{if .ServiceHasReturn}} result {{else}} "Hello" {{end}})
+		return response.Success(c, {{if .HasStructsResponse}} new(presenter.{{.HandlerName}}).Out(c, result) {{else if .ServiceHasReturn}} result {{else}} "Hello" {{end}})
 	}
 }

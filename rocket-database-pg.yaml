@@ -1,7 +1,7 @@
 openapi: "spec/openapi.yaml"
 app:
-  package: "github.com/muhfaris/pg"
-  project: "pg"
+  package: "github.com/muhfaris/rocket/examples/samplepg"
+  project: "samplepg"
   arch: "hexagonal"
   docker: false
   database: "postgresql"

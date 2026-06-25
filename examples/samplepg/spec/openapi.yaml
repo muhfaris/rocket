@@ -1,0 +1,161 @@
+openapi: 3.0.0
+info:
+  title: Laporkan API
+  version: 1.0.0
+servers:
+  - url: http://localhost
+components:
+  securitySchemes:
+    noauthAuth:
+      type: http
+      scheme: noauth
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ResponseCreateReport:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 01HBE00X5165PB9M5687PB12GY
+    ResponseGetReports:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Report"
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 01HBE00X5165PB9M5687PB12GY
+        title:
+          type: string
+          example: "Broken streetlight on Main St."
+        description:
+          type: string
+          example: "The streetlight near the bus stop is not working."
+        location:
+          type: string
+          example: "Main St, Downtown"
+        status:
+          type: string
+          enum: [pending, in_progress, resolved]
+          example: "pending"
+        created_at:
+          type: string
+          example: "2023-09-28T20:35:32.001775913+07:00"
+        updated_at:
+          type: string
+          example: "2023-09-28T20:35:32.001775913+07:00"
+tags:
+  - name: Reports
+paths:
+  /reports:
+    post:
+      operationId: CreateReport::ReportSvc
+      tags:
+        - Reports
+      summary: Submit a new report
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Broken streetlight on Main St."
+                description:
+                  type: string
+                  example: "The streetlight near the bus stop is not working."
+                location:
+                  type: string
+                  example: "Main St, Downtown"
+      responses:
+        "201":
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                # $ref: "#/components/schemas/ResponseCreateReport"
+                type: object
+                x-struct-response: ResponseCreateReport
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 01HBE00X5165PB9M5687PB12GY
+    get:
+      operationId: GetReports::ReportSvc
+      tags:
+        - Reports
+      summary: Get all reports
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+          example: "pending"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          example: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseGetReports"
+# /reports/{id}:
+#   patch:
+#     operationId: UpdateReportStatus::ReportSvc
+#     tags:
+#       - Reports
+#     summary: Update the status of a report
+#     security:
+#       - bearerAuth: []
+#     parameters:
+#       - name: id
+#         in: path
+#         required: true
+#         schema:
+#           type: string
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             properties:
+#               status:
+#                 type: string
+#                 enum: [pending, in_progress, resolved]
+#                 example: "in_progress"
+#     responses:
+#       "200":
+#         description: Report status updated successfully
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Report"

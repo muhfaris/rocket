@@ -110,11 +110,16 @@ func (req *{{.HandlerName}}) In(c *fiber.Ctx)(domain.{{.DomainModel.StructName}}
 }
 
 {{if .HasStructsResponse}}
-func (req *{{.HandlerName}}) Out(c *fiber.Ctx, data domain.{{.DomainModel.StructName}})any{
+func (req *{{.HandlerName}}) Out(c *fiber.Ctx, data domain.{{.DomainModel.StructName}}) any {
+	{{- if .MappingFieldsStructResponse}}
 	return {{(index .StructsResponse 0).StructName}}{
 		{{- range $key, $value := .MappingFieldsStructResponse}}
-					{{$key}}: data.{{$value}},
-		{{- end }}
+		{{$key}}: data.{{$value}},
+		{{- end}}
 	}
+	{{- else}}
+	// TODO: map domain.{{.DomainModel.StructName}} to {{(index .StructsResponse 0).StructName}}
+	return data
+	{{- end}}
 }
 {{end}}

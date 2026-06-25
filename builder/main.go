@@ -8,6 +8,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/muhfaris/rocket/builder/hexagonal"
+	"github.com/muhfaris/rocket/helper/ui"
 	liboas "github.com/muhfaris/rocket/shared/oas"
 	libos "github.com/muhfaris/rocket/shared/os"
 	"github.com/muhfaris/rocket/shared/templates"
@@ -77,9 +78,13 @@ func New(content []byte, doc *openapi3.T, cfg ConfigBuilder) *Main {
 	}
 }
 
+
 func (m *Main) Generate() error {
 	var err error
-	// slog.Info("Creating new project", "project", _baseproject.ProjectName)
+	// generationFailed tracks whether the error is from code generation (delete project)
+	// vs. post-generation steps like formatting (keep project for inspection)
+	var generationFailed bool
+
 	fmt.Println("Creating new project", _baseproject.ProjectName)
 
 	// create project
@@ -97,46 +102,67 @@ func (m *Main) Generate() error {
 		if err == nil {
 			return
 		}
-		// failed to create new project
-		// delete created project
-		err = libos.DeleteDir(_baseproject.ProjectName)
-		if err != nil {
+		if !generationFailed {
+			// post-generation error (formatting, tidy) — keep files for inspection
+			fmt.Printf("\u26a0 Post-generation step failed, project kept at %s/ for inspection\n", _baseproject.ProjectName)
 			return
 		}
+		// generation-stage error — delete incomplete project
+		_ = libos.DeleteDir(_baseproject.ProjectName)
 	}()
 
 	err = m.initMain()
 	if err != nil {
+		generationFailed = true
 		return err
 	}
 
 	// create .gitignore
 	err = m.initGitignore()
 	if err != nil {
+		generationFailed = true
 		return err
 	}
 
 	// all code files will Generate
 	err = m.generate()
 	if err != nil {
+		generationFailed = true
 		return err
+	}
+
+	// resolve dependencies
+	err = m.resolveDependencies()
+	if err != nil {
+		// non-fatal — project compiles manually with go mod tidy
+		fmt.Printf("\u26a0 go mod tidy failed, run 'go mod tidy' manually: %v\n", err)
 	}
 
 	// format file go
-	fmt.Println("└── Formatting directory")
+	fmt.Println("\u2514\u2500\u2500 Formatting directory")
 	time.Sleep(10 * time.Millisecond)
-	fmt.Printf(" %s goimports\n", LineOnProgress)
+	fmt.Printf(" %s goimports\n", ui.LineOnProgress)
 	err = m.GoImports(_baseproject.ProjectName)
 	if err != nil {
-		return err
+		fmt.Printf("  goimports unavailable, falling back to gofmt\n")
 	}
 
-	fmt.Printf(" %s gofmt\n", LineLast)
+	fmt.Printf(" %s gofmt\n", ui.LineLast)
 	err = m.GoFmt(_baseproject.ProjectName)
 	if err != nil {
-		return err
+		return nil // formatting is best-effort
 	}
 
+	return nil
+}
+
+func (m *Main) resolveDependencies() error {
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = _baseproject.ProjectName
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v: %s", err, string(out))
+	}
 	return nil
 }
 
@@ -186,7 +212,7 @@ func (m *Main) generate() error {
 }
 
 func (m *Main) initializeModule() error {
-	fmt.Printf("%s%s\n", LineLast, "Go module")
+	fmt.Printf("%s%s\n", ui.LineLast, "Go module")
 	// Initialize the Go module
 	cmd := exec.Command("go", "mod", "init", _baseproject.PackagePath)
 	cmd.Dir = _baseproject.ProjectName
@@ -214,7 +240,7 @@ func (m *Main) initializeModule() error {
 }
 
 func (m *Main) initMain() error {
-	fmt.Printf("%s%s\n", LineOnProgress, m.filename)
+	fmt.Printf("%s%s\n", ui.LineOnProgress, m.filename)
 	// create main.go
 	data := MainData{
 		PackagePath: m.PackagePath,
@@ -236,7 +262,7 @@ func (m *Main) initMain() error {
 }
 
 func (m *Main) initGitignore() error {
-	fmt.Printf("%s%s\n", LineOnProgress, ".gitignore")
+	fmt.Printf("%s%s\n", ui.LineOnProgress, ".gitignore")
 	filepathGitignore := fmt.Sprintf("%s/.gitignore", _baseproject.ProjectName)
 	err := libos.CreateFile(filepathGitignore, m.tempalteGitignore)
 	if err != nil {
@@ -247,6 +273,10 @@ func (m *Main) initGitignore() error {
 }
 
 func (m *Main) GoImports(directory string) error {
+	// check if goimports is available
+	if _, err := exec.LookPath("goimports"); err != nil {
+		return err // caller falls back to gofmt
+	}
 	cmd := exec.Command("goimports", "-w", directory)
 	return cmd.Run()
 }

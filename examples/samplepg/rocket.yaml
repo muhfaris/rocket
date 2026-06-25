@@ -1,0 +1,9 @@
+openapi: spec/openapi.yaml
+app:
+    package: github.com/muhfaris/rocket/examples/samplepg
+    project: samplepg
+    arch: hexagonal
+    docket: false
+    database: postgresql
+    cache: ""
+    ignoredataresponse: ""
