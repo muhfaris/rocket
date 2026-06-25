@@ -3,7 +3,9 @@ package addcmd
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/muhfaris/rocket/builder"
 	"github.com/muhfaris/rocket/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,31 +29,31 @@ var (
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			openapifile, valid := viper.Get("openapi").(string)
-			if !valid {
-				return fmt.Errorf("path openapi (--openapi) file is required")
+			openapifile, err := cmd.Flags().GetString("openapi")
+			if err != nil || openapifile == "" {
+				return fmt.Errorf("--openapi flag is required")
 			}
 
-			if openapifile == "" {
-				return fmt.Errorf("path openapi (--openapi) file is required")
+			operationID, err := cmd.Flags().GetString("operationid")
+			if err != nil || operationID == "" {
+				return fmt.Errorf("--operationid flag is required")
 			}
 
-			// content, doc, err := libos.LoadOpenapi(openapifile)
-			// if err != nil {
-			// 	return err
-			// }
-			//
-			// operationid := viper.Get("operationid")
-			// if operationid == "" {
-			// 	return fmt.Errorf("--operationid is required")
-			// }
-			//
-			// ignoreDataResponse, _ := viper.Get("ignore-data-response").(bool)
-			//
-			// fmt.Println(openapifile)
-			// fmt.Println(operationid)
+			ignoreDataResponse := ""
+			if v, _ := cmd.Flags().GetBool("ignore-data-response"); v {
+				ignoreDataResponse = "true"
+			}
 
-			return nil
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("get working directory: %w", err)
+			}
+
+			fmt.Println("Adding handler to project in", wd)
+			fmt.Printf("  OpenAPI spec: %s\n", openapifile)
+			fmt.Printf("  OperationId:  %s\n", operationID)
+
+			return builder.AddHandler(wd, openapifile, operationID, ignoreDataResponse)
 		},
 	}
 )
