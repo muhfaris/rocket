@@ -51,9 +51,9 @@ jobs:
       - name: Verify application execution pg
         if: success()
         run: |
-          rm -rf pg
+          rm -rf samplepg
           go run main.go new -c rocket-database-pg.yaml
-          cd pg && go mod tidy && go mod vendor
+          cd samplepg && go mod tidy && go mod vendor
       - name: Verify application execution docker
         if: success()
         run: |
@@ -68,4 +68,4 @@ jobs:
       - name: Remove all dummy data
         if: success()
         run: |
-          rm -rf basic cacher mongodb mysql pg dcc r1
+          rm -rf basic cacher mongodb mysql samplepg dcc r1
